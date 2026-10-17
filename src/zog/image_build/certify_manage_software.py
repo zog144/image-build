@@ -85,7 +85,13 @@ paths = sysconfig.get_paths()
 stdlib = paths["stdlib"]
 platstdlib = paths.get("platstdlib", stdlib)
 allowed = []
-for value in (site, stdlib, platstdlib):
+for value in (
+    site,
+    stdlib,
+    platstdlib,
+    stdlib + "/lib-dynload",
+    platstdlib + "/lib-dynload",
+):
     if value not in allowed:
         allowed.append(value)
 sys.path[:] = allowed
