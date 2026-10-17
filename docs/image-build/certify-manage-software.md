@@ -30,6 +30,13 @@ No version is resolved at publication time. The lock must provide an HTTPS sourc
 URL, SHA-256 and retained notice path for every distribution. Missing, extra or
 changed distributions are rejected.
 
+The Python runtime distributions are application-specific inputs. They do not need
+to become Basic/rootfs catalogue packages. Native build-only tooling already
+reviewed by image-build (Python setuptools/wheel, maturin, Rust, CFFI and the
+cryptography recipe/toolchain) may be used by the isolated Work build, but those
+build tools must not appear in the final runtime distribution set unless they are
+explicitly named by the runtime lock.
+
 ### Python and executable paths
 
 The application does **not** ship a second CPython/OpenSSL stack. It binds to the
@@ -44,7 +51,9 @@ The launcher executes rootfs `/usr/bin/python3` with `-I -S` and replaces
 `sys.path` with only:
 
 1. `/applications/certify-manage/lib/python3.15/site-packages`;
-2. the rootfs standard-library / platform-standard-library paths.
+2. the rootfs standard-library / platform-standard-library paths;
+3. the corresponding rootfs `lib-dynload` directories required by native standard
+   library modules such as `_ssl` and `_sqlite3`.
 
 It therefore does not consume user site-packages, `PYTHONPATH`, mutable issuer
 storage or an unrelated host installation.
