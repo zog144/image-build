@@ -1,0 +1,18 @@
+{
+  "corrupt-payload/rootfs.tar": {
+    "bytes": 10240,
+    "sha256": "67a54605682b70c06c8cae63fc4049a65560d13f93c74c341805cd2a57262bd9"
+  },
+  "false-readiness/rootfs.tar": {
+    "bytes": 10240,
+    "sha256": "22dc338a9192144ad1e832a86722899397815363d64f4b2136e48137bb498b9b"
+  },
+  "unsafe-path/rootfs.tar": {
+    "bytes": 10240,
+    "sha256": "7db10b0bb4edb7668483b747c6e36ea5ec7e6237bdb7d908aab845e63ee7756a"
+  },
+  "valid/rootfs.tar": {
+    "bytes": 10240,
+    "sha256": "22dc338a9192144ad1e832a86722899397815363d64f4b2136e48137bb498b9b"
+  }
+}

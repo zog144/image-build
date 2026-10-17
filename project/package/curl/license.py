@@ -1,0 +1,50 @@
+# Data only; parsed with ast.literal_eval.
+{'schema': 1,
+ 'package': 'curl',
+ 'version': '8.22.0',
+ 'source': {'url': 'https://curl.se/download/curl-8.22.0.tar.xz',
+            'sha256': 'f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7'},
+ 'status': 'declared',
+ 'expression': 'curl',
+ 'scope': 'Top-level upstream declaration only; explicitly separate components and unresolved '
+          'source scopes below.',
+ 'evidence': [{'path': 'curl-8.22.0/COPYING',
+               'sha256': '82f2f4427d6545ee5aaac4f0b80428da6cc8ba41c2cf5da3a03680ec327b9681',
+               'source_sha256': 'f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7'},
+              {'path': 'curl-8.22.0/lib/curlx/inet_ntop.c',
+               'sha256': '27981b93ba6db6ed89aa8800d97715d2896b255966cd409d1b60a874f9b9cfc9',
+               'source_sha256': 'f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7'},
+              {'path': 'curl-8.22.0/lib/vssh/vssh.c',
+               'sha256': 'd35bbc1d20c64255b8f2ca9513c94a7f3dfd137c0024a9b4f39f47dc5479616b',
+               'source_sha256': 'f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7'},
+              {'path': 'curl-8.22.0/tests/server/tftpd.c',
+               'sha256': '6ef3792dc935f057f8f94cada76d47f91fb6cff442642ca1fb21c47ed6007949',
+               'source_sha256': 'f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7'},
+              {'path': 'curl-8.22.0/lib/curlx/inet_pton.c',
+               'sha256': '8b332ba09a59449fa5478ae3c25e45d2e462987aa5a57754a0cb368a5afb8aa6',
+               'source_sha256': 'f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7'}],
+ 'components': [{'scope': 'Bundled libraries and test fixtures',
+                 'expression': None,
+                 'status': 'unresolved',
+                 'notes': 'Per-component release review remains required.'},
+                {'scope': 'lib/curlx/inet_ntop.c and inet_pton.c',
+                 'expression': 'ISC',
+                 'status': 'declared',
+                 'notes': 'Runtime helpers; explicit file grants.'},
+                {'scope': 'lib/vssh/vssh.c',
+                 'expression': 'curl AND ISC',
+                 'status': 'declared',
+                 'notes': 'File explicitly declares combined terms.'},
+                {'scope': 'tests/server/tftpd.c',
+                 'expression': 'BSD-4-Clause-UC',
+                 'status': 'unresolved',
+                 'notes': 'Canonical file declaration: BSD-4-Clause-UC. Frozen parser cannot '
+                          'represent this identifier; preserve it here without narrowing '
+                          'alternatives or inventing LicenseRef. Source test server, not inferred '
+                          'libcurl runtime term. Rerun 2026-10-16: a4e3870 adds this exact '
+                          'identifier; canonical expression restored with review status '
+                          'unchanged.'}],
+ 'patches': [],
+ 'notes': ['No downstream patches. Source bytes and included notice hashes retained.',
+           '2026-10-16 private source-scope review; source identity and historical pins preserved. '
+           'This record is not output redistribution approval.']}

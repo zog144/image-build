@@ -1,0 +1,18 @@
+# Data only; parsed with ast.literal_eval.
+{'schema': 1,
+ 'package': 'libevdev',
+ 'version': '1.14.0',
+ 'source': {'url': 'https://www.freedesktop.org/software/libevdev/libevdev-1.14.0.tar.xz',
+            'sha256': '5a0966c7110648665983848bad696c7acba614a2160d2865d535397101007332'},
+ 'status': 'declared',
+ 'expression': 'MIT',
+ 'scope': 'Main libevdev project. COPYING also records GPL-2.0-only text inherited from Linux kernel header material; no claim is made here that all bundled header material is MIT.',
+ 'evidence': [{'path': 'libevdev-1.14.0/COPYING',
+               'sha256': '6f13de7ce28e4948ba95170e0723ee1254c1978ce1f127af82aeca597b567cb9',
+               'source_sha256': '5a0966c7110648665983848bad696c7acba614a2160d2865d535397101007332'}],
+ 'components': [{'scope': 'Copied Linux input/uinput header material',
+                 'expression': 'GPL-2.0-only',
+                 'status': 'declared',
+                 'notes': 'Upstream COPYING explicitly identifies the Linux kernel header license and states that no GPL code is linked into the library.'}],
+ 'patches': [],
+ 'notes': ['No downstream patches. Full device/uinput upstream test suite needs kernel device access and is not granted by the Zog build recipe.']}

@@ -1,0 +1,17 @@
+# Reviewed public candidate; data only, parsed with ast.literal_eval.
+[{'url': 'recipe:fixtures/os-release',
+  'sha256': 'ce0505b3a16e37d668bed01967e37eb3b90aadee9864201bf890520e627c048d',
+  'destination': 'inputs/os-release',
+  'archive': False},
+ {'url': 'recipe:fixtures/COPYRIGHT',
+  'sha256': '153d80eda53b3b4f4d83026a05857903946096f9d742d40b751c2a22ca06bfe7',
+  'destination': 'inputs/COPYRIGHT',
+  'archive': False},
+ {'url': 'recipe:fixtures/LICENSES/BSD-3-Clause.txt',
+  'sha256': '12b85fc1f9cc9f1cade627244cd8e2aab2c61a9da3f2547b8326aa3388d7b6f0',
+  'destination': 'inputs/LICENSES/BSD-3-Clause.txt',
+  'archive': False},
+ {'url': 'recipe:fixtures/LICENSES/GPL-3.0-only.txt',
+  'sha256': 'fb981668c18a279e285fc4d83fba1e836cc84dd4daa73c9697d3cfd2d8aca6e0',
+  'destination': 'inputs/LICENSES/GPL-3.0-only.txt',
+  'archive': False}]

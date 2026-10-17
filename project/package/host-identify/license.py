@@ -1,0 +1,27 @@
+# Reviewed public candidate; data only, parsed with ast.literal_eval.
+{'schema': 1,
+ 'package': 'host-identify',
+ 'version': '0.3.4',
+ 'source': {'url': 'https://api.github.com/repos/zog144/host-identify/tarball/1a5eac0b255c995022db6a3a4c0051efffa748cc',
+            'sha256': 'a373a43845bb89119aec50df8d3dd1b0aa2103c37106de14aab844f3a2973e9f'},
+ 'status': 'declared',
+ 'expression': 'BSD-3-Clause OR GPL-3.0-only',
+ 'scope': 'Verified Zog-owned first-party source at immutable public revision. The copyright '
+          'holder grants the same dual license to historical Zog-owned snapshots; third-party '
+          'notices retain their own licenses.',
+ 'evidence': [{'path': 'zog144-host-identify-1a5eac0/LICENSE',
+               'sha256': '46d7b69738f1d73f17435b65d1341503915128b868297006f2b201cf97cea1fa',
+               'source_sha256': 'a373a43845bb89119aec50df8d3dd1b0aa2103c37106de14aab844f3a2973e9f'},
+              {'path': 'zog144-host-identify-1a5eac0/LICENSES/BSD-3-Clause.txt',
+               'sha256': '12b85fc1f9cc9f1cade627244cd8e2aab2c61a9da3f2547b8326aa3388d7b6f0',
+               'source_sha256': 'a373a43845bb89119aec50df8d3dd1b0aa2103c37106de14aab844f3a2973e9f'},
+              {'path': 'zog144-host-identify-1a5eac0/LICENSES/GPL-3.0-only.txt',
+               'sha256': 'fb981668c18a279e285fc4d83fba1e836cc84dd4daa73c9697d3cfd2d8aca6e0',
+               'source_sha256': 'a373a43845bb89119aec50df8d3dd1b0aa2103c37106de14aab844f3a2973e9f'},
+              {'path': 'zog144-host-identify-1a5eac0/THIRD-PARTY-NOTICES.md',
+               'sha256': 'f3810409c7a89e85042edf83730f759e4bfc249ec1a4fb494f4d878d50306cf4',
+               'source_sha256': 'a373a43845bb89119aec50df8d3dd1b0aa2103c37106de14aab844f3a2973e9f'}],
+ 'components': [],
+ 'patches': [],
+ 'notes': ['Public recipe generated from independently hashed exact archive.',
+           'Historical private recipe and original evidence remain immutable.']}

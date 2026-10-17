@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "directory": "valid",
+      "expected_id": "98b3240f21ececf7f4100950a18b769f0c5fb485971a15587af2987697d6c658",
+      "installable": false,
+      "reason": "valid synthetic artifact; no boot acceptance",
+      "verify": "accept"
+    },
+    {
+      "directory": "corrupt-payload",
+      "expected_id": "98b3240f21ececf7f4100950a18b769f0c5fb485971a15587af2987697d6c658",
+      "reason": "payload hash mismatch",
+      "verify": "reject"
+    },
+    {
+      "directory": "unsafe-path",
+      "expected_id": "38301c6b53d71ad0ef7858f562f6f72a6dbf21dacaf83eff55f8b4a768162dac",
+      "reason": "unsafe member path",
+      "verify": "reject"
+    },
+    {
+      "directory": "false-readiness",
+      "expected_id": "f52162fd53064a6c5fba511650d432dab35b2fe71448e71ca80b8001b57723dc",
+      "reason": "unsupported readiness claim",
+      "verify": "reject"
+    }
+  ],
+  "fixture": "host-install-v1",
+  "schema": 1,
+  "synthetic": true,
+  "trust": "Expected IDs must come from the reviewed repository commit, not an untrusted bundle."
+}

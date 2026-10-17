@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "box_control": {
+    "repository": "zog144/box-control",
+    "revision": "d913e70585ab241696ebf771b93a398d5337217c",
+    "path": "box-control/src/zog/box_control/mounts.py",
+    "blob_sha": "7d47bb6db852b2a2855842e3ba03d2a99b565912",
+    "mount_contract": "zog-mounts-v1"
+  },
+  "require_targets": true,
+  "targets": [
+    "/var/lib/archive-mirror",
+    "/var/lib/station-access"
+  ]
+}

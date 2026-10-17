@@ -1,0 +1,13 @@
+include .gitignore LICENSE THIRD-PARTY-NOTICES.md README.md zog-component.json
+recursive-include LICENSES *.txt
+recursive-include notices *
+recursive-include src *.py
+recursive-include project *
+recursive-include docs *.md *.json
+recursive-include tests *.py *.json
+recursive-include tools *.py
+recursive-include examples *
+recursive-include acceptance *.py *.md
+recursive-include jobs *.sh *.py *.json *.md
+recursive-include .github/workflows *.yml
+global-exclude __pycache__ *.py[cod] *.tar *.whl *.egg-info

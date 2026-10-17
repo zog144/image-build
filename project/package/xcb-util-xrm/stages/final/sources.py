@@ -1,0 +1,5 @@
+# Data only; parsed with ast.literal_eval.
+[{'url': 'https://github.com/Airblader/xcb-util-xrm/releases/download/v1.3/xcb-util-xrm-1.3.tar.bz2',
+  'sha256': '301cf33701207ea8782d49f4cb6404abd8f2d64e16f242017fd720be7c900c85',
+  'destination': 'upstream',
+  'archive': True}]

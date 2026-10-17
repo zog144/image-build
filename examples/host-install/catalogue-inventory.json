@@ -1,0 +1,321 @@
+{
+  "schema": 1,
+  "profile": "foreign-kernel-host-v1",
+  "profile_identity": "a207e1a1994f58ab46c7c25c897b092f5e9a8804134d1bfb2f57fbe58aee155d",
+  "installable": false,
+  "dependency_closure": "not-reviewed",
+  "live_inventory": "not-performed",
+  "items": [
+    {
+      "project": "glibc",
+      "role": "C runtime and dynamic loader",
+      "group": "base",
+      "catalogue_present": true,
+      "package_metadata_present": true,
+      "license_metadata_present": true,
+      "stages": [
+        {
+          "stage": "cross-initial",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "1447fc295ae56eb66a87fe37da0fd6163cc37aa08a9f3ac211ae49bb68caf8bb",
+            "build.py": "17e387169719274fc34c65a7f15c5c2a55c644f850630c49f02ce490480a2364",
+            "dependencies.py": "164112c1f1cf22a580b84c07af82c4b199f4d4d2eb2827725a5d58336e16faa4",
+            "produce-manifest.py": "75dc8b6ae067f8c79ea6bf950762b90140ba63c4e58b16e1230714650f3ff0ef"
+          }
+        },
+        {
+          "stage": "final",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "1447fc295ae56eb66a87fe37da0fd6163cc37aa08a9f3ac211ae49bb68caf8bb",
+            "build.py": "e50f1cd4128c45ba7c349f9ec8f766d2e29e3d8ff559c9deb19c23dace4c4392",
+            "dependencies.py": "0d5030a5d0a7bfac680a48128a2492c90e4f3ce7b2431da6080a1f2bdc035ad9",
+            "produce-manifest.py": "1b136a3f47263a3f9b0c1a29076786f89c0010ac434ab0f1ceb735ce7be74d6d"
+          }
+        }
+      ],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": false
+    },
+    {
+      "project": "bash",
+      "role": "shell for host initialization",
+      "group": "base",
+      "catalogue_present": true,
+      "package_metadata_present": true,
+      "license_metadata_present": true,
+      "stages": [
+        {
+          "stage": "temporary",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "0903aa2b7b3899c505439921ef3232cedbf52a19537ac108bfc3dc59cbe2ad51",
+            "build.py": "d5ccf90ef7d366af73822eaa62509e9a9ff9e9000aa7240912e990aecf77e215",
+            "dependencies.py": "a8d697bdf0269acbf908e9366bba8fb1777420ae1e8525611814ab3aa68d668b",
+            "produce-manifest.py": "129d98a5e8114a494e62e80660ab3bc3734666d0a7dc79e18915cea2629bbe8b"
+          }
+        },
+        {
+          "stage": "temporary-cwd",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "0903aa2b7b3899c505439921ef3232cedbf52a19537ac108bfc3dc59cbe2ad51",
+            "build.py": "c72d938cf8ac9b96bc6462c78f7ccc4f1d70585cdec0c84522d97baa098b758f",
+            "dependencies.py": "0d5030a5d0a7bfac680a48128a2492c90e4f3ce7b2431da6080a1f2bdc035ad9",
+            "produce-manifest.py": "f271252cba7448f336eef73f7561a843815c0ee215708ce11556ba1cd5e2330c"
+          }
+        }
+      ],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": false
+    },
+    {
+      "project": "coreutils",
+      "role": "base file and process utilities",
+      "group": "base",
+      "catalogue_present": true,
+      "package_metadata_present": true,
+      "license_metadata_present": true,
+      "stages": [
+        {
+          "stage": "temporary",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "f9f8f08786631305a988d62be3f6c765ca22c303f6f2939930f9c346eef739b6",
+            "build.py": "0305d48a695825c23da324d477225ee5a20fe6c177362e7f03a9ff22a829a5b3",
+            "dependencies.py": "0d5030a5d0a7bfac680a48128a2492c90e4f3ce7b2431da6080a1f2bdc035ad9",
+            "produce-manifest.py": "42e036ef55d82204f537edbbae14110e0018052a98d6d95aab77bc336c575211"
+          }
+        }
+      ],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": false
+    },
+    {
+      "project": "util-linux",
+      "role": "mounting and block-device utilities; review disabled features",
+      "group": "base",
+      "catalogue_present": true,
+      "package_metadata_present": true,
+      "license_metadata_present": true,
+      "stages": [
+        {
+          "stage": "native-environment",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "2576c5a491c3bee1eafd989024310fe76ab2b8dc38f986553ad009ee022372b8",
+            "build.py": "d04b5bed0f807b42e2289a963931cb0de454f513c9ce018c50218973488d0bd5",
+            "dependencies.py": "0d5030a5d0a7bfac680a48128a2492c90e4f3ce7b2431da6080a1f2bdc035ad9",
+            "produce-manifest.py": "c204d87984ff1376a0ab740124d31c8534dbfce234c33a36e6ae7d8aabb77add"
+          }
+        }
+      ],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": false
+    },
+    {
+      "project": "shadow",
+      "role": "accounts and emergency login policy; review required subset",
+      "group": "base",
+      "catalogue_present": true,
+      "package_metadata_present": true,
+      "license_metadata_present": true,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "systemd",
+      "role": "PID 1, journald, udev and proposed networkd/resolved services",
+      "group": "host",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "openssl",
+      "role": "TLS library for rebuilt Python",
+      "group": "next-compilation",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "sqlite",
+      "role": "SQL library for rebuilt Python",
+      "group": "next-compilation",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "python",
+      "role": "rebuild and require ssl/_ssl and sqlite3/_sqlite3 acceptance",
+      "group": "next-compilation",
+      "catalogue_present": true,
+      "package_metadata_present": true,
+      "license_metadata_present": true,
+      "stages": [
+        {
+          "stage": "native-environment",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "38db81ffdb6fc2a7af687030dfc2b2a7c09138ff570c160674c362bf6a8b3a22",
+            "build.py": "23cc45c2bb01e322ee796b9f0633c4562591e7560bfa6e71d653008fcc2a9691",
+            "dependencies.py": "0498b6384bbd924d4ff3dc139766b9b79e8fc2e6dea2293ddc741a25eb7763d1",
+            "produce-manifest.py": "fbae98c8eece6ec133c53c364c7f7dbc15870f6654373551ee4a3a2a98b6ecda"
+          }
+        }
+      ],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": false
+    },
+    {
+      "project": "ca-certificates",
+      "role": "review authoritative trust-store source and update policy",
+      "group": "host",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "iproute2",
+      "role": "network diagnostics and administration",
+      "group": "host",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "kmod",
+      "role": "module loading support for matching foreign kernel",
+      "group": "host",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "dbus",
+      "role": "candidate system bus provider; confirm service requirements",
+      "group": "selection-review",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "host-identify",
+      "role": "host Ed25519 identity primitives; fresh state at first boot",
+      "group": "zog",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "host-discover",
+      "role": "enrollment, beacon and control transport",
+      "group": "zog",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "box-control",
+      "role": "trusted local lifecycle and root-control installation contract",
+      "group": "zog",
+      "catalogue_present": false,
+      "package_metadata_present": false,
+      "license_metadata_present": false,
+      "stages": [],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": true
+    },
+    {
+      "project": "linux",
+      "role": "current API headers only; first kernel/initramfs/modules remain foreign",
+      "group": "foreign-boot",
+      "catalogue_present": true,
+      "package_metadata_present": true,
+      "license_metadata_present": true,
+      "stages": [
+        {
+          "stage": "api-headers",
+          "recipe_files_present": true,
+          "missing_files": [],
+          "file_hashes": {
+            "sources.py": "7cb2f169c84ab0b15ba4a8ae42524431c247f7018877fddc63cf8f3fd5158688",
+            "build.py": "8e44ef1f27ff75597376da45bbf6b57491f6485a6cde60b4f8de28f22396c959",
+            "dependencies.py": "0d5030a5d0a7bfac680a48128a2492c90e4f3ce7b2431da6080a1f2bdc035ad9",
+            "produce-manifest.py": "96d75b88adaf6e60a43ca2aa6a6d4b5ee18af5b26685585370a286ddcc1365ca"
+          }
+        }
+      ],
+      "host_acceptance": "not-assessed",
+      "recipe_gap": false
+    }
+  ],
+  "recipe_review_candidates": [
+    "meson",
+    "ninja",
+    "gperf",
+    "libcap",
+    "libseccomp",
+    "jinja2",
+    "packaging",
+    "pyelftools"
+  ],
+  "candidate_note": "Review selected upstream build options before adding dependency edges; this list is not a required closure.",
+  "acceptance": [
+    "self-hosted compiler acceptance",
+    "PID 1 and controller service startup",
+    "TLS certificate verification",
+    "Python SSL and SQLite modules",
+    "DHCP/DNS and outbound enrollment",
+    "fresh host identity in persistent state",
+    "read-only host with writable state and applications",
+    "foreign initramfs root/state mounting",
+    "authenticated control operation"
+  ],
+  "excluded_from_first_host": [
+    "station-access server",
+    "X11",
+    "TurboVNC",
+    "Zog-built kernel",
+    "Secure Boot",
+    "TPM attestation"
+  ]
+}
