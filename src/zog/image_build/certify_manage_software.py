@@ -264,7 +264,12 @@ def materialize_launchers(root):
     if root.is_symlink() or not root.is_dir():
         raise ImageBuildError("certify-manage staging root is unavailable")
     for directory in ("bin", "libexec"):
-        (root / directory).mkdir(parents=True, exist_ok=True)
+        path = root / directory
+        path.mkdir(parents=True, exist_ok=True)
+        for child in path.iterdir():
+            if child.is_dir() and not child.is_symlink():
+                raise ImageBuildError("unexpected certify-manage executable directory")
+            child.unlink()
     values = {
         root / "bin/python3": PYTHON_WRAPPER,
         root / "libexec/python-launcher.py": PYTHON_LAUNCHER,
@@ -319,6 +324,10 @@ def verify_staging(root, runtime_lock):
         "libexec/python-launcher.py": PYTHON_LAUNCHER,
         "bin/certbot": CERTBOT_SCRIPT,
     }
+    if {path.name for path in (root / "bin").iterdir()} != {"python3", "certbot"}:
+        raise ImageBuildError("unexpected certify-manage executable")
+    if {path.name for path in (root / "libexec").iterdir()} != {"python-launcher.py"}:
+        raise ImageBuildError("unexpected certify-manage libexec payload")
     for relative, content in expected_files.items():
         path = root / relative
         if (
