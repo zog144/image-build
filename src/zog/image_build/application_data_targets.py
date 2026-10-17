@@ -25,6 +25,12 @@ _TARGETS = (
         "mode": 0o755,
         "materialization": MATERIALIZATION,
     },
+    {
+        "application": "certify-manage",
+        "path": "/var/lib/zog-certify-manage",
+        "mode": 0o700,
+        "materialization": MATERIALIZATION,
+    },
 )
 
 

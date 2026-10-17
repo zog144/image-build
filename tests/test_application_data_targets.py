@@ -17,10 +17,12 @@ from zog.image_build.errors import ImageBuildError
 from zog.image_build.filesystem import inventory
 
 
-EXPECTED_PATHS = [
-    "/var/lib/archive-mirror",
-    "/var/lib/station-access",
-]
+EXPECTED_MODES = {
+    "/var/lib/archive-mirror": 0o755,
+    "/var/lib/station-access": 0o755,
+    "/var/lib/zog-certify-manage": 0o700,
+}
+EXPECTED_PATHS = list(EXPECTED_MODES)
 
 
 def _root(tmp_path):
@@ -33,7 +35,7 @@ def test_production_target_contract_is_exact_and_manifest_bound():
     value = definition()
     assert value["contract"] == CONTRACT
     assert [item["path"] for item in value["targets"]] == EXPECTED_PATHS
-    assert all(item["mode"] == 0o755 for item in value["targets"])
+    assert {item["path"]: item["mode"] for item in value["targets"]} == EXPECTED_MODES
     assert all(
         item["materialization"] == "immutable-empty-mount-target"
         for item in value["targets"]
@@ -42,6 +44,7 @@ def test_production_target_contract_is_exact_and_manifest_bound():
         "var/lib": 0o755,
         "var/lib/archive-mirror": 0o755,
         "var/lib/station-access": 0o755,
+        "var/lib/zog-certify-manage": 0o700,
     }
     assert validate(value) == value
     validate_manifest({FIELD: value}, {FIELD: value})
@@ -54,7 +57,7 @@ def test_existing_empty_target_is_allowed_but_content_is_rejected(tmp_path, targ
     root = _root(tmp_path)
     path = root / target.lstrip("/")
     path.mkdir()
-    path.chmod(0o755)
+    path.chmod(EXPECTED_MODES[target])
     assert bind(inventory(root)) == definition()
     (path / "payload").write_text("must not be hidden by the writable mount")
     with pytest.raises(ImageBuildError, match="not empty"):
@@ -76,7 +79,7 @@ def test_target_file_symlink_or_mode_conflict_fails_closed(tmp_path, target):
 
     path.unlink()
     path.mkdir()
-    path.chmod(0o700)
+    path.chmod(0o755 if EXPECTED_MODES[target] == 0o700 else 0o700)
     with pytest.raises(ImageBuildError, match="conflicts"):
         bind(inventory(root))
 
@@ -115,9 +118,9 @@ def test_exact_box_control_consumer_contract_is_pinned():
         "schema": 1,
         "box_control": {
             "repository": "zog144/box-control",
-            "revision": "d913e70585ab241696ebf771b93a398d5337217c",
+            "revision": "644170fc441863307092f329bf7e23cb64eb33e2",
             "path": "box-control/src/zog/box_control/mounts.py",
-            "blob_sha": "7d47bb6db852b2a2855842e3ba03d2a99b565912",
+            "blob_sha": "5fa552b5c58e97aa5a3fac1a2bfb85bd54221602",
             "mount_contract": "zog-mounts-v1",
         },
         "require_targets": True,
