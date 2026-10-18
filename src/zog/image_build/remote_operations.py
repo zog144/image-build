@@ -1041,6 +1041,9 @@ class RemoteOperations:
                 result["missing_evidence"].append(
                     {"kind": "generation", "locator": record["generation"]}
                 )
+        result["artifacts"]["execution_evidence"] = self._pipeline_execution_evidence(
+            record, pipeline_record_digest, jobs
+        )
         return result
 
     def _base_result(
@@ -1240,9 +1243,6 @@ class RemoteOperations:
             terminal_outcome="success",
         )
         result["artifacts"] = {"targets": targets, "dependency_order": list(resolved)}
-        result["artifacts"]["execution_evidence"] = self._pipeline_execution_evidence(
-            record, pipeline_record_digest, jobs
-        )
         return result
 
     def _pipeline_submit(self, request, directory):
