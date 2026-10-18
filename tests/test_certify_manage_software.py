@@ -81,6 +81,9 @@ def populate(root, lock):
         "certbot/__init__.py": "__version__='5.8.0'\n",
         "acme/__init__.py": "__version__='5.8.0'\n",
         "cryptography/__init__.py": "__version__='50.0.2'\n",
+        "cffi/__init__.py": "__version__='2.1.1'\n",
+        "pycparser/__init__.py": "__version__='3.0'\n",
+        "_cffi_backend.cpython-315-x86_64-linux-gnu.so": "fixture ELF\n",
         "configobj/__init__.py": "__version__='5.0.9'\n",
         "certifi/cacert.pem": "fixture CA bundle\n",
         "cryptography/hazmat/bindings/_rust.abi3.so": "fixture ELF\n",
@@ -132,6 +135,11 @@ def test_lock_rejects_missing_extra_or_changed_dependency(tmp_path):
         validate_lock(lock)
 
     lock = runtime_lock()
+    lock["packages"] = [record for record in lock["packages"] if record["name"] != "cffi"]
+    with pytest.raises(ImageBuildError, match="dependency closure"):
+        validate_lock(lock)
+
+    lock = runtime_lock()
     lock["packages"][0]["version"] = "999"
     with pytest.raises(ImageBuildError, match="package version"):
         validate_lock(lock)
@@ -166,6 +174,12 @@ def test_native_extensions_and_profile_selection_fail_closed(tmp_path):
     native = next((operation.root / SITE).glob("cryptography/hazmat/bindings/_rust*.so"))
     native.unlink()
     with pytest.raises(ImageBuildError, match="cryptography native extension"):
+        verify_staging(operation.root, lock)
+
+    state, lock, operation = prepared(tmp_path / "cffi-native")
+    native = next((operation.root / SITE).glob("_cffi_backend*.so"))
+    native.unlink()
+    with pytest.raises(ImageBuildError, match="CFFI native extension"):
         verify_staging(operation.root, lock)
 
     state, lock, operation = prepared(tmp_path / "http-extra")

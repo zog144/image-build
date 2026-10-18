@@ -22,6 +22,7 @@ The selected immutable runtime lock therefore requires:
 - certify-manage 0.1.0 from an exact reviewed Git/source artifact;
 - Certbot/acme 5.8.0;
 - cryptography 50.0.2;
+- CFFI 2.1.1 and pycparser 3.0, matching the reviewed image-build source recipes required by cryptography on CPython;
 - pyOpenSSL 26.4.0;
 - the exact transitive versions encoded by
   `zog.image_build.certify_manage_software.PROFILES`.
@@ -32,10 +33,11 @@ changed distributions are rejected.
 
 The Python runtime distributions are application-specific inputs. They do not need
 to become Basic/rootfs catalogue packages. Native build-only tooling already
-reviewed by image-build (Python setuptools/wheel, maturin, Rust, CFFI and the
-cryptography recipe/toolchain) may be used by the isolated Work build, but those
-build tools must not appear in the final runtime distribution set unless they are
-explicitly named by the runtime lock.
+reviewed by image-build (Python setuptools/wheel, maturin, Rust and the
+cryptography recipe/toolchain) may be used by the isolated Work build. CFFI and
+pycparser are different: cryptography 50.0.2 requires CFFI at runtime on CPython,
+and CFFI in turn requires pycparser, so both are explicit immutable runtime inputs
+and must appear in the lock and installed distribution set.
 
 ### Python and executable paths
 
@@ -83,7 +85,13 @@ The HTTP-only profile rejects installed `certbot_dns_cloudflare` or `cloudflare`
 modules. The Cloudflare profile requires both modules and the pydantic-core native
 extension.
 
-Both profiles require the cryptography native extension and certifi CA bundle.
+Both profiles require the cryptography native extension, the CFFI native extension,
+pycparser, and the certifi CA bundle. The reviewed source identities are
+`cffi-2.1.1.tar.gz` SHA-256
+`dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be` and
+`pycparser-3.0.tar.gz` SHA-256
+`600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29`;
+license evidence remains subject to the repository-wide redistribution review.
 
 ## Producer flow
 
@@ -175,7 +183,7 @@ rootfs and locked source bytes to:
    staging root;
 3. run the producer's staging verification and reopen the published artifact/view;
 4. execute the immutable Python launcher and import `zog.certify_manage`,
-   `certbot`, `acme`, `cryptography`, `configobj`, `ssl`, and `sqlite3`;
+   `certbot`, `acme`, `cryptography`, `cffi`, `pycparser`, `configobj`, `ssl`, and `sqlite3`;
 5. run `certbot --version`, `certbot plugins --text`, and offline
    `renew --help` / `certonly --help`;
 6. for the Cloudflare profile require `dns-cloudflare`; for HTTP-only require its

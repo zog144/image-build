@@ -39,6 +39,8 @@ CORE = {
     "configargparse": "1.7.5",
     "configobj": "5.0.9",
     "cryptography": "50.0.2",
+    "cffi": "2.1.1",
+    "pycparser": "3.0",
     "distro": "1.9.0",
     "josepy": "2.2.0",
     "parsedatetime": "2.6",
@@ -356,10 +358,14 @@ def verify_staging(root, runtime_lock):
     _require_any(site, "certbot/__init__.py")
     _require_any(site, "acme/__init__.py")
     _require_any(site, "cryptography/__init__.py")
+    _require_any(site, "cffi/__init__.py")
+    _require_any(site, "pycparser/__init__.py")
     _require_any(site, "configobj/__init__.py", "configobj.py")
     _require_any(site, "certifi/cacert.pem")
     if not list(site.glob("cryptography/hazmat/bindings/_rust*.so")):
         raise ImageBuildError("certify-manage cryptography native extension is missing")
+    if not list(site.glob("_cffi_backend*.so")):
+        raise ImageBuildError("certify-manage CFFI native extension is missing")
     if lock["profile"] == "cloudflare-dns-01":
         _require_any(site, "certbot_dns_cloudflare/__init__.py")
         _require_any(site, "cloudflare/__init__.py")
