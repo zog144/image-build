@@ -29,7 +29,9 @@ The selected immutable runtime lock therefore requires:
 
 No version is resolved at publication time. The lock must provide an HTTPS source
 URL, SHA-256 and retained notice path for every distribution. Missing, extra or
-changed distributions are rejected.
+changed distributions are rejected. For CFFI 2.1.1 and pycparser 3.0, the producer
+also requires the exact reviewed image-build catalogue URL/SHA-256 identities; a
+same-version archive from different bytes is rejected.
 
 The Python runtime distributions are application-specific inputs. They do not need
 to become Basic/rootfs catalogue packages. Native build-only tooling already

@@ -11,6 +11,7 @@ from zog.image_build.certify_manage_software import (
     LOCK_CONTRACT,
     PYTHON,
     PYTHON_VERSION,
+    REVIEWED_RUNTIME_SOURCES,
     SITE,
     begin,
     finalize,
@@ -45,10 +46,10 @@ def runtime_lock(profile="http-01"):
             {
                 "name": name,
                 "version": version,
-                "source": {
+                "source": dict(REVIEWED_RUNTIME_SOURCES.get(name, {
                     "url": f"https://example.invalid/{name}-{version}.tar.gz",
                     "sha256": hashlib.sha256(name.encode()).hexdigest(),
-                },
+                })),
                 "notices": [f"share/licenses/{name}/LICENSE"],
             }
         )
@@ -147,6 +148,15 @@ def test_lock_rejects_missing_extra_or_changed_dependency(tmp_path):
     lock = runtime_lock()
     lock["packages"][0]["source"]["sha256"] = "not-a-hash"
     with pytest.raises(ImageBuildError, match="source identity"):
+        validate_lock(lock)
+
+    lock = runtime_lock()
+    cffi = next(record for record in lock["packages"] if record["name"] == "cffi")
+    cffi["source"] = {
+        "url": "https://example.invalid/cffi-2.1.1.tar.gz",
+        "sha256": "0" * 64,
+    }
+    with pytest.raises(ImageBuildError, match="unreviewed certify-manage source identity: cffi"):
         validate_lock(lock)
 
     lock = runtime_lock()

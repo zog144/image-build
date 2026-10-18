@@ -70,6 +70,16 @@ PROFILES = {
     "http-01": CORE,
     "cloudflare-dns-01": {**CORE, **CLOUDFLARE},
 }
+REVIEWED_RUNTIME_SOURCES = {
+    "cffi": {
+        "url": "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz",
+        "sha256": "dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be",
+    },
+    "pycparser": {
+        "url": "https://files.pythonhosted.org/packages/1b/7d/92392ff7815c21062bea51aa7b87d45576f649f16458d78b7cf94b9ab2e6/pycparser-3.0.tar.gz",
+        "sha256": "600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29",
+    },
+}
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _REVISION = re.compile(r"[0-9a-f]{40}\Z")
 _DIST = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
@@ -187,6 +197,9 @@ def validate_lock(value):
             or not _SHA.fullmatch(source["sha256"])
         ):
             raise ImageBuildError("invalid certify-manage source identity: " + name)
+        reviewed_source = REVIEWED_RUNTIME_SOURCES.get(name)
+        if reviewed_source is not None and source != reviewed_source:
+            raise ImageBuildError("unreviewed certify-manage source identity: " + name)
         package_notices = record["notices"]
         if (
             not isinstance(package_notices, list)
