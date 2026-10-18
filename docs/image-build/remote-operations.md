@@ -71,6 +71,8 @@ object. The response artifact is:
 The contract advertises:
 
 - the exact request/result schemas and deployed source repository/revision;
+- `image-build-remote-execution-evidence-v1` as the bounded pipeline reporting
+  artifact used by unattended GitHub/host-deploy callers;
 - the exact remote operation names accepted by that producer revision;
 - whether generic pipelines are remotely supported;
 - `image-build-recipe-snapshot-v1` as the required immutable selection boundary
@@ -341,6 +343,15 @@ Every response uses `image-build-remote-result-v1` and is bounded. Core fields i
 - allowed next operations;
 - predecessor operation.
 
+Pipeline responses also include
+`artifacts.execution_evidence` with contract
+`image-build-remote-execution-evidence-v1`. It binds the retained pipeline record
+digest, pipeline owner/operation ID, exact recipe snapshot, source-pin identity,
+input generation selection, execution-policy identity, attempt IDs, a bounded list
+of controller request/job identities, output generation when present, and retained
+observation snapshot. This is reporting evidence only; it does not authorize retry
+or promotion.
+
 The response is an observation of image-build/controller state, not recovery
 authority. Full logs remain in journald/controller storage and full artifacts remain
 in durable image-build stores.
@@ -422,7 +433,16 @@ reviewed monthly provenance pin.
 Every **new** `pipeline.submit` and `pipeline.retry` must provide
 `recipe_snapshot: sha256:...`. Image-build verifies that the snapshot belongs to the
 same deployed source revision and that requested targets/stages are present, then
-constructs the pipeline with that snapshot as its package directory. The pipeline
+constructs the pipeline with that snapshot as its package directory.
+
+For `pipeline.submit`, callers may additionally set `predecessor` to the exact
+completed `recipes.snapshot` operation ID. When supplied, image-build verifies that
+the retained predecessor request/result belong to the same deployed source and
+produced exactly the submitted snapshot. The predecessor is copied into the durable
+pipeline owner, so a disconnected GitHub dispatch can later prove both operation
+identities rather than only the content-addressed snapshot. This binding is optional
+for compatibility with already implemented callers, but host-deploy should use it for
+new GitHub-initiated builds. The pipeline
 still retains its own exact recipe copy, preserving the existing per-pipeline recovery
 contract.
 
@@ -471,6 +491,14 @@ The classifications are deliberate:
 Host-deploy must therefore dispatch these identities through the maintained worker
 entrypoint until image-build introduces a future explicit worker-specific remote
 operation. It must not synthesize target lists and call generic `pipeline.submit`.
+
+This remains a deliberate blocker for unattended full compiler-toolchain construction:
+`final-compiler` (and its prerequisite maintained workers) owns recovery and
+publication semantics that the generic pipeline contract does not model. The first
+GitHub Actions integration should use the generic pipeline path and must not wait for
+this worker-specific follow-on. A future worker remote contract must preserve each
+worker's own durable operation IDs and typed options; it must not accept arbitrary
+argv or generic aliases.
 
 ## Explicit retry
 

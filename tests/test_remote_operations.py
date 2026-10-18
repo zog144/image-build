@@ -1697,6 +1697,9 @@ def test_execution_evidence_reports_controller_request_identity_after_interrupti
     )
 
     class DurableController:
+        def __init__(self):
+            self.interrupted = False
+
         def configuration(self):
             return {"contract": "fixture-controller-v1", "lane": "gha"}
 
@@ -1711,7 +1714,9 @@ def test_execution_evidence_reports_controller_request_identity_after_interrupti
                     "request_id": request_id,
                     "job_id": job_id,
                 }))
-                raise KeyboardInterrupt("lost controller reply")
+                if not self.interrupted:
+                    self.interrupted = True
+                    raise KeyboardInterrupt("lost controller reply")
             if build_request.command[0] == "install":
                 target = build_request.output / "usr/share/library"
                 target.parent.mkdir(parents=True, exist_ok=True)
