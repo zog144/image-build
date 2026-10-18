@@ -1563,3 +1563,201 @@ def test_worker_dispatcher_uses_same_machine_contract():
     from zog.image_build.worker_contracts import modules
 
     assert WORKERS == modules()
+
+
+def test_github_sequence_retains_snapshot_submit_selection_and_policy_after_interrupt(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    capabilities = remote.execute(
+        request("gha-capabilities", "capabilities.inspect", {})
+    )
+    assert capabilities["status"] == "completed"
+    assert capabilities["artifacts"]["remote_capabilities"]["generic_pipeline"]["supported"] is True
+
+    snapshot_result = remote.execute(
+        request(
+            "gha-snapshot",
+            "recipes.snapshot",
+            {
+                "entries": recipe_entries("library"),
+                "pin_date": "2026-10-01",
+            },
+        )
+    )
+    snapshot = snapshot_result["recipe_identity"]
+
+    builder.runner = BoxControlRunner(
+        execute=lambda build_request: (_ for _ in ()).throw(
+            KeyboardInterrupt("simulated client interruption")
+        )
+    )
+    submitted = remote.execute(
+        request(
+            "gha-submit",
+            "pipeline.submit",
+            {
+                "mode": "image",
+                "selection": toolchain.generation,
+                "targets": ["library"],
+                "recipe_snapshot": snapshot,
+            },
+            predecessor="gha-snapshot",
+        )
+    )
+    assert submitted["status"] == "pending"
+    pipeline_id = submitted["pipeline_id"]
+
+    inspected = remote.execute(
+        request(
+            "gha-inspect",
+            "pipeline.inspect",
+            {"pipeline_id": pipeline_id},
+        )
+    )
+    evidence = inspected["artifacts"]["execution_evidence"]
+    pipeline = builder.inspect_pipeline(pipeline_id)
+    assert evidence["contract"] == "image-build-remote-execution-evidence-v1"
+    assert evidence["pipeline_id"] == pipeline_id
+    assert evidence["pipeline_owner"] == {
+        "contract": REQUEST_SCHEMA,
+        "operation_id": "gha-submit",
+        "source_repository": "zog144/image-build",
+        "source_revision": "a" * 40,
+        "recipe_snapshot": snapshot,
+        "predecessor": "gha-snapshot",
+    }
+    assert evidence["recipe_snapshot"] == snapshot
+    assert evidence["source_pins"] == pipeline["source_pins"]
+    assert evidence["selection_generation"] == toolchain.generation
+    assert evidence["policy_identity"] is None
+    assert evidence["attempt_ids"] == sorted(pipeline["attempts"].values())
+
+    replay = remote.execute(
+        request(
+            "gha-submit",
+            "pipeline.submit",
+            {
+                "mode": "image",
+                "selection": toolchain.generation,
+                "targets": ["library"],
+                "recipe_snapshot": snapshot,
+            },
+            predecessor="gha-snapshot",
+        )
+    )
+    assert replay["pipeline_id"] == pipeline_id
+    assert replay["artifacts"]["execution_evidence"]["pipeline_owner"]["operation_id"] == "gha-submit"
+
+
+def test_submit_predecessor_must_bind_the_same_completed_snapshot(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    first = remote.execute(
+        request(
+            "snapshot-library",
+            "recipes.snapshot",
+            {
+                "entries": recipe_entries("library"),
+                "pin_date": "2026-10-01",
+            },
+        )
+    )
+    second = remote.execute(
+        request(
+            "snapshot-consumer",
+            "recipes.snapshot",
+            {
+                "entries": recipe_entries("library", "consumer"),
+                "pin_date": "2026-10-01",
+            },
+        )
+    )
+    rejected = remote.execute(
+        request(
+            "submit-mismatched-predecessor",
+            "pipeline.submit",
+            {
+                "mode": "image",
+                "selection": toolchain.generation,
+                "targets": ["consumer"],
+                "recipe_snapshot": second["recipe_identity"],
+            },
+            predecessor="snapshot-library",
+        )
+    )
+    assert rejected["status"] == "failed"
+    assert "same recipe snapshot" in rejected["failure"]["reason"]
+
+
+def test_execution_evidence_reports_controller_request_identity_after_interruption(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    snapshot = remote_recipe_snapshot(
+        remote, "controller-evidence-snapshot", "library"
+    )
+
+    class DurableController:
+        def configuration(self):
+            return {"contract": "fixture-controller-v1", "lane": "gha"}
+
+        def execute_for_attempt(self, build_request, checkpoint):
+            checkpoint = Path(checkpoint)
+            request_id = "gha-" + hashlib.sha256(
+                checkpoint.name.encode()
+            ).hexdigest()
+            job_id = hashlib.sha256(request_id.encode()).hexdigest()[:32]
+            if not checkpoint.exists():
+                checkpoint.write_text(json.dumps({
+                    "request_id": request_id,
+                    "job_id": job_id,
+                }))
+                raise KeyboardInterrupt("lost controller reply")
+            if build_request.command[0] == "install":
+                target = build_request.output / "usr/share/library"
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("library")
+            return BuildExecutionResult(
+                "runtime-fixture",
+                "invocation-fixture",
+                0,
+                True,
+                "journal:fixture",
+            )
+
+    builder.runner = BoxControlRunner(execute=DurableController())
+    pending = remote.execute(
+        request(
+            "controller-evidence-submit",
+            "pipeline.submit",
+            {
+                "mode": "image",
+                "selection": toolchain.generation,
+                "targets": ["library"],
+                "recipe_snapshot": snapshot,
+            },
+        )
+    )
+    assert pending["status"] == "pending"
+    first_evidence = pending["artifacts"]["execution_evidence"]
+    assert first_evidence["policy_identity"].startswith("sha256:")
+    assert first_evidence["controller_jobs"]
+    retained_job = first_evidence["controller_jobs"][0]
+    assert retained_job["request_id"].startswith("gha-")
+    assert retained_job["job_id"] == hashlib.sha256(
+        retained_job["request_id"].encode()
+    ).hexdigest()[:32]
+
+    resumed = remote.execute(
+        request(
+            "controller-evidence-resume",
+            "pipeline.resume",
+            {"pipeline_id": pending["pipeline_id"]},
+        )
+    )
+    assert resumed["status"] == "completed"
+    final_jobs = resumed["artifacts"]["execution_evidence"]["controller_jobs"]
+    assert any(
+        item["request_id"] == retained_job["request_id"]
+        and item["job_id"] == retained_job["job_id"]
+        for item in final_jobs
+    )

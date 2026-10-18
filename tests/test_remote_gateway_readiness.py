@@ -115,6 +115,12 @@ def test_capability_contract_declares_generic_submit_and_worker_boundary(tmp_pat
         "required_for": ["pipeline.submit", "pipeline.retry"],
     }
     assert contract["generic_pipeline"]["submit"]["operation"] == "pipeline.submit"
+    assert contract["generic_pipeline"]["submit"]["snapshot_predecessor"] == {
+        "field": "predecessor",
+        "operation": "recipes.snapshot",
+        "required": False,
+        "when_present": "must-bind-same-completed-snapshot",
+    }
     assert contract["generic_pipeline"]["submit"]["modes"] == [
         "bootstrap",
         "image",
@@ -122,6 +128,11 @@ def test_capability_contract_declares_generic_submit_and_worker_boundary(tmp_pat
         "seed-check",
     ]
     assert contract["maintained_workers"]["remote_execution_operation"] is None
+    assert contract["reporting"] == {
+        "execution_evidence_contract": "image-build-remote-execution-evidence-v1",
+        "controller_jobs_limit": 24,
+        "result_bytes_limit": 128 * 1024,
+    }
     runtime = contract["runtime_dependencies"]
     assert runtime["contract"] == "image-build-runtime-dependencies-v1"
     assert runtime["preflight_contract"] == "image-build-runtime-preflight-v1"

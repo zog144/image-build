@@ -7,6 +7,7 @@ reason about an operation without importing or initializing the full CLI.
 REQUEST_SCHEMA = "image-build-remote-operation-v1"
 RESULT_SCHEMA = "image-build-remote-result-v1"
 CAPABILITIES_SCHEMA = "image-build-remote-capabilities-v1"
+EXECUTION_EVIDENCE_SCHEMA = "image-build-remote-execution-evidence-v1"
 
 GENERIC_PIPELINE_MODES = (
     "bootstrap",

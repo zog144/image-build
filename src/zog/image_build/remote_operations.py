@@ -25,6 +25,7 @@ from .runner import BuildExecutionRequest
 
 from .remote_contract import (
     CAPABILITIES_SCHEMA,
+    EXECUTION_EVIDENCE_SCHEMA,
     GENERIC_PIPELINE_MODES,
     REQUEST_SCHEMA,
     RESULT_SCHEMA,
@@ -533,6 +534,33 @@ class RemoteOperations:
             raise ImageBuildError("remote operation owns multiple pipelines")
         return matches[0] if matches else None
 
+    def _validate_submit_snapshot_predecessor(self, request, snapshot):
+        predecessor = request.get("predecessor")
+        if predecessor is None or request["operation"] != "pipeline.submit":
+            return
+        directory = self._directory(predecessor)
+        try:
+            previous_request = json.loads((directory / "request.json").read_text())
+            previous_result = json.loads((directory / "result.json").read_text())
+        except (OSError, ValueError, TypeError) as error:
+            raise ImageBuildError(
+                "pipeline submit predecessor snapshot operation is unavailable"
+            ) from error
+        if (
+            previous_request.get("operation_id") != predecessor
+            or previous_request.get("operation") != "recipes.snapshot"
+            or previous_request.get("source") != request["source"]
+            or previous_result.get("schema") != RESULT_SCHEMA
+            or previous_result.get("operation_id") != predecessor
+            or previous_result.get("operation_type") != "recipes.snapshot"
+            or previous_result.get("status") != "completed"
+            or previous_result.get("terminal_outcome") != "success"
+            or previous_result.get("recipe_identity") != snapshot.snapshot
+        ):
+            raise ImageBuildError(
+                "pipeline submit predecessor must be the completed operation for the same recipe snapshot"
+            )
+
     def _pipeline_arguments(self, request):
         arguments = request["arguments"]
         if set(arguments) - {
@@ -552,6 +580,7 @@ class RemoteOperations:
         snapshot = self._resolve_recipe_snapshot(
             arguments["recipe_snapshot"]
         )
+        self._validate_submit_snapshot_predecessor(request, snapshot)
         packages = set(snapshot.manifest["packages"])
         mode = arguments.get("mode")
         if mode not in GENERIC_PIPELINE_MODES:
@@ -829,6 +858,60 @@ class RemoteOperations:
                 jobs.append(job)
         return commands, jobs, failures, missing
 
+    def _pipeline_selection_generation(self, record):
+        selection = record.get("selection")
+        if not isinstance(selection, str):
+            return None
+        candidate = Path(selection).name
+        return candidate if _GENERATION.fullmatch(candidate) else None
+
+    def _pipeline_execution_evidence(
+        self, record, pipeline_record_digest, jobs
+    ):
+        owner = self._pipeline_owner(record)
+        compact_jobs = []
+        fields = (
+            "job_id",
+            "request_id",
+            "attempt_id",
+            "package",
+            "stage",
+            "phase",
+            "command_index",
+            "state",
+            "outcome",
+            "exit_code",
+            "signal",
+            "journal_reference",
+            "process_cleanup_complete",
+        )
+        for job in jobs[:MAX_COMMANDS]:
+            compact_jobs.append(
+                {key: job.get(key) for key in fields if key in job}
+            )
+        policy = record.get("policy")
+        value = {
+            "contract": EXECUTION_EVIDENCE_SCHEMA,
+            "pipeline_id": record.get("pipeline_id"),
+            "pipeline_operation": record.get("operation"),
+            "pipeline_status": record.get("status"),
+            "pipeline_record_sha256": pipeline_record_digest,
+            "pipeline_owner": owner,
+            "recipe_snapshot": (
+                owner.get("recipe_snapshot") if owner else None
+            ),
+            "source_pins": record.get("source_pins"),
+            "selection_generation": self._pipeline_selection_generation(record),
+            "policy_identity": (
+                None if policy is None else "sha256:" + identity(policy)
+            ),
+            "attempt_ids": sorted(record.get("attempts", {}).values()),
+            "controller_jobs": compact_jobs,
+            "output_generation": record.get("generation"),
+            "observation_snapshot": record.get("observation_snapshot"),
+        }
+        return value
+
     def _pipeline_summary(self, request, pipeline_id, *, raised=None):
         try:
             record, pipeline_record_digest = self._inspect_pipeline_record(
@@ -1031,6 +1114,12 @@ class RemoteOperations:
                     "operation": "pipeline.submit",
                     "modes": list(GENERIC_PIPELINE_MODES),
                     "requires_recipe_snapshot": True,
+                    "snapshot_predecessor": {
+                        "field": "predecessor",
+                        "operation": "recipes.snapshot",
+                        "required": False,
+                        "when_present": "must-bind-same-completed-snapshot",
+                    },
                     "image_like_arguments": [
                         "mode",
                         "selection",
@@ -1063,6 +1152,11 @@ class RemoteOperations:
             "external_observed_state": {
                 "operations": ["pipeline.inspect"],
                 "mutation": False,
+            },
+            "reporting": {
+                "execution_evidence_contract": EXECUTION_EVIDENCE_SCHEMA,
+                "controller_jobs_limit": MAX_COMMANDS,
+                "result_bytes_limit": 128 * 1024,
             },
             "runtime_dependencies": describe_runtime(),
         }
@@ -1146,6 +1240,9 @@ class RemoteOperations:
             terminal_outcome="success",
         )
         result["artifacts"] = {"targets": targets, "dependency_order": list(resolved)}
+        result["artifacts"]["execution_evidence"] = self._pipeline_execution_evidence(
+            record, pipeline_record_digest, jobs
+        )
         return result
 
     def _pipeline_submit(self, request, directory):
