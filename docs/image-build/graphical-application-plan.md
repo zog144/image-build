@@ -1,7 +1,9 @@
 # Post-install graphical application build plan
 
-Status: source-pinned catalogue planning only. These entries are intentionally
-`catalogue-only`; they are not buildable package recipes and are not eligible for
+Status: staged source planning. greetd/agreety now additionally freeze the complete
+upstream Cargo.lock crates.io source closure, but remain `catalogue-only` until
+per-crate license/notice review, PAM/rootfs ABI selection and native build acceptance
+are complete. The other entries remain source-pinned plans. None are eligible for
 automatic installation or runtime launch.
 
 The objective is to publish optional graphical software through the existing
@@ -38,7 +40,7 @@ separate immutable artifacts/views.
 
 Before authoring the final recipes:
 
-1. freeze the full Cargo dependency closure and every crate source/license;
+1. **DONE for source identity:** freeze the full Cargo dependency closure from upstream `Cargo.lock`; the exact crates.io URL/checksum set is retained in both `greetd/cargo-sources.py` and `agreety/cargo-sources.py`. Per-crate license/notice review remains a blocker before binary publication;
 2. verify the selected Rust toolchain is a reviewed image-build input;
 3. determine the exact PAM ABI/configuration expected by the target rootfs;
 4. review upstream/distro PAM-related fixes instead of silently copying a distro

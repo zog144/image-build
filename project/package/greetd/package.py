@@ -5,9 +5,9 @@
   "display_name": "greetd",
   "status": "catalogue-only",
   "role": "Post-install login/session daemon application artifact",
-  "recipe_status": "source-pinned-application-plan",
+  "recipe_status": "cargo-source-closure-frozen",
   "artifact_contract": "applications-v1",
   "activation": "privileged-role-not-approved",
   "source_version": "0.10.3",
-  "license_scope": "GPL-3.0; Cargo dependency review pending"
+  "license_scope": "GPL-3.0; exact Cargo sources frozen; per-crate license review pending"
 }

@@ -14,13 +14,13 @@ EXPECTED = {
         "0.10.3",
         "https://deb.debian.org/debian/pool/main/g/greetd/greetd_0.10.3.orig.tar.gz",
         "ee5cb70e0add4ca9c9fe57e47581ab0002d44c07743fb5492469f3b570db640b",
-        "source-pinned-application-plan",
+        "cargo-source-closure-frozen",
     ),
     "agreety": (
         "0.10.3",
         "https://deb.debian.org/debian/pool/main/g/greetd/greetd_0.10.3.orig.tar.gz",
         "ee5cb70e0add4ca9c9fe57e47581ab0002d44c07743fb5492469f3b570db640b",
-        "source-pinned-application-plan",
+        "cargo-source-closure-frozen",
     ),
     "xorg-server": (
         "21.1.25",
@@ -99,3 +99,28 @@ def test_greetd_and_agreety_share_source_but_are_distinct_application_plans():
     assert greetd == agreety
     assert literal(ROOT / "greetd/package.py")["name"] == "greetd"
     assert literal(ROOT / "agreety/package.py")["name"] == "agreety"
+
+
+def test_greetd_cargo_source_closure_is_exact_and_shared():
+    greetd = literal(ROOT / "greetd/cargo-sources.py")
+    agreety = literal(ROOT / "agreety/cargo-sources.py")
+    assert greetd == agreety
+    assert greetd["schema"] == 1
+    assert greetd["source_version"] == "0.10.3"
+    assert greetd["status"] == "source-closure-frozen"
+    packages = greetd["packages"]
+    assert len(packages) == 60
+    assert len({(item["name"], item["version"]) for item in packages}) == len(packages)
+    assert all(item["url"] == f"https://static.crates.io/crates/{item['name']}/{item['name']}-{item['version']}.crate" for item in packages)
+    assert all(len(item["sha256"]) == 64 for item in packages)
+    assert all(int(item["sha256"], 16) >= 0 for item in packages)
+    assert "per-crate-license-and-notice-review" in greetd["blockers"]
+
+
+def test_greetd_recipe_plan_stays_non_activating_until_security_review():
+    for name in ("greetd", "agreety"):
+        plan = literal(ROOT / name / "recipe-plan.py")
+        assert plan["build_strategy"].startswith("cargo --locked --offline")
+        assert plan["publication"] == "separate applications-v1 artifacts/views"
+        assert plan["activation"] == "not-authorized"
+        assert "controller-owned-greetd-privileged-role-review" in plan["blockers"]
