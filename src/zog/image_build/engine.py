@@ -408,6 +408,8 @@ class ImageBuild(PipelineMixin):
                         'pipeline_id': getattr(self, '_pipeline_record', {}).get('pipeline_id') if getattr(self, '_pipeline_record', None) else None,
                         'stage_id': package.integration.get('stage_id', 'package-build'),
                         'package': package.integration.get('project', name),
+                        'recipe_identity': package.fingerprint,
+                        'source_pin_identity': (getattr(self, '_pipeline_record', None) or {}).get('source_pins'),
                         'phase': phase, 'command_index': command_index,
                         'command': list(command), 'checkpoint': phase + '-' + str(command_index) + '.controller.json',
                     })

@@ -53,6 +53,7 @@ jobs:
             tests/test_runtime_facilities.py \
             tests/test_application_data_targets.py \
             tests/test_certify_manage_software.py \
+            tests/test_post_install_progress.py \
             tests/test_verification_environment.py \
             tests/test_licensing.py \
             tests/test_host_fixture.py \

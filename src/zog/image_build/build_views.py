@@ -1,4 +1,5 @@
 """Read-only command grouping. Authorize the attempt directory before calling."""
+import hashlib
 import json
 from pathlib import Path
 from .errors import ImageBuildError
@@ -26,8 +27,10 @@ def read_build_commands(attempt, *, after=None, limit=50):
         saved = json.loads(saved_path.read_text()) if saved_path.exists() else None
         job_id = None
         if saved is not None:
-            from zog.box_control.build_jobs import BuildJobs
-            job_id = BuildJobs.job_id(saved['request_id'])
+            request_id = saved.get('request_id')
+            if not isinstance(request_id, str) or not request_id:
+                raise ImageBuildError('invalid command request identity')
+            job_id = hashlib.sha256(request_id.encode()).hexdigest()[:32]
             if saved.get('job_id', job_id) != job_id:
                 raise ImageBuildError('command job identity mismatch')
         entries.append(dict(raw, command_key=key, job_id=job_id,
