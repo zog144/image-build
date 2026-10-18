@@ -106,6 +106,7 @@ def test_catalogue_and_every_stage_have_bound_records():
             if catalogue.get('recipe_status') in {
                 'source-pinned-application-plan',
                 'source-pinned-follow-on-plan',
+                'cargo-source-closure-frozen',
             }:
                 assert catalogue.get('status') == 'catalogue-only'
                 assert catalogue.get('artifact_contract') == 'applications-v1'
