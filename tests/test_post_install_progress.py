@@ -134,7 +134,7 @@ def publish(state, receipt):
         "firefox-view",
         application="firefox",
         artifacts=[artifact.artifact],
-        profile="kiosk",
+        profile="application",
     )
     return record_publication(
         state,
