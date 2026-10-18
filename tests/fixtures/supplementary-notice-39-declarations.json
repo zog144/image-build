@@ -1,0 +1,704 @@
+[
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "8a6598d74f990a797c67c334-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/nichmor/arwen/e6ce6f09adb0d39381b7575d2eb2b32517a12557/LICENSE",
+      "sha256": "84854a8d791e42edaa2f6a907ea41aca82cc6166d2764ee119a247944c2e2785",
+      "destination": "supplementary/8a6598d74f990a797c67c334-1/LICENSE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/nichmor/arwen",
+      "revision": "e6ce6f09adb0d39381b7575d2eb2b32517a12557",
+      "path": "LICENSE"
+    },
+    "path": "LICENSE",
+    "scope": "arwen-codesign 0.0.1-alpha.1",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "742bd84fbcfdde00d20d6952-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/akhilles/crc-catalog/b500ea693c552f8d946e290722a7b3ee8b9a7ee2/LICENSES/Apache-2.0.txt",
+      "sha256": "d3cdb764b98283ee7c3a3cea8d374e2a2957322374378d1f3263f4d512741fc3",
+      "destination": "supplementary/742bd84fbcfdde00d20d6952-1/Apache-2.0.txt",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/akhilles/crc-catalog",
+      "revision": "b500ea693c552f8d946e290722a7b3ee8b9a7ee2",
+      "path": "LICENSES/Apache-2.0.txt"
+    },
+    "path": "Apache-2.0.txt",
+    "scope": "crc-catalog 2.4.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "742bd84fbcfdde00d20d6952-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/akhilles/crc-catalog/b500ea693c552f8d946e290722a7b3ee8b9a7ee2/LICENSES/MIT.txt",
+      "sha256": "5ef8fcfb6cccec8fcae043c834099a60c8b7406408db576e026d2b7e67dc5cf5",
+      "destination": "supplementary/742bd84fbcfdde00d20d6952-2/MIT.txt",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/akhilles/crc-catalog",
+      "revision": "b500ea693c552f8d946e290722a7b3ee8b9a7ee2",
+      "path": "LICENSES/MIT.txt"
+    },
+    "path": "MIT.txt",
+    "scope": "crc-catalog 2.4.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "435fa1ba3bb0312a3aa3bf48-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/CycloneDX/cyclonedx-rust-cargo/649dcba64d9e0e34e233450e0f1e7b96ea95d02d/LICENSE",
+      "sha256": "8d774b8e55770e19ccdbebe68a10c7505efaa6988257e87bfc58bf0c6675817b",
+      "destination": "supplementary/435fa1ba3bb0312a3aa3bf48-1/LICENSE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/CycloneDX/cyclonedx-rust-cargo",
+      "revision": "649dcba64d9e0e34e233450e0f1e7b96ea95d02d",
+      "path": "LICENSE"
+    },
+    "path": "LICENSE",
+    "scope": "cyclonedx-bom-macros 0.1.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "435fa1ba3bb0312a3aa3bf48-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/CycloneDX/cyclonedx-rust-cargo/649dcba64d9e0e34e233450e0f1e7b96ea95d02d/NOTICE",
+      "sha256": "b4f86283f298a2b75372e8d2406c8406de1f70e91f0f78a784919ae581ea8de5",
+      "destination": "supplementary/435fa1ba3bb0312a3aa3bf48-2/NOTICE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/CycloneDX/cyclonedx-rust-cargo",
+      "revision": "649dcba64d9e0e34e233450e0f1e7b96ea95d02d",
+      "path": "NOTICE"
+    },
+    "path": "NOTICE",
+    "scope": "cyclonedx-bom-macros 0.1.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "6617a363198bc1e94bd41213-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT",
+      "sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1",
+      "destination": "supplementary/6617a363198bc1e94bd41213-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/jni-rs/jni-sys",
+      "revision": "64d77b7a5f119d7b55b4e2c169a4668067ff59e6",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "jni-sys-macros 0.4.1",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "6617a363198bc1e94bd41213-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE",
+      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+      "destination": "supplementary/6617a363198bc1e94bd41213-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/jni-rs/jni-sys",
+      "revision": "64d77b7a5f119d7b55b4e2c169a4668067ff59e6",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "jni-sys-macros 0.4.1",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "76233634cb62216225e27f97-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/phylum-dev/purl/93152aae4005766d3ea7dcd0e5d8beaee3f0fad8/LICENSE",
+      "sha256": "93dd22d1a0fbb1ccb4e320a7ac1f5f58c7338eb11f8893756b7819cd1b62b5e3",
+      "destination": "supplementary/76233634cb62216225e27f97-1/LICENSE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/phylum-dev/purl",
+      "revision": "93152aae4005766d3ea7dcd0e5d8beaee3f0fad8",
+      "path": "LICENSE"
+    },
+    "path": "LICENSE",
+    "scope": "purl 0.1.6",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "1b33638273fa6a2228d48f57-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/udoprog/relative-path/6d267fbd85b257e4416c9f020131c6da168e1d3d/LICENSE-MIT",
+      "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+      "destination": "supplementary/1b33638273fa6a2228d48f57-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/udoprog/relative-path",
+      "revision": "6d267fbd85b257e4416c9f020131c6da168e1d3d",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "relative-path 1.9.3",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "1b33638273fa6a2228d48f57-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/udoprog/relative-path/6d267fbd85b257e4416c9f020131c6da168e1d3d/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "destination": "supplementary/1b33638273fa6a2228d48f57-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/udoprog/relative-path",
+      "revision": "6d267fbd85b257e4416c9f020131c6da168e1d3d",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "relative-path 1.9.3",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "27928674212fe70cbf269f38-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/rustls/rustls-platform-verifier/da3d9c36f48fb9f8f97e94f132fdab67ab0fc75b/LICENSE-MIT",
+      "sha256": "1c7cf76689c837a68ed8d704994e52a0f2940c087958f860d17f3186afbdcc0c",
+      "destination": "supplementary/27928674212fe70cbf269f38-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/rustls/rustls-platform-verifier",
+      "revision": "da3d9c36f48fb9f8f97e94f132fdab67ab0fc75b",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "rustls-platform-verifier-android 0.1.1",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "27928674212fe70cbf269f38-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/rustls/rustls-platform-verifier/da3d9c36f48fb9f8f97e94f132fdab67ab0fc75b/LICENSE-APACHE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "destination": "supplementary/27928674212fe70cbf269f38-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/rustls/rustls-platform-verifier",
+      "revision": "da3d9c36f48fb9f8f97e94f132fdab67ab0fc75b",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "rustls-platform-verifier-android 0.1.1",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "e36fdcf0c412734826af8c33-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/KillingSpark/zstd-rs/fcc40ba1bc766ba38eca852cb64550c827d7068d/LICENSE",
+      "sha256": "d715eb0d9cfe1cc0cc22577e387436aa568b31ca272a7c837004dc0cdde925b5",
+      "destination": "supplementary/e36fdcf0c412734826af8c33-1/LICENSE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/KillingSpark/zstd-rs",
+      "revision": "fcc40ba1bc766ba38eca852cb64550c827d7068d",
+      "path": "LICENSE"
+    },
+    "path": "LICENSE",
+    "scope": "ruzstd 0.8.2",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "731c02a25d3fa8519a469d55-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/Keats/validator/2f243314bb0e484a66c49fd2145a8e15f8449187/LICENSE",
+      "sha256": "3f91b318232b91ccedaadc2b3fba4c3f3d2cc5300a685a97f24b167d11df2fe1",
+      "destination": "supplementary/731c02a25d3fa8519a469d55-1/LICENSE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/Keats/validator",
+      "revision": "2f243314bb0e484a66c49fd2145a8e15f8449187",
+      "path": "LICENSE"
+    },
+    "path": "LICENSE",
+    "scope": "validator 0.19.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "9943e51f3f91da5551ca551f-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE",
+      "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+      "destination": "supplementary/9943e51f3f91da5551ca551f-1/LICENSE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/tokio-rs/valuable",
+      "revision": "9efc29b6e58cef28f6566a47aa7e142a55fead77",
+      "path": "LICENSE"
+    },
+    "path": "LICENSE",
+    "scope": "valuable 0.1.1",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "63adc2bb395e12b9b8c2b7a7-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasi-rs/06ce201370fcde0d1b0d47cac8ecb1b0b312c9f9/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "destination": "supplementary/63adc2bb395e12b9b8c2b7a7-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasi-rs",
+      "revision": "06ce201370fcde0d1b0d47cac8ecb1b0b312c9f9",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "wasip3 0.4.0+wasi-0.3.0-rc-2026-01-06",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "63adc2bb395e12b9b8c2b7a7-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasi-rs/06ce201370fcde0d1b0d47cac8ecb1b0b312c9f9/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "destination": "supplementary/63adc2bb395e12b9b8c2b7a7-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasi-rs",
+      "revision": "06ce201370fcde0d1b0d47cac8ecb1b0b312c9f9",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "wasip3 0.4.0+wasi-0.3.0-rc-2026-01-06",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "63adc2bb395e12b9b8c2b7a7-3",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasi-rs/06ce201370fcde0d1b0d47cac8ecb1b0b312c9f9/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+      "destination": "supplementary/63adc2bb395e12b9b8c2b7a7-3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasi-rs",
+      "revision": "06ce201370fcde0d1b0d47cac8ecb1b0b312c9f9",
+      "path": "LICENSE-Apache-2.0_WITH_LLVM-exception"
+    },
+    "path": "LICENSE-Apache-2.0_WITH_LLVM-exception",
+    "scope": "wasip3 0.4.0+wasi-0.3.0-rc-2026-01-06",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "82d9c127638738bcaca6b029-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "destination": "supplementary/82d9c127638738bcaca6b029-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "wasm-encoder 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "82d9c127638738bcaca6b029-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "destination": "supplementary/82d9c127638738bcaca6b029-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "wasm-encoder 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "82d9c127638738bcaca6b029-3",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+      "destination": "supplementary/82d9c127638738bcaca6b029-3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-Apache-2.0_WITH_LLVM-exception"
+    },
+    "path": "LICENSE-Apache-2.0_WITH_LLVM-exception",
+    "scope": "wasm-encoder 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "aa96fb2a41287172dda2f667-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "destination": "supplementary/aa96fb2a41287172dda2f667-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "wasm-metadata 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "aa96fb2a41287172dda2f667-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "destination": "supplementary/aa96fb2a41287172dda2f667-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "wasm-metadata 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "aa96fb2a41287172dda2f667-3",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+      "destination": "supplementary/aa96fb2a41287172dda2f667-3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-Apache-2.0_WITH_LLVM-exception"
+    },
+    "path": "LICENSE-Apache-2.0_WITH_LLVM-exception",
+    "scope": "wasm-metadata 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "84899d58eae97f688f38a4c4-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "destination": "supplementary/84899d58eae97f688f38a4c4-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "wasmparser 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "84899d58eae97f688f38a4c4-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "destination": "supplementary/84899d58eae97f688f38a4c4-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "wasmparser 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "84899d58eae97f688f38a4c4-3",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+      "destination": "supplementary/84899d58eae97f688f38a4c4-3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-Apache-2.0_WITH_LLVM-exception"
+    },
+    "path": "LICENSE-Apache-2.0_WITH_LLVM-exception",
+    "scope": "wasmparser 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "1432b0598b7de360b02c64be-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/rustls/webpki-roots/be948464fd5907af6227213a066743a161221688/LICENSE-CCADB",
+      "sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8",
+      "destination": "supplementary/1432b0598b7de360b02c64be-1/LICENSE-CCADB",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/rustls/webpki-roots",
+      "revision": "be948464fd5907af6227213a066743a161221688",
+      "path": "LICENSE-CCADB"
+    },
+    "path": "LICENSE-CCADB",
+    "scope": "webpki-root-certs 1.0.7",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "8ff1a0a8dbbefc73cdba193e-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/rustls/webpki-roots/be948464fd5907af6227213a066743a161221688/LICENSE-CCADB",
+      "sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8",
+      "destination": "supplementary/8ff1a0a8dbbefc73cdba193e-1/LICENSE-CCADB",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/rustls/webpki-roots",
+      "revision": "be948464fd5907af6227213a066743a161221688",
+      "path": "LICENSE-CCADB"
+    },
+    "path": "LICENSE-CCADB",
+    "scope": "webpki-roots 1.0.7",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "56221a7d8d1cc0b2d436ae19-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/retep998/winapi-rs/9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa/LICENSE-MIT",
+      "sha256": "5b19674a1db628a475850a131956ed49521b744e3dda8f5a94141f9aba681219",
+      "destination": "supplementary/56221a7d8d1cc0b2d436ae19-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/retep998/winapi-rs",
+      "revision": "9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "winapi-i686-pc-windows-gnu 0.4.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "56221a7d8d1cc0b2d436ae19-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/retep998/winapi-rs/9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa/LICENSE-APACHE",
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+      "destination": "supplementary/56221a7d8d1cc0b2d436ae19-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/retep998/winapi-rs",
+      "revision": "9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "winapi-i686-pc-windows-gnu 0.4.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "1f1d696cb8820030c08f0b8a-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/retep998/winapi-rs/9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa/LICENSE-MIT",
+      "sha256": "5b19674a1db628a475850a131956ed49521b744e3dda8f5a94141f9aba681219",
+      "destination": "supplementary/1f1d696cb8820030c08f0b8a-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/retep998/winapi-rs",
+      "revision": "9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "winapi-x86_64-pc-windows-gnu 0.4.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "1f1d696cb8820030c08f0b8a-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/retep998/winapi-rs/9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa/LICENSE-APACHE",
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+      "destination": "supplementary/1f1d696cb8820030c08f0b8a-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/retep998/winapi-rs",
+      "revision": "9497609ef44cc9bcd16cd2411c0ee6ccaf5483aa",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "winapi-x86_64-pc-windows-gnu 0.4.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "d5c4524e9f31c94093e56424-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "destination": "supplementary/d5c4524e9f31c94093e56424-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "wit-component 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "d5c4524e9f31c94093e56424-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "destination": "supplementary/d5c4524e9f31c94093e56424-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "wit-component 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "d5c4524e9f31c94093e56424-3",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+      "destination": "supplementary/d5c4524e9f31c94093e56424-3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-Apache-2.0_WITH_LLVM-exception"
+    },
+    "path": "LICENSE-Apache-2.0_WITH_LLVM-exception",
+    "scope": "wit-component 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "8891c2c6ed6a608fdf697748-1",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "destination": "supplementary/8891c2c6ed6a608fdf697748-1/LICENSE-MIT",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-MIT"
+    },
+    "path": "LICENSE-MIT",
+    "scope": "wit-parser 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "8891c2c6ed6a608fdf697748-2",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "destination": "supplementary/8891c2c6ed6a608fdf697748-2/LICENSE-APACHE",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-APACHE"
+    },
+    "path": "LICENSE-APACHE",
+    "scope": "wit-parser 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  },
+  {
+    "contract": "image-build-supplementary-notice-v1",
+    "id": "8891c2c6ed6a608fdf697748-3",
+    "source": {
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+      "destination": "supplementary/8891c2c6ed6a608fdf697748-3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "archive": false
+    },
+    "upstream": {
+      "repository": "https://github.com/bytecodealliance/wasm-tools",
+      "revision": "d4e317f22c3bace76cb3205003bcc34b4929037d",
+      "path": "LICENSE-Apache-2.0_WITH_LLVM-exception"
+    },
+    "path": "LICENSE-Apache-2.0_WITH_LLVM-exception",
+    "scope": "wit-parser 0.244.0",
+    "notes": "Independently retrieved same-revision upstream notice; not a member of the original crate. No actual binary inclusion claim."
+  }
+]

@@ -1,0 +1,16 @@
+# Data only; parsed with ast.literal_eval.
+{'schema': 1,
+ 'architecture': 'x86_64',
+ 'stages': [{'id': 'libpng-final',
+             'project': 'libpng',
+             'stage': 'final',
+             'recipe': 'libpng/stages/final'},
+            {'id': 'freetype-final',
+             'project': 'freetype',
+             'stage': 'final',
+             'recipe': 'freetype/stages/final'},
+            {'id': 'fontconfig-final',
+             'project': 'fontconfig',
+             'stage': 'final',
+             'recipe': 'fontconfig/stages/final'}],
+ 'targets': ['libpng-final', 'freetype-final', 'fontconfig-final']}

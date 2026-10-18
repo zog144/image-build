@@ -1,0 +1,1 @@
+{"command": ["bash", "jobs/amazon_linux_acceptance.sh"], "timeout_seconds": 1200, "outputs": ["evidence"], "environment": {}}

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=80,<83"]
+build-backend = "setuptools.build_meta"
+
+# Component-development metadata only. Public Python publication is the
+# aggregate "zog" distribution assembled by release-build.
+[project]
+name = "image-build"
+version = "0.2.0.dev5"
+description = "Immutable integrated rootfs construction for the Zog project"
+requires-python = ">=3.11"
+license = "BSD-3-Clause OR GPL-3.0-only"
+license-files = ["LICENSE", "LICENSES/*.txt", "THIRD-PARTY-NOTICES.md"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["zog.image_build*"]
+namespaces = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["systemd: requires the box-control build-job integration"]

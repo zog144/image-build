@@ -1,0 +1,15 @@
+# Data only; parsed with ast.literal_eval.
+{'schema': 1,
+ 'package': 'python-libevdev',
+ 'version': '0.13.1',
+ 'source': {'url': 'https://files.pythonhosted.org/packages/source/l/libevdev/libevdev-0.13.1.tar.gz',
+            'sha256': 'dc3369cd1401767b9ecb1117cd6b73faba9038e3bd9e1695a710a9e9d9415e8d'},
+ 'status': 'declared',
+ 'expression': 'MIT',
+ 'scope': 'Version-bound PyPI source distribution.',
+ 'evidence': [{'path': 'libevdev-0.13.1/COPYING',
+               'sha256': 'a547b196da4e5bb9588a6e24f1f36ae9e2349ca5375e2cf9c315186e237d9f6d',
+               'source_sha256': 'dc3369cd1401767b9ecb1117cd6b73faba9038e3bd9e1695a710a9e9d9415e8d'}],
+ 'components': [],
+ 'patches': [],
+ 'notes': ['No downstream patches. Upstream build-system metadata requires hatchling, but the package payload is pure Python; Zog directly installs the reviewed libevdev package directory for the xorgproto test-support role.']}

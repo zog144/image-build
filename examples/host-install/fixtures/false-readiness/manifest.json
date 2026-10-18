@@ -1,0 +1,169 @@
+{
+  "artifact_id": "f52162fd53064a6c5fba511650d432dab35b2fe71448e71ca80b8001b57723dc",
+  "boot_bundle": null,
+  "evidence": {
+    "acceptance": [],
+    "packages": []
+  },
+  "generation": {
+    "generation": "030c71d654f5209dd9c9a39493170564613f3471b417c97be50d9b214a34dc42",
+    "inputs": {
+      "architecture": "x86_64",
+      "fixture": "host-install-v1",
+      "kind": "host-bootstrap"
+    },
+    "kind": "host-bootstrap",
+    "outputs": [
+      {
+        "kind": "symlink",
+        "mode": 511,
+        "path": "bin",
+        "target": "usr/bin"
+      },
+      {
+        "kind": "directory",
+        "mode": 1023,
+        "path": "tmp"
+      },
+      {
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr"
+      },
+      {
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr/bin"
+      },
+      {
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr/share"
+      },
+      {
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr/share/host-install-fixture"
+      },
+      {
+        "kind": "file",
+        "mode": 420,
+        "path": "usr/share/host-install-fixture/README",
+        "sha256": "906a552c404cff4f6f68e619147829cb05187b34f20cad3405647fa7114d054c"
+      }
+    ],
+    "schema": 2
+  },
+  "kind": "host-install-artifact",
+  "ownership_policy": "all-root-v1",
+  "readiness": {
+    "acceptance_records": [],
+    "blockers": [
+      "missing executable: usr/lib/systemd/systemd",
+      "missing executable: usr/bin/bash",
+      "missing executable: usr/bin/python3",
+      "missing executable: usr/lib/systemd/systemd-networkd",
+      "Host service composition and writable-path mapping require acceptance",
+      "Python SSL/SQLite and network operation have not been executed by this verifier",
+      "Foreign initramfs root/state mounting compatibility requires acceptance",
+      "First boot, enrollment and authenticated control operation remain untested"
+    ],
+    "evidence_status": "caller-supplied; preserved, not independently accepted",
+    "installable": true,
+    "presence_checks": {
+      "network": false,
+      "pid1": false,
+      "python": false,
+      "shell": false
+    },
+    "profile": "foreign-kernel-host-v1"
+  },
+  "rootfs": {
+    "bytes": 10240,
+    "entries": [
+      {
+        "gid": 0,
+        "kind": "symlink",
+        "mode": 511,
+        "path": "bin",
+        "target": "usr/bin",
+        "uid": 0
+      },
+      {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 1023,
+        "path": "tmp",
+        "uid": 0
+      },
+      {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr",
+        "uid": 0
+      },
+      {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr/bin",
+        "uid": 0
+      },
+      {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr/share",
+        "uid": 0
+      },
+      {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 493,
+        "path": "usr/share/host-install-fixture",
+        "uid": 0
+      },
+      {
+        "gid": 0,
+        "kind": "file",
+        "mode": 420,
+        "path": "usr/share/host-install-fixture/README",
+        "sha256": "906a552c404cff4f6f68e619147829cb05187b34f20cad3405647fa7114d054c",
+        "uid": 0
+      }
+    ],
+    "file": "rootfs.tar",
+    "sha256": "22dc338a9192144ad1e832a86722899397815363d64f4b2136e48137bb498b9b"
+  },
+  "schema": 1,
+  "security": {
+    "measured_boot": false,
+    "public_release_reviewed": false,
+    "verified_boot": false
+  },
+  "storage_intent": {
+    "applications": {
+      "partition": "APPLICATIONS",
+      "read_only": false
+    },
+    "host": {
+      "partition": "HOST-A-or-HOST-B",
+      "read_only": true
+    },
+    "runtime": {
+      "paths": [
+        "/run",
+        "/tmp",
+        "/dev",
+        "/proc",
+        "/sys"
+      ],
+      "persistent": false
+    },
+    "state": {
+      "partition": "STATE",
+      "read_only": false
+    }
+  }
+}

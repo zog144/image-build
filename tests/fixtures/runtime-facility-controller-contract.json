@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "box_control": {
+    "repository": "zog144/box-control",
+    "revision": "b61f0f1c3f697db33e1edf61c84bfae85d7a7e16",
+    "path": "box-control/src/zog/box_control/runtime/scaffold.py",
+    "blob_sha": "35e2ae4aea3a03496d385d8338a4644528049669"
+  },
+  "root_control": {
+    "repository": "zog144/root-control",
+    "revision": "39ece63e33e6ec71463216eb6eea908ba81a244c",
+    "path": "src/zog/root_control/systemd.py",
+    "blob_sha": "430885d4899cff70f140a36122481e3229c0cda5"
+  },
+  "runtime_facility_roots": [
+    "applications",
+    "run",
+    "proc",
+    "sys",
+    "dev"
+  ],
+  "admission": "absent-or-empty-real-directory",
+  "materialization": "private-runtime-scaffold"
+}

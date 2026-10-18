@@ -1,0 +1,75 @@
+name: Public image-build source checks
+
+on:
+  pull_request:
+    branches: [main, unstable]
+  push:
+    branches: [main, unstable]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-build-source-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-and-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out candidate source only
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5; Node 24
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6; Node 24
+        with:
+          python-version: "3.12"
+
+      - name: Refuse private or unreviewed source contents
+        run: python tools/public_candidate_preflight.py --root .
+
+      - name: Install bounded test and packaging tools
+        run: python -m pip install "pytest==8.4.2" "build==1.6.1" "setuptools==82.0.1" "wheel==0.45.1"
+
+      - name: Compile maintained source and isolated unit tests
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/image-build-pycache
+        run: python -m compileall -q src tests
+
+      - name: Validate namespace and purely local contracts
+        run: |
+          python -m pytest -q -p no:cacheprovider \
+            tests/test_namespace_layout.py \
+            tests/test_application_software.py \
+            tests/test_application_views.py \
+            tests/test_immutable_objects.py \
+            tests/test_publication_recovery.py \
+            tests/test_runtime_facilities.py \
+            tests/test_application_data_targets.py \
+            tests/test_certify_manage_software.py \
+            tests/test_post_install_progress.py \
+            tests/test_graphical_application_catalogue.py \
+            tests/test_verification_environment.py \
+            tests/test_licensing.py \
+            tests/test_host_fixture.py \
+            tests/test_worker_identity.py
+
+      - name: Build from the exact indexed source tree outside the checkout
+        run: |
+          mkdir -p "$RUNNER_TEMP/image-build-source" "$RUNNER_TEMP/image-build-dist"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/image-build-source"
+          python -m build --no-isolation --outdir "$RUNNER_TEMP/image-build-dist" "$RUNNER_TEMP/image-build-source"
+
+      - name: Inspect built artifacts before any upload
+        run: python tools/check_public_component_artifacts.py "$RUNNER_TEMP/image-build-dist"
+
+# No secrets, deployment, privileged jobs, cross-repository token-backed
+# checkout, live host enrollment, container image publish, artifact upload,
+# or package release. Native/systemd and compiled third-party redistribution
+# require separate trusted-environment acceptance.

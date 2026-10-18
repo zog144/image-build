@@ -1,0 +1,8 @@
+{
+  "distribution": "amazon-linux",
+  "release": "2023",
+  "architecture": "x86_64",
+  "kernel_release": "6.fixture",
+  "packages": ["kernel-6.fixture.amzn2023.x86_64"],
+  "acquisition": "EXAMPLE ONLY: replace with exact package versions, repository/source references, acquisition method and initramfs generation inputs"
+}

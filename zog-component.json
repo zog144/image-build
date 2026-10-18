@@ -1,0 +1,22 @@
+{
+  "schema": 2,
+  "program": "image-build",
+  "python_package": "zog.image_build",
+  "version": "0.2.0.dev5",
+  "scripts": {
+    "image-build": "zog.image_build.__main__:main"
+  },
+  "component_dependencies": [
+    "box-control",
+    "build-record",
+    "host-identify"
+  ],
+  "external_dependencies": [],
+  "package_data": [],
+  "license_notice_paths": [
+    "LICENSE",
+    "LICENSES/BSD-3-Clause.txt",
+    "LICENSES/GPL-3.0-only.txt",
+    "THIRD-PARTY-NOTICES.md"
+  ]
+}
