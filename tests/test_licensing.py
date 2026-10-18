@@ -101,6 +101,19 @@ def test_catalogue_and_every_stage_have_bound_records():
     for directory in projects:
         stages=list(directory.glob('stages/*'))
         if not stages:
+            catalogue_path=directory/'package.py'
+            catalogue=literal(catalogue_path) if catalogue_path.exists() else {}
+            if catalogue.get('recipe_status') in {
+                'source-pinned-application-plan',
+                'source-pinned-follow-on-plan',
+            }:
+                assert catalogue.get('status') == 'catalogue-only'
+                assert catalogue.get('artifact_contract') == 'applications-v1'
+                assert isinstance(catalogue.get('license_scope'), str)
+                assert catalogue['license_scope']
+                assert (directory/'sources.py').exists()
+                assert not (directory/'license.py').exists()
+                continue
             sources_path=directory/'sources.py'
             record=(load(directory/'license.py',literal(sources_path))
                     if sources_path.exists() else load(directory/'license.py'))
