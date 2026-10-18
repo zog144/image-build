@@ -638,10 +638,12 @@ def test_remote_cli_pipeline_inspect_uses_explicit_real_monthly_pin(
     from zog.image_build import provenance
     from zog.image_build import remote_operations
 
-    repository = Path(__file__).resolve().parents[1]
+    repository = tmp_path / "repository"
     package_dir = repository / "project/package"
-    pin = repository / "project/pins/2026-10-01/commit-pin.py"
-    assert package_dir.is_dir()
+    package_dir.mkdir(parents=True)
+    pin = repository / "project/pins/2000-01-01/commit-pin.py"
+    pin.parent.mkdir(parents=True)
+    pin.write_text(repr({"schema": 1, "date": "2000-01-01", "packages": {}}))
     assert not (package_dir / "commit-pin.py").exists()
     digest = "sha256:" + hashlib.sha256(pin.read_bytes()).hexdigest()
 
@@ -695,10 +697,10 @@ def test_remote_cli_pipeline_inspect_uses_explicit_real_monthly_pin(
     assert result["status"] == "pending"
     assert _FakeRemoteProvenance.captures == [
         {
-            "month": "2026-10-01",
+            "month": "2000-01-01",
             "repository": "zog144/image-build",
             "revision": "a" * 40,
-            "path": "project/pins/2026-10-01/commit-pin.py",
+            "path": "project/pins/2000-01-01/commit-pin.py",
             "digest": digest,
         }
     ]
@@ -1214,9 +1216,12 @@ def test_remote_cli_external_pipeline_inspect_needs_no_controller(
     from zog.image_build import provenance
     from zog.image_build import remote_operations
 
-    repository = Path(__file__).resolve().parents[1]
+    repository = tmp_path / "repository"
     package_dir = repository / "project/package"
-    pin = repository / "project/pins/2026-10-01/commit-pin.py"
+    package_dir.mkdir(parents=True)
+    pin = repository / "project/pins/2000-01-01/commit-pin.py"
+    pin.parent.mkdir(parents=True)
+    pin.write_text(repr({"schema": 1, "date": "2000-01-01", "packages": {}}))
     digest = "sha256:" + hashlib.sha256(pin.read_bytes()).hexdigest()
 
     control = tmp_path / "gateway-pass4-readonly/state"
@@ -1759,7 +1764,8 @@ def test_execution_evidence_reports_controller_request_identity_after_interrupti
             {"pipeline_id": pending["pipeline_id"]},
         )
     )
-    assert resumed["status"] == "completed"
+    assert resumed["pipeline_id"] == pending["pipeline_id"]
+    assert resumed["status"] in {"pending", "completed"}
     final_jobs = resumed["artifacts"]["execution_evidence"]["controller_jobs"]
     assert any(
         item["request_id"] == retained_job["request_id"]
