@@ -12,7 +12,7 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
-import secrets
+import uuid
 
 from .application_software import ApplicationSoftwareStore, compatibility
 from .application_views import ApplicationSoftwareViewStore
@@ -631,7 +631,7 @@ def snapshot(state_dir, *, applications, after=None, limit=4, command_limit=16):
         item["observed_at"] = observed
     return {
         "schema": SCHEMA,
-        "snapshot_id": secrets.token_hex(16),
+        "snapshot_id": uuid.uuid4().hex,
         "observed_at": observed,
         "producer": "image-build",
         "selection_owner": SELECTION_OWNER,
