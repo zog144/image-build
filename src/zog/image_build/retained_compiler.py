@@ -19,6 +19,12 @@ from .filesystem import inventory, write_json
 from .final_compiler import ACCEPTANCE, assemble, replacement_records, successful_execution
 from .glibc_final import wait_for
 from .metadata import identity
+from .toolchain_contract import (
+    artifact_record,
+    specification_binding,
+    verification_binding,
+    verification_record,
+)
 from .native import pipeline
 from .stages import recorded_root, stage_recipes
 
@@ -127,18 +133,27 @@ def run(project, catalogue, controller, retained, ownership, work, test_job, ins
                   'printf "eval(6*7)\\n" | /selfhost-m4/usr/bin/m4 | grep -x 42']],
                 {'compiler': candidate.generation, 'm4': m4.generation}))
             m4_execution = successful_execution(m4_attempt)
+            toolchain_verification = verification_record(
+                evidence, execution, m4_evidence, m4_execution
+            )
             with builder.locked():
                 final = builder._publish(candidate.root, {'schema': 2, 'kind': 'toolchain', 'stage': 2,
                     'architecture': platform.machine(), 'parent': candidate.generation,
                     'bootstrap': 'gcc-three-stage-comparison', 'intent': identity(binding),
-                    'acceptance': identity({'compiler': evidence, 'execution': execution,
-                        'm4': m4_evidence, 'm4_execution': m4_execution}), 'outputs': inventory(candidate.root)},
+                    'acceptance': toolchain_verification['acceptance_identity'],
+                    'toolchain_specification': specification_binding(),
+                    'toolchain_verification': verification_binding(toolchain_verification),
+                    'outputs': inventory(candidate.root)},
                     'toolchain', {'stage': 2, 'self_hosted': True, 'source_built': True,
-                                  'build_environment_complete': True})
+                                  'build_environment_complete': True,
+                                  'toolchain_verification': toolchain_verification,
+                                  'toolchain_artifact': artifact_record(toolchain_verification),
+                                  'verification_execution': execution})
                 builder._activate(final, 'toolchain-active')
             result = {'phase': 'complete', 'generation': final.generation, 'root': str(final.root),
                       'self_hosted': True, 'gcc_version': version, 'm4_generation': m4.generation,
-                      'test_job': test_job, 'install_job': install_job}
+                      'test_job': test_job, 'install_job': install_job,
+                      'toolchain_artifact': final.manifest['toolchain_artifact']}
             write_json(result_path, result)
             return result
         except Exception as error:

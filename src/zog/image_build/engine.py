@@ -44,6 +44,9 @@ def read_selection(directory):
             or manifest.get("self_hosted") != (manifest["inputs"]["stage"] == 2)
         ):
             raise ImageBuildError("toolchain stage mismatch")
+        if manifest["kind"] == "toolchain":
+            from .toolchain_contract import validate_publication
+            validate_publication(manifest["inputs"], manifest)
         if identity(manifest["inputs"]) != manifest["generation"]:
             raise ImageBuildError("generation input identity mismatch")
         from .rootfs_compatibility import validate_manifest
@@ -188,6 +191,9 @@ class ImageBuild(PipelineMixin):
             or details.get('self_hosted') != (inputs['stage'] == 2)
         ):
             raise ImageBuildError('generation publication stage mismatch')
+        if kind == 'toolchain':
+            from .toolchain_contract import validate_publication
+            validate_publication(inputs, details)
         fingerprint = identity(inputs)
         store = self.state / "image-build" / "generations"
         ensure_directory(store)

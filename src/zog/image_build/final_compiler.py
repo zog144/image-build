@@ -18,6 +18,12 @@ from .native import pipeline, remove_owned
 from .stages import stage_recipes, recorded_root
 from .local_network import FILES as NETWORK_FILES, install as install_network
 from .compiler_environment import account_files, install_accounts, GENERATE_LOCALE, ACCOUNT_PREFLIGHT
+from .toolchain_contract import (
+    artifact_record,
+    specification_binding,
+    verification_binding,
+    verification_record,
+)
 
 PREFLIGHT = r'''set -eu
 test "$(id -u)" != 0
@@ -195,16 +201,27 @@ def run(project, catalogue, controller, selection, arithmetic, ownership, work):
                 lambda root: (shutil.copytree(compiler.root, root, symlinks=True), shutil.copytree(m4.root, root / 'selfhost-m4', symlinks=True)))
             m4_evidence, m4_execution = check('m4-installed', probe,
                 'printf "eval(6*7)\\n" | /selfhost-m4/usr/bin/m4 | grep -x 42', {'compiler': compiler.generation, 'm4': m4.generation})
+            toolchain_verification = verification_record(
+                evidence, execution, m4_evidence, m4_execution
+            )
             with builder.locked():
                 final = builder._publish(compiler.root, {'schema': 2, 'kind': 'toolchain', 'stage': 2,
                     'architecture': platform.machine(), 'parent': compiler.generation,
                     'bootstrap': 'gcc-three-stage-comparison', 'intent': identity(binding),
-                    'acceptance': identity({'compiler': evidence, 'execution': execution, 'm4': m4_evidence, 'm4_execution': m4_execution}),
+                    'acceptance': toolchain_verification['acceptance_identity'],
+                    'toolchain_specification': specification_binding(),
+                    'toolchain_verification': verification_binding(toolchain_verification),
                     'composition_policy': POLICY}, 'toolchain',
-                    {'stage': 2, 'self_hosted': True, 'source_built': True, 'build_environment_complete': True})
+                    {'stage': 2, 'self_hosted': True, 'source_built': True,
+                     'build_environment_complete': True,
+                     'toolchain_verification': toolchain_verification,
+                     'toolchain_artifact': artifact_record(toolchain_verification),
+                     'verification_execution': execution})
                 builder._activate(final, 'toolchain-active')
             result = {'phase': 'complete', 'generation': final.generation, 'root': str(final.root),
-                      'self_hosted': True, 'gcc_bootstrap': 'three-stage-comparison', 'm4_generation': m4.generation}
+                      'self_hosted': True, 'gcc_bootstrap': 'three-stage-comparison',
+                      'm4_generation': m4.generation,
+                      'toolchain_artifact': final.manifest['toolchain_artifact']}
             write_json(result_path, result)
             for label in ('account-environment', 'network-environment', 'test-environment', 'final-linker', 'final-compiler', 'm4-probe'):
                 path = work / (label + '-root')
