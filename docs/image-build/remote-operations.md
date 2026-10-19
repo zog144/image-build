@@ -32,6 +32,9 @@ Initial operations are:
   recipe set from exact repository catalogue entries plus the reviewed monthly pin.
 - `worker.inspect`: return the machine-readable maintained-worker routing contract;
   it does not execute a worker.
+- `toolchain.specification.inspect`: return the producer-owned toolchain bootstrap,
+  verification and immutable final-artifact specification. It is discovery only and
+  does not execute a maintained worker.
 - `package.inspect`: report source identities, dependencies, outputs, licensing and
   source provenance for one package.
 - `dependencies.resolve`: return deterministic dependency order for arbitrary
@@ -80,6 +83,9 @@ The contract advertises:
 - the generic modes accepted by the same validation constant used by submission;
 - explicit inspect/resume/cancel/retry recovery operation names and the fact that
   retry is never automatic;
+- the toolchain specification identity and its verification/artifact contracts,
+  while its bootstrap pipeline continues to advertise
+  `remote_execution_operation: null` until typed worker execution lands;
 - the maintained-worker contract and worker names, with
   `remote_execution_operation: null` and
   `generic_pipeline_submit_equivalent: false` until a future producer revision
