@@ -115,6 +115,7 @@ def test_cross_bootstrap_uses_server_owned_paths_only(tmp_path, monkeypatch):
     assert binding["execution_contract"] == (
         "image-build-toolchain-remote-execution-v1"
     )
+    assert binding["identity"].startswith("sha256:")
 
 
 def test_interrupted_phase_resumes_same_bound_operation(tmp_path, monkeypatch):
@@ -291,3 +292,45 @@ def test_toolchain_requests_refuse_caller_paths_and_wrong_predecessors(
     )
     assert wrong["status"] == "failed"
     assert "predecessor phase differs" in wrong["failure"]["reason"]
+
+
+def test_toolchain_binding_identity_rejects_retained_input_drift(
+    tmp_path, monkeypatch
+):
+    builder, remote, seed, _ = fixture(tmp_path)
+
+    import zog.image_build.stages as stages
+    def run(project, catalogue, plan, controller, seed_path, operation_name):
+        del project, catalogue, plan, controller, seed_path
+        work = builder.state / "image-build" / operation_name
+        work.mkdir(parents=True, exist_ok=True)
+        (work / "operation.json").write_text(
+            json.dumps({"schema": 1, "phase": "stages"})
+        )
+        raise KeyboardInterrupt("pending")
+    monkeypatch.setattr(stages, "run", run)
+
+    remote.execute(
+        request(
+            "binding-drift",
+            "toolchain.submit",
+            {"phase": "cross-bootstrap", "seed_generation": seed.generation},
+        )
+    )
+    binding_path = (
+        builder.state
+        / "image-build/remote-operations/binding-drift/binding.json"
+    )
+    binding = json.loads(binding_path.read_text())
+    binding["inputs"]["seed_generation"] = "0" * 64
+    binding_path.write_text(json.dumps(binding))
+
+    inspected = remote.execute(
+        request(
+            "binding-drift-inspect",
+            "toolchain.inspect",
+            {"operation_id": "binding-drift"},
+        )
+    )
+    assert inspected["status"] == "failed"
+    assert "binding identity changed" in inspected["failure"]["reason"]

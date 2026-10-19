@@ -403,7 +403,7 @@ class ToolchainRemoteExecutor:
                 }
         work_name = "toolchain-" + request["operation_id"] + "-" + phase
         names([work_name])
-        return {
+        binding = {
             "contract": BINDING_CONTRACT,
             "execution_contract": REMOTE_EXECUTION_CONTRACT,
             "specification": specification_binding(),
@@ -415,6 +415,9 @@ class ToolchainRemoteExecutor:
             "inputs": inputs,
             "work_name": work_name,
         }
+        from .metadata import identity
+        binding["identity"] = "sha256:" + identity(binding)
+        return binding
 
     def validate_binding(self, request, binding):
         if not isinstance(binding, dict):
@@ -430,9 +433,14 @@ class ToolchainRemoteExecutor:
             "lineage",
             "inputs",
             "work_name",
+            "identity",
         }
         if set(binding) != required:
             raise ImageBuildError("invalid toolchain remote binding fields")
+        from .metadata import identity
+        payload = {key: value for key, value in binding.items() if key != "identity"}
+        if binding.get("identity") != "sha256:" + identity(payload):
+            raise ImageBuildError("toolchain remote binding identity changed")
         if (
             binding["contract"] != BINDING_CONTRACT
             or binding["execution_contract"] != REMOTE_EXECUTION_CONTRACT

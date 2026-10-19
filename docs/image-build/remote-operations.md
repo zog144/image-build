@@ -35,6 +35,13 @@ Initial operations are:
 - `toolchain.specification.inspect`: return the producer-owned toolchain bootstrap,
   verification and immutable final-artifact specification. It is discovery only and
   does not execute a maintained worker.
+- `toolchain.submit`: bind and run exactly one reviewed typed toolchain phase.
+  Only the initial phase accepts a seed generation; subsequent phases consume the
+  predecessor toolchain operation and derive retained paths/identities internally.
+- `toolchain.inspect`: read the retained phase/work/controller summary without
+  execution.
+- `toolchain.resume`: continue only the same pending typed phase with its frozen
+  binding. It does not retry a terminal failure.
 - `package.inspect`: report source identities, dependencies, outputs, licensing and
   source provenance for one package.
 - `dependencies.resolve`: return deterministic dependency order for arbitrary
@@ -494,17 +501,24 @@ The classifications are deliberate:
   components, upstream three-stage comparison, acceptance probes and final self-hosted
   toolchain publication.
 
-Host-deploy must therefore dispatch these identities through the maintained worker
-entrypoint until image-build introduces a future explicit worker-specific remote
-operation. It must not synthesize target lists and call generic `pipeline.submit`.
+Host-deploy must not synthesize target lists and call generic `pipeline.submit`
+for maintained worker identities.
 
-This remains a deliberate blocker for unattended full compiler-toolchain construction:
-`final-compiler` (and its prerequisite maintained workers) owns recovery and
-publication semantics that the generic pipeline contract does not model. The first
-GitHub Actions integration should use the generic pipeline path and must not wait for
-this worker-specific follow-on. A future worker remote contract must preserve each
-worker's own durable operation IDs and typed options; it must not accept arbitrary
-argv or generic aliases.
+For the compiler-toolchain sequence, image-build now exposes the separate typed
+`image-build-toolchain-remote-execution-v1` contract. Its concrete steps are
+`cross-bootstrap`, `temporary-userspace`, `native-transition`,
+`native-environment`, `final-libc-build`, `final-libc-publish`,
+optional explicit `final-libc-recover`, `final-math`, and
+`final-compiler`. The request never carries a project path, catalogue path,
+controller path, work path, retained attempt path, plan path, worker argv, target
+list, or arbitrary command. Those are derived from the server-owned lane, deployed
+source and predecessor lineage.
+
+A typed binding is content-identified and retains the exact specification identity,
+source revision, phase, predecessor, lineage, immutable generation/attempt
+references, and derived work identity. Lost replies resume that same binding.
+Terminal failures are inspect-only; the only specialized recovery phase currently
+defined is `final-libc-recover` over a retained failed final-libc publication.
 
 ## Explicit retry
 
