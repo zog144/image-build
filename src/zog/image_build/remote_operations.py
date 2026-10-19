@@ -192,12 +192,18 @@ class RemoteOperations:
         source_repository,
         source_revision,
         observed_state_dir=None,
+        controller_config_path=None,
     ):
         self.builder = builder
         self.repository_root = Path(repository_root).resolve()
         self.source_repository = source_repository
         self.source_revision = source_revision
         self.control_state = Path(builder.state).resolve()
+        self.controller_config_path = (
+            None
+            if controller_config_path is None
+            else Path(controller_config_path).resolve()
+        )
         self.external_observed_state = observed_state_dir is not None
         self.observed_state = (
             _validated_observed_state_dir(
@@ -502,6 +508,175 @@ class RemoteOperations:
             "toolchain_specification": describe()
         }
         return result
+
+    def _toolchain_executor(self):
+        from .toolchain_remote import ToolchainRemoteExecutor
+
+        return ToolchainRemoteExecutor(
+            self.builder,
+            repository_root=self.repository_root,
+            source_repository=self.source_repository,
+            source_revision=self.source_revision,
+            remote_root=self.root,
+            controller_config=self.controller_config_path,
+        )
+
+    def _toolchain_target(self, request):
+        arguments = request["arguments"]
+        if set(arguments) != {"operation_id"}:
+            raise ImageBuildError(
+                "toolchain inspection/recovery requires operation_id"
+            )
+        operation_id = arguments["operation_id"]
+        target = self._directory(operation_id)
+        try:
+            target_request = json.loads((target / "request.json").read_text())
+        except (OSError, ValueError, TypeError) as error:
+            raise ImageBuildError(
+                "toolchain submission request is unavailable"
+            ) from error
+        if (
+            target_request.get("schema") != REQUEST_SCHEMA
+            or target_request.get("operation") != "toolchain.submit"
+            or target_request.get("operation_id") != operation_id
+            or target_request.get("source") != request["source"]
+        ):
+            raise ImageBuildError("toolchain target binding differs")
+        binding = self._binding(target)
+        if binding is None:
+            raise ImageBuildError("toolchain submission has no durable binding")
+        executor = self._toolchain_executor()
+        executor.validate_binding(target_request, binding)
+        result_path = target / "result.json"
+        previous = None
+        if result_path.exists():
+            try:
+                previous = json.loads(result_path.read_text())
+            except (OSError, ValueError, TypeError) as error:
+                raise ImageBuildError(
+                    "invalid retained toolchain remote result"
+                ) from error
+        return target_request, binding, previous
+
+    def _toolchain_render(
+        self,
+        request,
+        binding,
+        *,
+        execute=False,
+        previous=None,
+    ):
+        executor = self._toolchain_executor()
+        observation = executor.observe(binding)
+        terminal_remote_failure = (
+            isinstance(previous, dict)
+            and previous.get("status") == "failed"
+            and previous.get("terminal_outcome") == "request-error"
+            and observation["status"] == "pending"
+        )
+        raised = None
+        pending_exception = False
+        uncertainty = False
+        if execute and observation["status"] == "pending" and not terminal_remote_failure:
+            try:
+                executor.execute(binding)
+            except BaseException as error:
+                raised = error
+                from .box_control_adapter import BuildExecutionPending
+                pending_exception = isinstance(
+                    error, (BuildExecutionPending, KeyboardInterrupt, SystemExit)
+                )
+                uncertainty = isinstance(error, (KeyboardInterrupt, SystemExit))
+            observation = executor.observe(binding)
+
+        status = observation["status"]
+        terminal_outcome = observation["terminal_outcome"]
+        failure = observation["failure"]
+        if terminal_remote_failure:
+            status = "failed"
+            terminal_outcome = "request-error"
+            failure = previous.get("failure")
+        elif raised is not None and status == "pending":
+            if pending_exception:
+                failure = {
+                    "type": type(raised).__name__,
+                    "reason": str(raised)[:4096],
+                }
+            else:
+                status = "failed"
+                terminal_outcome = "request-error"
+                failure = {
+                    "type": type(raised).__name__,
+                    "reason": str(raised)[:4096],
+                }
+
+        if status == "completed":
+            allowed = ["toolchain.inspect"]
+        elif status == "pending":
+            allowed = ["toolchain.inspect", "toolchain.resume"]
+        else:
+            allowed = ["toolchain.inspect"]
+            if binding["phase"] == "final-libc-publish":
+                allowed.append("toolchain.submit")
+
+        result = self._base_result(
+            request,
+            status=status,
+            terminal_outcome=terminal_outcome,
+            uncertainty=uncertainty,
+            failure=failure,
+            allowed_next_operations=allowed,
+        )
+        result["selected_generation"] = observation["selected_generation"]
+        artifact = observation["artifact"]
+        result["artifacts"]["toolchain_execution"] = artifact
+        result["controller_jobs"] = artifact["controller_jobs"][:MAX_COMMANDS]
+        attempts = []
+        for pipeline in artifact["pipelines"]:
+            attempts.extend(pipeline.get("attempt_ids", []))
+        result["attempt_ids"] = list(dict.fromkeys(attempts))[:MAX_COMMANDS]
+        return result
+
+    def _toolchain_submit(self, request, directory):
+        executor = self._toolchain_executor()
+        binding = self._binding(directory)
+        if binding is None:
+            binding = self._write_binding(
+                directory, executor.prepare(request)
+            )
+        else:
+            executor.validate_binding(request, binding)
+        previous = None
+        result_path = directory / "result.json"
+        if result_path.exists():
+            try:
+                previous = json.loads(result_path.read_text())
+            except (OSError, ValueError, TypeError):
+                previous = None
+        return self._toolchain_render(
+            request,
+            binding,
+            execute=True,
+            previous=previous,
+        )
+
+    def _toolchain_inspect(self, request):
+        _, binding, previous = self._toolchain_target(request)
+        return self._toolchain_render(
+            request,
+            binding,
+            execute=False,
+            previous=previous,
+        )
+
+    def _toolchain_resume(self, request):
+        _, binding, previous = self._toolchain_target(request)
+        return self._toolchain_render(
+            request,
+            binding,
+            execute=True,
+            previous=previous,
+        )
 
     def _resolve_recipe_snapshot(self, snapshot):
         value = self._recipe_snapshot_store().resolve(snapshot)
@@ -1905,6 +2080,12 @@ class RemoteOperations:
                     result = self._worker_inspect(request)
                 elif operation == "toolchain.specification.inspect":
                     result = self._toolchain_specification_inspect(request)
+                elif operation == "toolchain.submit":
+                    result = self._toolchain_submit(request, directory)
+                elif operation == "toolchain.inspect":
+                    result = self._toolchain_inspect(request)
+                elif operation == "toolchain.resume":
+                    result = self._toolchain_resume(request)
                 elif operation == "package.inspect":
                     result = self._package_inspect(request)
                 elif operation == "dependencies.resolve":
@@ -2051,6 +2232,7 @@ def main():
         source_repository=args.source_repository,
         source_revision=args.source_revision,
         observed_state_dir=args.observed_state_dir,
+        controller_config_path=args.controller_config,
     )
     result = adapter.execute(json.loads(args.request.read_text()))
     print(json.dumps(result, sort_keys=True))
