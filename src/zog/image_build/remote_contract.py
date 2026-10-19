@@ -21,6 +21,7 @@ SUPPORTED_OPERATIONS = (
     "recipe.validate",
     "recipes.snapshot",
     "worker.inspect",
+    "toolchain.specification.inspect",
     "package.inspect",
     "dependencies.resolve",
     "pipeline.submit",

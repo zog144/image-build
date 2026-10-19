@@ -485,6 +485,24 @@ class RemoteOperations:
         }
         return result
 
+    def _toolchain_specification_inspect(self, request):
+        if request["arguments"]:
+            raise ImageBuildError(
+                "toolchain specification inspection accepts no arguments"
+            )
+        from .toolchain_contract import describe
+
+        result = self._base_result(
+            request,
+            status="completed",
+            terminal_outcome="success",
+            allowed_next_operations=[],
+        )
+        result["artifacts"] = {
+            "toolchain_specification": describe()
+        }
+        return result
+
     def _resolve_recipe_snapshot(self, snapshot):
         value = self._recipe_snapshot_store().resolve(snapshot)
         if value.manifest["source"] != {
@@ -1092,8 +1110,15 @@ class RemoteOperations:
         from .recipe_snapshots import CONTRACT as SNAPSHOT_CONTRACT
         from .runtime_requirements import describe as describe_runtime
         from .worker_contracts import describe as describe_workers
+        from .toolchain_contract import (
+            ARTIFACT_CONTRACT as TOOLCHAIN_ARTIFACT_CONTRACT,
+            SPECIFICATION_CONTRACT as TOOLCHAIN_SPECIFICATION_CONTRACT,
+            VERIFICATION_CONTRACT as TOOLCHAIN_VERIFICATION_CONTRACT,
+            describe as describe_toolchain,
+        )
 
         workers = describe_workers()
+        toolchain = describe_toolchain()
         capabilities = {
             "contract": CAPABILITIES_SCHEMA,
             "request_contract": REQUEST_SCHEMA,
@@ -1151,6 +1176,19 @@ class RemoteOperations:
                 "remote_execution_operation": None,
                 "generic_pipeline_submit_equivalent": False,
                 "workers": sorted(workers["workers"]),
+            },
+            "toolchain": {
+                "specification_operation": "toolchain.specification.inspect",
+                "specification_contract": TOOLCHAIN_SPECIFICATION_CONTRACT,
+                "specification_identity": toolchain["identity"],
+                "verification_contract": TOOLCHAIN_VERIFICATION_CONTRACT,
+                "artifact_contract": TOOLCHAIN_ARTIFACT_CONTRACT,
+                "remote_execution_operation": toolchain[
+                    "bootstrap_pipeline"
+                ]["remote_execution_operation"],
+                "remote_execution_status": toolchain[
+                    "bootstrap_pipeline"
+                ]["remote_execution_status"],
             },
             "external_observed_state": {
                 "operations": ["pipeline.inspect"],
@@ -1865,6 +1903,8 @@ class RemoteOperations:
                     )
                 elif operation == "worker.inspect":
                     result = self._worker_inspect(request)
+                elif operation == "toolchain.specification.inspect":
+                    result = self._toolchain_specification_inspect(request)
                 elif operation == "package.inspect":
                     result = self._package_inspect(request)
                 elif operation == "dependencies.resolve":
