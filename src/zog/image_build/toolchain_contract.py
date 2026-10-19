@@ -14,6 +14,19 @@ BOOTSTRAP_CONTRACT = "image-build-toolchain-bootstrap-pipeline-v1"
 VERIFICATION_CONTRACT = "image-build-toolchain-verification-v1"
 ARTIFACT_CONTRACT = "image-build-toolchain-artifact-v1"
 FINAL_PROFILE = "self-hosted-c-cxx-toolchain-v1"
+REMOTE_EXECUTION_CONTRACT = "image-build-toolchain-remote-execution-v1"
+
+REMOTE_PHASES = (
+    "cross-bootstrap",
+    "temporary-userspace",
+    "native-transition",
+    "native-environment",
+    "final-libc-build",
+    "final-libc-publish",
+    "final-libc-recover",
+    "final-math",
+    "final-compiler",
+)
 
 FINAL_CHECKS = (
     "compiler-version",
@@ -39,8 +52,9 @@ _PHASES = (
     {
         "id": "native-bootstrap",
         "producers": [
+            "zog.image_build.temporary",
             "zog.image_build.native",
-            "zog.image_build.native_tools",
+            "zog.image_build.build_environment",
             "zog.image_build.native_stage",
         ],
         "input_kinds": [
@@ -106,8 +120,17 @@ def describe():
             "automatic_retry": False,
             "implicit_generation_promotion": False,
             "arbitrary_command_execution": False,
-            "remote_execution_operation": None,
-            "remote_execution_status": "typed-worker-contract-required",
+            "remote_execution_operation": "toolchain.submit",
+            "remote_execution_status": "available",
+            "remote_execution": {
+                "contract": REMOTE_EXECUTION_CONTRACT,
+                "submit": "toolchain.submit",
+                "inspect": "toolchain.inspect",
+                "resume": "toolchain.resume",
+                "phases": list(REMOTE_PHASES),
+                "automatic_retry": False,
+                "caller_paths": False,
+            },
         },
         "verification": {
             "contract": VERIFICATION_CONTRACT,

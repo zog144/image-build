@@ -81,6 +81,7 @@ def run(project,catalogue,plan_path,controller,seed_path,cross_path,operation_na
             cross_headers(root)
         assembled=recorded_root(work/'cross-root',{'seed':seed.generation,'cross':cross.generation,'compiler_layout':'separate-sysroot-cxx-v1'},prepare)
         compiler=builder.import_bootstrap(assembled,{'purpose':'distribution runtime plus source cross compiler','seed':seed.generation,'cross':cross.generation})
+        operation.update(compiler_generation=compiler.generation);write_json(path,operation)
         matches=[]
         for p in (state/'image-build/pipelines').glob('*/pipeline.json'):
             r=json.loads(p.read_text())

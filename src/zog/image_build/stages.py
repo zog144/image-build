@@ -111,9 +111,10 @@ def restart_incomplete_stage(project, controller, stage_id):
             return restart
 
 
-def run(project, catalogue, plan_path, controller, seed_path):
+def run(project, catalogue, plan_path, controller, seed_path, operation_name='cross-bootstrap'):
+    names([operation_name])
     project = Path(project).resolve(); state = project / 'state'
-    work = state / 'image-build/cross-bootstrap'; ensure_directory(work)
+    work = state / 'image-build' / operation_name; ensure_directory(work)
     with (work / 'operation.lock').open('a+') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         plan = stage_recipes(plan_path, catalogue, work / 'recipes')
@@ -159,8 +160,11 @@ grep -E '/sysroot/.*/libc.so.6.*succeeded' /image-build/output/link.txt
 if grep -E '(RPATH|RUNPATH)' /image-build/output/dynamic.txt; then exit 1; fi
 '''.replace('TARGET',target)
         attempts = state/'image-build/attempts'
-        verify(builder,attempts/'cross-link-verification',assembled,[['/bin/bash','-c',probe]],result.generation)
-        linked = attempts/'cross-link-verification/output'
+        prefix = '' if operation_name == 'cross-bootstrap' else operation_name + '-'
+        link_attempt = attempts/(prefix + 'cross-link-verification')
+        runtime_attempt = attempts/(prefix + 'cross-runtime-verification')
+        verify(builder,link_attempt,assembled,[['/bin/bash','-c',probe]],result.generation)
+        linked = link_attempt/'output'
         def runtime_root(root):
             shutil.copytree(result.root/'sysroot',root,symlinks=True)
             (root/'usr/bin').mkdir(exist_ok=True,parents=True)
@@ -168,7 +172,7 @@ if grep -E '(RPATH|RUNPATH)' /image-build/output/dynamic.txt; then exit 1; fi
             for name in ('tmp','run','image-build/source','image-build/output'):(root/name).mkdir(parents=True,exist_ok=True)
         runtime = recorded_root(work/'runtime-root',{'stages':result.generation,'probe':inventory(linked)},runtime_root)
         operation.update(phase='verify-runtime');write_json(operation_path,operation)
-        verify(builder,attempts/'cross-runtime-verification',runtime,[['/usr/bin/bootstrap-probe']],result.generation)
+        verify(builder,runtime_attempt,runtime,[['/usr/bin/bootstrap-probe']],result.generation)
         with builder.locked():
             published = builder._publish(runtime,{'schema':2,'kind':'bootstrap-runtime','stages':result.generation,'outputs':inventory(runtime),'architecture':plan['architecture']},'bootstrap-runtime',{'self_hosted':False,'lfs_edition':plan['lfs_edition']})
         operation.update(phase='complete',runtime_generation=published.generation);write_json(operation_path,operation)
