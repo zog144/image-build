@@ -1023,6 +1023,7 @@ def test_external_observed_missing_pipeline_never_falls_back_to_control(
         "recipe.validate",
         "recipes.snapshot",
         "worker.inspect",
+        "toolchain.specification.inspect",
         "dependencies.resolve",
     ],
 )

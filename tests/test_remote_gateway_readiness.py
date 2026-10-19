@@ -128,6 +128,23 @@ def test_capability_contract_declares_generic_submit_and_worker_boundary(tmp_pat
         "seed-check",
     ]
     assert contract["maintained_workers"]["remote_execution_operation"] is None
+    assert contract["toolchain"]["specification_operation"] == (
+        "toolchain.specification.inspect"
+    )
+    assert contract["toolchain"]["specification_contract"] == (
+        "image-build-toolchain-specification-v1"
+    )
+    assert contract["toolchain"]["verification_contract"] == (
+        "image-build-toolchain-verification-v1"
+    )
+    assert contract["toolchain"]["artifact_contract"] == (
+        "image-build-toolchain-artifact-v1"
+    )
+    assert contract["toolchain"]["specification_identity"].startswith("sha256:")
+    assert contract["toolchain"]["remote_execution_operation"] is None
+    assert contract["toolchain"]["remote_execution_status"] == (
+        "typed-worker-contract-required"
+    )
     assert contract["reporting"] == {
         "execution_evidence_contract": "image-build-remote-execution-evidence-v1",
         "controller_jobs_limit": 24,
@@ -270,3 +287,32 @@ def test_real_graphics_snapshot_prepares_durable_generic_pipeline_without_execut
     assert replay["pipeline_id"] == submitted["pipeline_id"]
     assert replay["recipe_identity"] == snapshot
     assert resume_calls == [submitted["pipeline_id"], submitted["pipeline_id"]]
+
+
+def test_toolchain_specification_is_source_bound_remote_discovery(tmp_path):
+    builder = ImageBuild(
+        package_dir=REPOSITORY / "project/package",
+        state_dir=tmp_path / "state",
+    )
+    result = adapter(builder).execute(
+        request(
+            "toolchain-specification",
+            "toolchain.specification.inspect",
+            {},
+        )
+    )
+    assert result["status"] == "completed"
+    spec = result["artifacts"]["toolchain_specification"]
+    assert spec["contract"] == "image-build-toolchain-specification-v1"
+    assert spec["identity"].startswith("sha256:")
+    assert [phase["id"] for phase in spec["bootstrap_pipeline"]["phases"]] == [
+        "cross-bootstrap",
+        "native-bootstrap",
+        "final-libc",
+        "final-math",
+        "final-compiler",
+    ]
+    assert spec["bootstrap_pipeline"]["remote_execution_operation"] is None
+    assert spec["immutable_artifact"]["contract"] == (
+        "image-build-toolchain-artifact-v1"
+    )
