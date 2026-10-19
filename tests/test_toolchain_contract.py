@@ -74,7 +74,27 @@ def test_toolchain_specification_freezes_bootstrap_and_final_contract():
     ]
     assert pipeline["automatic_retry"] is False
     assert pipeline["implicit_generation_promotion"] is False
-    assert pipeline["remote_execution_operation"] is None
+    assert pipeline["remote_execution_operation"] == "toolchain.submit"
+    assert pipeline["remote_execution_status"] == "available"
+    assert pipeline["remote_execution"] == {
+        "contract": "image-build-toolchain-remote-execution-v1",
+        "submit": "toolchain.submit",
+        "inspect": "toolchain.inspect",
+        "resume": "toolchain.resume",
+        "phases": [
+            "cross-bootstrap",
+            "temporary-userspace",
+            "native-transition",
+            "native-environment",
+            "final-libc-build",
+            "final-libc-publish",
+            "final-libc-recover",
+            "final-math",
+            "final-compiler",
+        ],
+        "automatic_retry": False,
+        "caller_paths": False,
+    }
     assert spec["verification"] == {
         "contract": VERIFICATION_CONTRACT,
         "profile": FINAL_PROFILE,

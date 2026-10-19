@@ -67,7 +67,8 @@ jobs:
             tests/test_remote_operations.py \
             tests/test_remote_gateway_readiness.py \
             tests/test_snapshot_pipeline_binding.py \
-            tests/test_worker.py
+            tests/test_worker.py \
+            tests/test_toolchain_remote.py
 
       - name: Build from the exact indexed source tree outside the checkout
         run: |

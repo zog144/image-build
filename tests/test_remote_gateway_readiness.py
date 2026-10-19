@@ -141,10 +141,10 @@ def test_capability_contract_declares_generic_submit_and_worker_boundary(tmp_pat
         "image-build-toolchain-artifact-v1"
     )
     assert contract["toolchain"]["specification_identity"].startswith("sha256:")
-    assert contract["toolchain"]["remote_execution_operation"] is None
-    assert contract["toolchain"]["remote_execution_status"] == (
-        "typed-worker-contract-required"
+    assert contract["toolchain"]["remote_execution_operation"] == (
+        "toolchain.submit"
     )
+    assert contract["toolchain"]["remote_execution_status"] == "available"
     assert contract["reporting"] == {
         "execution_evidence_contract": "image-build-remote-execution-evidence-v1",
         "controller_jobs_limit": 24,
@@ -312,7 +312,10 @@ def test_toolchain_specification_is_source_bound_remote_discovery(tmp_path):
         "final-math",
         "final-compiler",
     ]
-    assert spec["bootstrap_pipeline"]["remote_execution_operation"] is None
+    assert spec["bootstrap_pipeline"]["remote_execution_operation"] == (
+        "toolchain.submit"
+    )
+    assert spec["bootstrap_pipeline"]["remote_execution"]["caller_paths"] is False
     assert spec["immutable_artifact"]["contract"] == (
         "image-build-toolchain-artifact-v1"
     )

@@ -31,11 +31,30 @@ Every phase retains its own intent/operation record, pipeline records where used
 controller request/job identities and cleanup state. Automatic retry and implicit
 generation promotion are forbidden.
 
-The specification currently advertises no remote execution operation. GitHub
-Actions/host-deploy may discover and bind the specification now, but unattended
-compiler construction still requires the separately typed maintained-worker remote
-execution contract. The caller must never translate these phases into arbitrary
-commands or generic `pipeline.submit` aliases.
+The specification exposes the typed
+`image-build-toolchain-remote-execution-v1` interface through
+`toolchain.submit`, `toolchain.inspect`, and `toolchain.resume`.
+
+After the initial `cross-bootstrap` seed generation, callers provide only the next
+reviewed phase and the predecessor toolchain operation ID. Image-build derives the
+project, catalogue, fixed bootstrap plan, controller configuration, work directory,
+retained pipeline attempts and package-ownership records from its own authorized
+state. Request JSON never supplies host filesystem paths, worker argv, package target
+lists or arbitrary commands.
+
+The concrete unattended chain is:
+
+`cross-bootstrap -> temporary-userspace -> native-transition ->
+native-environment -> final-libc-build -> final-libc-publish -> final-math ->
+final-compiler`
+
+A failed `final-libc-publish` may be followed only by the explicit
+`final-libc-recover` phase, which consumes its retained failed publication
+evidence. There is no automatic retry operation. Other terminal failures require
+inspection and a separately reviewed correction/new source operation.
+
+The caller must never translate these phases into arbitrary commands or generic
+`pipeline.submit` aliases.
 
 ## Verification
 
