@@ -117,10 +117,18 @@ def test_reference_systemd_units_are_dedicated_bounded_and_read_only():
     assert "Accept=no" in socket_text
     assert "RemoveOnStop=yes" in socket_text
 
-    expected = " ".join(broker_argv(
-        state_dir="@IMAGE_BUILD_STATE@",
-        consumer_uid=1501,
-    )).replace("--authorized-uid 1501", "--authorized-uid @WELCOME_UID@")
+    expected = (
+        "-m zog.image_build.post_install_progress_broker "
+        "--state-dir @IMAGE_BUILD_STATE@ "
+        "--authorized-uid @WELCOME_UID@ "
+        "--application agreety "
+        "--application firefox-esr "
+        "--application greetd "
+        "--application i3 "
+        "--application xorg-server "
+        "--source-repository zog144/image-build "
+        "--source-revision " + SOURCE_REVISION
+    )
     assert expected in service_text
     assert "User=@IMAGE_BUILD_UID@" in service_text
     assert "Group=@IMAGE_BUILD_GID@" in service_text
