@@ -755,6 +755,18 @@ def _app_item(state, application, selection, *, command_limit):
     base["commands_truncated"] = len(commands) > command_limit
     base["commands"] = commands[:command_limit]
 
+    retained_commands = base["commands"]
+    command_override = None
+    for state_name, message in (
+        ("unknown", "command-evidence-conflict"),
+        ("failed", "command-failed"),
+        ("cancelled", "command-cancelled"),
+        ("uncertain", "command-outcome-uncertain"),
+    ):
+        if any(command["state"] == state_name for command in retained_commands):
+            command_override = (state_name, message)
+            break
+
     status = pipeline.get("status")
     if status == "prepared":
         build_state, code, phase = "waiting", "pipeline-prepared", "queued"
@@ -768,6 +780,15 @@ def _app_item(state, application, selection, *, command_limit):
         build_state, code, phase = "succeeded", "pipeline-complete-publication-unobserved", "publishing"
     else:
         build_state, code, phase = "unknown", "pipeline-state-unknown", "building"
+
+    if command_override is not None:
+        command_state, command_code = command_override
+        if status == "complete":
+            build_state, code, phase = "unknown", "command-evidence-conflict", "building"
+        elif command_state in {"unknown", "failed", "cancelled"}:
+            build_state, code, phase = command_state, command_code, "building"
+        elif build_state in {"running", "waiting"}:
+            build_state, code, phase = "uncertain", command_code, "building"
 
     publication = _publication(
         state, application, selection["selection_revision"], row["operation_revision"]
