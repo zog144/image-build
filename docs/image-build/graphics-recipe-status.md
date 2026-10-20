@@ -31,6 +31,37 @@ The XCB/libevdev checkpoint was closed at
 `4380187c07a615c695456e10bb67f240c0bd3d9b`, with the validation correction at
 `b12d1a8e11ba31c36edf3d6c3d8983377c2e61f7`.
 
+## Host-welcome graphical application plan
+
+The reviewed source-level first-group/admission plan is
+`project/bootstrap/graphical-applications-first.py`, validated by
+`zog.image_build.graphical_application_plan` under contract
+`image-build-graphical-application-plan-v1`.
+
+The first group is ordered as **agreety → greetd → Xorg server → i3 → Firefox ESR**.
+Agreety and greetd share the reviewed greetd 0.10.3 source/Cargo closure but remain
+separate `applications-v1` artifacts/views. Greetd's privileged role remains
+**not authorized**: PAM/logind plus controller/root-control allowlisting and native
+acceptance are later gates.
+
+The plan records the exact existing source pins and blockers. It deliberately has
+empty `verified_artifact_ids` and `verified_view_ids` for every first/later-group
+application because this source pass did not compile and publish those applications
+on the owned compiler host. In particular:
+
+- Xorg server still lacks a completed native server dependency/notice closure;
+- i3 still lacks the complete Pango/Cairo/xkbcommon/XCB-cursor support closure;
+- Firefox ESR still lacks its complete native GTK/NSS/NSPR/media closure, frozen
+  reproducibility profile, and bundled third-party notice review;
+- TurboVNC/VirtualGL are source-pinned follow-ons, not local-seat proof;
+- Chromium remains `research-required` and unpinned here;
+- Wayland compositor and graphical greeter remain optional/unselected and unpinned.
+
+The acceptance order is source/notices → package build/test →
+`applications-v1` publication → immutable view publication → selected-rootfs
+compatibility → protected box-control admission → Xvfb → physical seat → privileged
+PAM/logind where applicable. No earlier gate implies a later one.
+
 ## Next recipe batches
 
 ### A. Xorg client/runtime foundation
@@ -153,7 +184,10 @@ The first matrix is `docs/graphics-rpm-review.md`.  Extend it batch-by-batch.
 
 ## Execution hold
 
-All rows above remain source preparation until a supported host-deploy/image-build
-submission route is explicitly authorized for the compiler host.  GitHub Actions may
-validate metadata and download exact public sources for evidence; it is not evidence
-that the Zog rootfs package was compiled or installed.
+Image-build now has a typed unattended GitHub/host-deploy toolchain execution
+interface, but that does not itself authorize or fabricate graphical application
+builds. The rows above remain source preparation until host-deploy Work explicitly
+runs the reviewed application recipes on the owned compiler host and returns native
+build/test/publication evidence. Public GitHub Actions validate source contracts and
+metadata only; they are not evidence that Xorg, greetd, i3, Firefox, TurboVNC or
+VirtualGL was compiled, published, mounted or launched.

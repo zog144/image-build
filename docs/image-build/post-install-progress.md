@@ -1,7 +1,7 @@
 # Post-install application progress projection
 
-Contract: `image-build-post-install-progress-v1`  
-Wire: `image-build-post-install-progress-rpc-v1`
+Contract: `image-build-post-install-progress-v2`  
+Wire: `image-build-post-install-progress-rpc-v2`
 
 This is a bounded read-only projection of **image-build-owned durable evidence**.
 It complements, and does not replace, box-control's
@@ -62,7 +62,15 @@ The projection joins these to existing immutable fields:
 - build phase;
 - command index;
 - controller request ID;
-- deterministic build job ID.
+- deterministic build job ID;
+- a SHA-256 identity of the sanitized immutable build trace;
+- build-record identities for prepared inputs/result/output when present;
+- the retained controller observation timestamp and controller boot identity.
+
+The authenticated snapshot additionally binds the deployed producer source with
+`image-build-post-install-source-v1`: exact repository plus immutable 40-hex
+image-build commit. This is the source revision of the projection implementation,
+not a substitute for the package's separate recipe/source-pin identity.
 
 Only phases `prepare`, `configure`, `build`, `test`, and `install` are
 accepted.
@@ -70,10 +78,16 @@ accepted.
 Raw argv, environment, log text, host paths and source URLs are never returned.
 
 A saved controller request without a terminal observation is `uncertain`, not
-running. A command succeeds only when its saved observation says
+running. A command succeeds only when its saved observation has the exact request
+and deterministic job identities, a valid observation timestamp/boot ID, says
 `state=completed`, `outcome=success`, and
-`process_cleanup_complete=true`. Lost response, reboot, pruned observation,
-identity mismatch or old command views without recipe/source bindings fail closed.
+`process_cleanup_complete=true`, and has the required retained trace/build-record
+association. Missing receipts or conflicting evidence return `unknown`.
+
+Terminal failure and cancellation are projected distinctly even when the pipeline
+remains `pending` for explicit recovery. A caller interruption is not permission
+to fabricate a new attempt. Durable terminal command evidence may survive reboot;
+the current snapshot's own boot/timestamp are separate freshness evidence.
 
 No percentages are synthesized: `progress` is always null.
 
@@ -94,6 +108,7 @@ The receipt reopens the immutable `applications-v1` artifact and binds:
 - owner operation revision;
 - optional `application-software-view-v1` SHA-256 ID;
 - whether selected-rootfs compatibility was independently checked;
+- the exact immutable selected rootfs **generation ID** when compatibility is checked;
 - optional `application-software-consumer-v1` binding digest.
 
 Publication can advance monotonically:
@@ -106,8 +121,11 @@ Each superseded receipt is retained under publication history. Artifact, source,
 view, selection or operation identity may never change during that progression.
 
 Every read re-resolves the immutable artifact/view. A compatibility-checked receipt
-recomputes the consumer binding against the retained rootfs descriptor. Missing or
-tampered evidence returns `unknown`.
+also reopens the exact retained `kind=image` rootfs generation, verifies that its
+frozen `application_software_compatibility` descriptor still equals the receipt,
+and recomputes the consumer binding. A copied descriptor from another generation,
+missing generation, tampered artifact/view, or conflicting publication returns
+`unknown`.
 
 Publication does not imply box-control runtime admission, a mounted application,
 an active GUI, or physical-seat readiness. The projection reports
@@ -125,6 +143,7 @@ Deployment parameters are fixed by host-install/systemd, not the UI:
 - canonical image-build state directory;
 - numeric host-welcome observer UID;
 - reviewed application allowlist;
+- exact deployed image-build repository name and immutable source commit;
 - exactly one systemd-activated AF_UNIX socket.
 
 The service must run as the distinct non-root image-build progress producer UID.
@@ -137,7 +156,7 @@ Request framing is a 4-byte network-order length followed by JSON, maximum 4096
 bytes. Reply maximum is 65536 bytes. The only operation is:
 
 ```json
-{"schema":"image-build-post-install-progress-rpc-v1",
+{"schema":"image-build-post-install-progress-rpc-v2",
  "operation":"snapshot","after":null,"limit":4}
 ```
 
@@ -148,11 +167,13 @@ The application allowlist is fixed at broker startup. Pages are ordered by
 application name, maximum 16 applications, with at most 16 command observations per
 application in the broker's default producer call.
 
-Every response has a fresh random 128-bit `snapshot_id` and timezone-aware
-`observed_at`. Durable intent/build/publication identities survive reboot; there
-is intentionally no image-build boot identity. A consumer must reject stale
-transport responses by its own freshness window. Replaying an old response never
-changes producer state.
+Every response has a fresh random 128-bit `snapshot_id`, timezone-aware
+`observed_at`, the producer's current Linux boot ID, and exact deployed source
+binding. A consumer must reject a stale/future response or an unexpected producer
+source/boot according to its own reviewed freshness policy. Durable
+intent/build/publication identities survive reboot, so a retained terminal command
+may truthfully name the older controller boot while the current snapshot names the
+new producer boot. Replaying an old response never changes producer state.
 
 ## Sanitized state/message vocabulary
 
@@ -186,3 +207,28 @@ Examples:
 
 Synthetic source fixtures are test evidence only. host-welcome must continue to
 display publication as unobserved until a live authenticated producer is deployed.
+
+
+## Host-welcome fixtures and adoption boundary
+
+Sanitized source fixtures live under
+`examples/host-welcome/post-install-progress-v2/`:
+
+- `successful.json`: build completed; publication still unobserved;
+- `in-progress.json`: requested pipeline executing;
+- `failed.json`: retained terminal build failure;
+- `interrupted.json`: request/job identity retained but terminal observation missing;
+- `unknown.json`: no authoritative selection/evidence;
+- `published.json`: artifact + view + exact selected rootfs generation compatible.
+
+These are schema examples, not live host evidence. The authenticated host-welcome
+consumer must use the fixed broker, verify the expected image-build source commit,
+peer UID, current response freshness/boot, and then separately join current
+box-control runtime evidence. It must not treat `published` as mounted, launched,
+display-ready, authenticated-login-ready, or physical-seat-ready.
+
+The broker service runs as a distinct non-root producer account and authorizes only
+the exact numeric host-welcome UID supplied by protected host-install/systemd
+configuration. It refuses root execution and refuses producer UID == consumer UID.
+Neither the UI nor the RPC request can choose the state directory, repository,
+source revision, application allowlist, controller job, or publication identity.

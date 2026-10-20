@@ -54,6 +54,7 @@ jobs:
             tests/test_application_data_targets.py \
             tests/test_certify_manage_software.py \
             tests/test_post_install_progress.py \
+            tests/test_post_install_progress_examples.py \
             tests/test_graphical_application_catalogue.py \
             tests/test_verification_environment.py \
             tests/test_licensing.py \
