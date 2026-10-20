@@ -590,7 +590,10 @@ def _publication(state, application, selection_revision, operation_revision):
         }
         body = {key: raw[key] for key in body_keys}
         expected_receipt = "sha256:" + hashlib.sha256(_canonical(body).encode()).hexdigest()
-        if (raw.get("receipt") != expected_receipt
+        if (raw.get("schema") != 1
+                or raw.get("contract") != PUBLICATION_CONTRACT
+                or raw.get("producer") != "image-build"
+                or raw.get("receipt") != expected_receipt
                 or raw.get("selection_revision") != selection_revision
                 or raw.get("operation_revision") != operation_revision
                 or raw.get("application") != application):
@@ -809,6 +812,8 @@ def snapshot(state_dir, *, applications, producer_source=None, producer_boot_id=
         "snapshot_id": uuid.uuid4().hex,
         "observed_at": observed,
         "producer": "image-build",
+        "producer_source": source,
+        "boot_id": boot_id,
         "selection_owner": SELECTION_OWNER,
         "items": items,
         "page": {
