@@ -6,14 +6,29 @@ literals parsed with `ast.literal_eval`, not executable modules.
 `project/pins/current.py` explicitly selects the default month. Dates name the
 first day of a month; creating/correcting a set is a maintainer operation.
 
-The initial set was recorded on October 2 for the October 1 cycle. It covers all
-40 catalogue projects and locks all 47 existing stage recipes to exact source
-URLs and SHA256 hashes, including patches/additional inputs. It preserves current
-recipe versions; it is not a verified October 1 upstream-master snapshot. Unknown
-upstream commit identities are null and marked for the next full refresh/recompile.
-Final GCC has an explicit 15.3 fallback and exact upstream revision. Earlier GCC
-stages retain their existing source versions. Non-buildable catalogue entries have
-provenance but no invented executable recipe.
+The initial set was recorded on October 2 for the October 1 cycle and was corrected
+on October 20 after the public-source migration accidentally omitted `project/pins`.
+The corrected set covers all 133 current catalogue projects and locks all 139
+executable stage recipes to exact current source URLs and SHA256 hashes, including
+patches, recipe-bundled inputs, supplementary notices and license materials. Seven
+graphical catalogue-only source plans are source-pinned with empty `recipes`
+mappings; no executable recipe is invented for them.
+
+The corrected file byte digest is
+`sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36`.
+Five stage source definitions changed relative to the retained pre-migration pin:
+the systemd-test fixture, host-discover, host-identify, host-install and
+python-maturin. Those five are rebound to the exact reviewed public recipe inputs;
+the remaining 134 stage source-definition files retain their prior source bytes.
+Historical materialized pin snapshots and already prepared operations are not
+retargeted by this correction.
+
+The set preserves reviewed recipe versions; it is not a verified October 1
+upstream-master snapshot. Unknown upstream commit identities remain explicit where
+the producer does not have an authenticated canonical revision. Final GCC retains
+its explicit 15.3 fallback and exact upstream revision. Earlier GCC stages retain
+their existing source versions. Non-buildable catalogue entries have provenance but
+no invented executable recipe.
 
 Stage materialization uses the current month, or explicit `pin_date="YYYY-MM-01"`
 in `stage_recipes`. It saves a `commit-pin.py` snapshot in the materialized recipe
