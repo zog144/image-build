@@ -670,8 +670,6 @@ def _app_item(state, application, selection, *, command_limit):
     base = {
         "application": application,
         "producer": "image-build",
-        "producer_source": source,
-        "boot_id": boot_id,
         "selection_owner": SELECTION_OWNER,
         "selection_revision": None,
         "selection_sequence": None,
