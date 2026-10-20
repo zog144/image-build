@@ -6,6 +6,8 @@ native-test acceptance or proof that binary/compiled redistribution is permitted
 Run against the complete candidate after applying all reviewed overlays.
 """
 import argparse
+import ast
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -14,8 +16,6 @@ import sys
 
 PROHIBITED_PATHS = {
     "AGENTS.md", "COPYRIGHT", "version-share-handoff.json",
-    "project/pins/2026-10-01/commit-pin.py",
-    "project/pins/2026-10-01",
     "private-stage-manifest.json",
     "public-first-party-pins.json",
 }
@@ -59,6 +59,37 @@ REQUIRED_ROOT = [
     "zog-component.json",
 ]
 LICENSE_EXP = b"BSD-3-Clause OR GPL-3.0-only"
+APPROVED_MONTHLY_PINS = {
+    "2026-10-01": "d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36",
+}
+
+
+def monthly_pin_issues(root: Path, paths):
+    """Validate only producer-reviewed public monthly locks; no moving/external pin."""
+    issues = []
+    current_name = "project/pins/current.py"
+    if current_name not in paths:
+        return [{"path": current_name, "finding": "required_monthly_pin_selector_missing"}]
+    current = root / current_name
+    try:
+        selected = ast.literal_eval(current.read_text("utf-8"))
+    except (OSError, ValueError, SyntaxError, UnicodeError):
+        return [{"path": current_name, "finding": "invalid_monthly_pin_selector"}]
+    if (
+        not isinstance(selected, dict)
+        or set(selected) != {"date"}
+        or selected["date"] not in APPROVED_MONTHLY_PINS
+    ):
+        return [{"path": current_name, "finding": "unreviewed_monthly_pin_selection"}]
+    date = selected["date"]
+    pin_name = f"project/pins/{date}/commit-pin.py"
+    pin = root / pin_name
+    if pin_name not in paths or pin.is_symlink() or not pin.is_file():
+        return [{"path": pin_name, "finding": "reviewed_monthly_pin_missing"}]
+    digest = hashlib.sha256(pin.read_bytes()).hexdigest()
+    if digest != APPROVED_MONTHLY_PINS[date]:
+        issues.append({"path": pin_name, "finding": "reviewed_monthly_pin_digest_mismatch"})
+    return issues
 
 def included_paths(root: Path):
     # For a Git working tree, prefer the *indexed* tracked objects and reject
@@ -128,9 +159,7 @@ def scan(root: Path):
                            "finding": "invalid_component_manifest"})
     if (root / "src/zog/__init__.py").exists():
         issues.append({"path": "src/zog/__init__.py", "finding": "top_level_zog_owned_by_release_build"})
-    current = root / "project/pins/current.py"
-    if current.is_file() and "2026-10-01" in current.read_text():
-        issues.append({"path": "project/pins/current.py", "finding": "historical_monthly_pin_selected"})
+    issues.extend(monthly_pin_issues(root, paths))
     return {"schema": "zog-image-build-public-source-preflight-v1",
             "file_count": len(paths), "issue_count": len(issues),
             "issues": issues, "source_export_preflight": "PASS" if not issues else "FAIL",

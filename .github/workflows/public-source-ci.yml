@@ -55,6 +55,7 @@ jobs:
             tests/test_certify_manage_software.py \
             tests/test_pins.py \
             tests/test_monthly_pin_restoration.py \
+            tests/test_public_candidate_preflight.py \
             tests/test_post_install_progress.py \
             tests/test_post_install_progress_examples.py \
             tests/test_graphical_application_catalogue.py \
