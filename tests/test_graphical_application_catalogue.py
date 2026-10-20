@@ -5,6 +5,13 @@ import pytest
 
 from zog.image_build.errors import ImageBuildError
 from zog.image_build.metadata import load_package
+from zog.image_build.graphical_application_plan import (
+    ARTIFACT_CONTRACT,
+    CONSUMER_CONTRACT,
+    CONTRACT,
+    VIEW_CONTRACT,
+    describe,
+)
 
 
 ROOT = Path(__file__).parents[1] / "project/package"
@@ -124,3 +131,56 @@ def test_greetd_recipe_plan_stays_non_activating_until_security_review():
         assert plan["publication"] == "separate applications-v1 artifacts/views"
         assert plan["activation"] == "not-authorized"
         assert "controller-owned-greetd-privileged-role-review" in plan["blockers"]
+
+
+def test_first_group_plan_freezes_order_contracts_and_blockers():
+    repository = ROOT.parents[1]
+    plan = describe(repository)
+    assert plan["contract"] == CONTRACT
+    assert plan["artifact_contract"] == ARTIFACT_CONTRACT
+    assert plan["view_contract"] == VIEW_CONTRACT
+    assert plan["consumer_contract"] == CONSUMER_CONTRACT
+    assert [item["application"] for item in plan["first_group"]] == [
+        "agreety",
+        "greetd",
+        "xorg-server",
+        "i3",
+        "firefox-esr",
+    ]
+    rows = {item["application"]: item for item in plan["first_group"]}
+    assert rows["greetd"]["depends_on"] == ["agreety"]
+    assert rows["greetd"]["privileged_role"] is True
+    assert "controller-root-control-privileged-role-review" in rows["greetd"]["blockers"]
+    assert rows["xorg-server"]["build_status"] == "dependency-closure-incomplete"
+    assert "xorg-server-native-dependency-closure-incomplete" in rows["xorg-server"]["blockers"]
+    assert rows["i3"]["depends_on"] == ["xorg-server"]
+    assert rows["firefox-esr"]["depends_on"] == ["xorg-server"]
+    assert all(item["verified_artifact_ids"] == [] for item in plan["first_group"])
+    assert all(item["verified_view_ids"] == [] for item in plan["first_group"])
+
+
+def test_graphical_plan_exposes_exact_reviewed_source_pins_without_claiming_builds():
+    repository = ROOT.parents[1]
+    plan = describe(repository)
+    for name in ("agreety", "greetd", "xorg-server", "i3", "firefox-esr", "turbovnc", "virtualgl"):
+        row = plan["catalogue"][name]
+        expected = EXPECTED[name]
+        assert row["source_version"] == expected[0]
+        assert row["recipe_status"] == expected[3]
+        assert row["sources"][0]["url"] == expected[1]
+        assert row["sources"][0]["sha256"] == expected[2]
+    later = {item["application"]: item for item in plan["later_group"]}
+    assert later["chromium"]["source_status"] == "research-required"
+    assert later["chromium"]["catalogue_package"] is None
+    assert later["wayland-compositor"]["source_status"] == "optional-unselected"
+    assert later["graphical-greeter"]["source_status"] == "optional-unselected"
+    assert all(item["verified_artifact_ids"] == [] for item in plan["later_group"])
+
+
+def test_graphical_acceptance_order_never_equates_build_with_privileged_session():
+    plan = describe(ROOT.parents[1])
+    order = plan["acceptance_order"]
+    assert order.index("package-build-and-tests") < order.index("applications-v1-publication")
+    assert order.index("applications-v1-publication") < order.index("selected-rootfs-compatibility")
+    assert order.index("selected-rootfs-compatibility") < order.index("protected-box-control-admission")
+    assert order.index("physical-seat") < order.index("privileged-pam-logind-if-applicable")
