@@ -1,0 +1,51 @@
+{
+  "schema": "image-build-post-install-progress-v2",
+  "snapshot_id": "55555555555555555555555555555555",
+  "observed_at": "2026-10-20T12:40:00+00:00",
+  "producer": "image-build",
+  "producer_source": {
+    "contract": "image-build-post-install-source-v1",
+    "repository": "zog144/image-build",
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "boot_id": "11111111-2222-3333-4444-555555555555",
+  "selection_owner": "host-install",
+  "items": [
+    {
+      "application": "firefox",
+      "producer": "image-build",
+      "selection_owner": "host-install",
+      "selection_revision": null,
+      "selection_sequence": null,
+      "operation_revision": null,
+      "requested": null,
+      "pipeline_id": null,
+      "pipeline_state": null,
+      "source_pin_identity": null,
+      "commands": [],
+      "commands_truncated": false,
+      "publication": {
+        "state": "unknown",
+        "message_code": "publication-unobserved",
+        "artifact_id": null,
+        "view_id": null,
+        "receipt": null,
+        "compatibility_checked": false,
+        "rootfs_generation": null,
+        "binding_digest": null,
+        "artifact_revision": null,
+        "artifact_source_identity": null
+      },
+      "runtime_admission": "unobserved",
+      "phase": "intent",
+      "state": "unknown",
+      "message_code": "selection-unobserved",
+      "progress": null,
+      "observed_at": "2026-10-20T12:40:00+00:00"
+    }
+  ],
+  "page": {
+    "has_more": false,
+    "next_after": "firefox"
+  }
+}

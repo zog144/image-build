@@ -1,0 +1,75 @@
+{
+  "schema": "image-build-post-install-progress-v2",
+  "snapshot_id": "33333333333333333333333333333333",
+  "observed_at": "2026-10-20T12:40:00+00:00",
+  "producer": "image-build",
+  "producer_source": {
+    "contract": "image-build-post-install-source-v1",
+    "repository": "zog144/image-build",
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "boot_id": "11111111-2222-3333-4444-555555555555",
+  "selection_owner": "host-install",
+  "items": [
+    {
+      "application": "firefox",
+      "producer": "image-build",
+      "selection_owner": "host-install",
+      "selection_revision": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "selection_sequence": 7,
+      "operation_revision": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "requested": true,
+      "pipeline_id": "dddddddddddddddddddddddddddddddd",
+      "pipeline_state": "pending",
+      "source_pin_identity": "5555555555555555555555555555555555555555555555555555555555555555",
+      "commands": [
+        {
+          "attempt_id": "image-22222222222222222222222222222222",
+          "stage_id": "firefox-final",
+          "package": "firefox",
+          "phase": "build",
+          "command_index": 0,
+          "controller_request_id": "signed-build-123",
+          "build_job_id": "33333333333333333333333333333333",
+          "recipe_identity": "4444444444444444444444444444444444444444444444444444444444444444",
+          "source_pin_identity": "5555555555555555555555555555555555555555555555555555555555555555",
+          "trace_identity": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "build_record": {
+            "prepared": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "inputs": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "result": null,
+            "output": null
+          },
+          "controller_observed_at": "2026-10-20T12:39:30+00:00",
+          "controller_boot_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+          "state": "failed",
+          "message_code": "command-failed",
+          "progress": null
+        }
+      ],
+      "commands_truncated": false,
+      "publication": {
+        "state": "unknown",
+        "message_code": "publication-unobserved",
+        "artifact_id": null,
+        "view_id": null,
+        "receipt": null,
+        "compatibility_checked": false,
+        "rootfs_generation": null,
+        "binding_digest": null,
+        "artifact_revision": null,
+        "artifact_source_identity": null
+      },
+      "runtime_admission": "unobserved",
+      "phase": "building",
+      "state": "failed",
+      "message_code": "command-failed",
+      "progress": null,
+      "observed_at": "2026-10-20T12:40:00+00:00"
+    }
+  ],
+  "page": {
+    "has_more": false,
+    "next_after": "firefox"
+  }
+}
