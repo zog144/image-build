@@ -9,9 +9,9 @@ from pathlib import Path
 import socket
 import struct
 
-from .post_install_progress import SCHEMA, snapshot
+from .post_install_progress import SCHEMA, producer_source, snapshot
 
-WIRE = "image-build-post-install-progress-rpc-v1"
+WIRE = "image-build-post-install-progress-rpc-v2"
 MAX_REQUEST = 4096
 MAX_RESPONSE = 65536
 
@@ -69,8 +69,24 @@ def _activated_socket():
         sock.close()
 
 
+def _boot_id():
+    try:
+        value = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+    except OSError as error:
+        raise ProgressBrokerError("current boot identity is unavailable") from error
+    try:
+        import uuid
+        parsed = str(uuid.UUID(value))
+    except (ValueError, AttributeError) as error:
+        raise ProgressBrokerError("invalid current boot identity") from error
+    if parsed != value:
+        raise ProgressBrokerError("noncanonical current boot identity")
+    return value
+
+
 class PostInstallProgressBroker:
-    def __init__(self, state_dir, *, applications, authorized_uid):
+    def __init__(self, state_dir, *, applications, authorized_uid,
+                 source_repository, source_revision, boot_id=None):
         state=Path(state_dir)
         if not state.is_absolute() or state == Path("/") or ".." in state.parts:
             raise ProgressBrokerError("fixed canonical image-build state required")
@@ -80,9 +96,17 @@ class PostInstallProgressBroker:
         values=tuple(sorted(set(applications)))
         if not values:
             raise ProgressBrokerError("fixed application allowlist required")
-        # Validate the fixed allowlist once. Missing producer state is valid.
+        self.source = producer_source(source_repository, source_revision)
+        self.boot_id = _boot_id() if boot_id is None else boot_id
+        # Validate the fixed allowlist and source/boot bindings once.
         try:
-            snapshot(state, applications=values, limit=1)
+            snapshot(
+                state,
+                applications=values,
+                producer_source=self.source,
+                producer_boot_id=self.boot_id,
+                limit=1,
+            )
         except Exception as error:
             raise ProgressBrokerError("invalid application allowlist or state root") from error
         self.state=state
@@ -95,8 +119,12 @@ class PostInstallProgressBroker:
         if set(request) != {"schema","operation","after","limit"}:
             raise ProgressBrokerError("invalid progress request shape")
         return snapshot(
-            self.state, applications=self.applications,
-            after=request["after"], limit=request["limit"],
+            self.state,
+            applications=self.applications,
+            producer_source=self.source,
+            producer_boot_id=self.boot_id,
+            after=request["after"],
+            limit=request["limit"],
         )
 
 
@@ -119,11 +147,17 @@ def main(argv=None):
     parser.add_argument("--state-dir", required=True)
     parser.add_argument("--authorized-uid", type=int, required=True)
     parser.add_argument("--application", action="append", required=True)
+    parser.add_argument("--source-repository", required=True)
+    parser.add_argument("--source-revision", required=True)
     args=parser.parse_args(argv)
     if os.geteuid() == 0 or os.geteuid() == args.authorized_uid:
         raise ProgressBrokerError("distinct nonroot producer and consumer identities required")
     broker=PostInstallProgressBroker(
-        args.state_dir, applications=args.application, authorized_uid=args.authorized_uid
+        args.state_dir,
+        applications=args.application,
+        authorized_uid=args.authorized_uid,
+        source_repository=args.source_repository,
+        source_revision=args.source_revision,
     )
     with _activated_socket() as listener:
         while True:

@@ -21,10 +21,11 @@ from .errors import ImageBuildError
 from .filesystem import ensure_directory, write_json
 from .metadata import identity
 
-SCHEMA = "image-build-post-install-progress-v1"
+SCHEMA = "image-build-post-install-progress-v2"
 SELECTION_CONTRACT = "image-build-post-install-selection-v1"
 PIPELINE_OWNER_CONTRACT = "image-build-post-install-pipeline-owner-v1"
-PUBLICATION_CONTRACT = "image-build-post-install-publication-v1"
+PUBLICATION_CONTRACT = "image-build-post-install-publication-v2"
+PRODUCER_SOURCE_CONTRACT = "image-build-post-install-source-v1"
 SELECTION_OWNER = "host-install"
 
 _NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
@@ -34,6 +35,11 @@ _ATTEMPT = re.compile(r"[a-z0-9-]+-[0-9a-f]{32}\Z")
 _TOKEN = re.compile(r"[A-Za-z0-9-]{1,200}\Z")
 _JOB = re.compile(r"[0-9a-f]{32}\Z")
 _RECIPE = re.compile(r"[0-9a-f]{64}\Z")
+_REVISION = re.compile(r"[0-9a-f]{40}\Z")
+_GENERATION = re.compile(r"[0-9a-f]{64}\Z")
+_BOOT = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\Z"
+)
 _PHASES = {"prepare", "configure", "build", "test", "install"}
 _STATES = {
     "not-requested", "waiting", "running", "succeeded", "blocked",
@@ -58,6 +64,7 @@ _CODES = {
     "command-cancelled",
     "command-outcome-uncertain",
     "command-evidence-conflict",
+    "command-provenance-unobserved",
     "publication-unobserved",
     "artifact-published",
     "view-published-compatibility-unchecked",
@@ -72,6 +79,56 @@ def _canonical(value):
 
 def _now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def _producer_source(value):
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"contract", "repository", "revision"}
+        or value.get("contract") != PRODUCER_SOURCE_CONTRACT
+        or not isinstance(value.get("repository"), str)
+        or not value["repository"]
+        or len(value["repository"]) > 256
+        or any(ord(c) < 32 for c in value["repository"])
+        or not isinstance(value.get("revision"), str)
+        or not _REVISION.fullmatch(value["revision"])
+    ):
+        raise ImageBuildError("invalid post-install producer source binding")
+    return dict(value)
+
+
+def producer_source(repository, revision):
+    return _producer_source({
+        "contract": PRODUCER_SOURCE_CONTRACT,
+        "repository": repository,
+        "revision": revision,
+    })
+
+
+def _aware_timestamp(value):
+    if not isinstance(value, str) or len(value) > 64:
+        raise ImageBuildError("invalid progress observation timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (ValueError, OverflowError) as error:
+        raise ImageBuildError("invalid progress observation timestamp") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ImageBuildError("progress observation timestamp must be timezone-aware")
+    return parsed.astimezone(timezone.utc).isoformat()
+
+
+def _boot(value):
+    if value is None:
+        return None
+    if not isinstance(value, str) or not _BOOT.fullmatch(value):
+        raise ImageBuildError("invalid progress boot identity")
+    return value
+
+
+def _generation(value):
+    if not isinstance(value, str) or not _GENERATION.fullmatch(value):
+        raise ImageBuildError("invalid rootfs generation identity")
+    return value
 
 
 def _name(value):
@@ -188,8 +245,8 @@ def pipeline_owner(selection, application):
 
 
 def _publication_body(*, application, selection_revision, operation_revision,
-                      artifact, view, rootfs_compatibility, binding_digest,
-                      artifact_revision, artifact_source_identity):
+                      artifact, view, rootfs_generation, rootfs_compatibility,
+                      binding_digest, artifact_revision, artifact_source_identity):
     return {
         "schema": 1,
         "contract": PUBLICATION_CONTRACT,
@@ -200,6 +257,7 @@ def _publication_body(*, application, selection_revision, operation_revision,
         "artifact": _sha(artifact, "artifact identity"),
         "view": None if view is None else _sha(view, "view identity"),
         "compatibility_checked": rootfs_compatibility is not None,
+        "rootfs_generation": rootfs_generation,
         "rootfs_compatibility": rootfs_compatibility,
         "binding_digest": binding_digest,
         "artifact_revision": artifact_revision,
@@ -209,7 +267,7 @@ def _publication_body(*, application, selection_revision, operation_revision,
 
 def record_publication(state_dir, *, application, selection_revision,
                        operation_revision, artifact, view=None,
-                       rootfs_compatibility=None):
+                       rootfs_generation=None, rootfs_compatibility=None):
     """Publish a verified image-build receipt; this never launches the application."""
     artifacts = ApplicationSoftwareStore(state_dir)
     views = ApplicationSoftwareViewStore(state_dir)
@@ -223,7 +281,7 @@ def record_publication(state_dir, *, application, selection_revision,
     }).encode()).hexdigest()
     binding_digest = None
     canonical_rootfs = None
-    compatibility_checked = False
+    canonical_generation = None
     if view is not None:
         value = views.resolve(view)
         if value.manifest["application"] != application:
@@ -231,11 +289,27 @@ def record_publication(state_dir, *, application, selection_revision,
         if artifact not in value.manifest["artifacts"]:
             raise ImageBuildError("post-install view omits selected artifact")
         if rootfs_compatibility is not None:
+            canonical_generation = _generation(rootfs_generation)
             canonical_rootfs = compatibility(rootfs_compatibility)
+            from .engine import read_selection
+            from .rootfs_compatibility import FIELD
+            selected = read_selection(
+                Path(state_dir) / "image-build" / "generations" / canonical_generation
+            )
+            if (
+                selected.manifest.get("kind") != "image"
+                or selected.manifest.get(FIELD) != canonical_rootfs
+            ):
+                raise ImageBuildError(
+                    "selected rootfs generation differs from compatibility receipt"
+                )
             binding = views.consumer_manifest(view, canonical_rootfs)
             binding_digest = binding["binding_digest"]
-            compatibility_checked = True
-    elif rootfs_compatibility is not None:
+        elif rootfs_generation is not None:
+            raise ImageBuildError(
+                "rootfs generation requires a compatibility-checked view"
+            )
+    elif rootfs_compatibility is not None or rootfs_generation is not None:
         raise ImageBuildError("artifact-only publication cannot claim rootfs compatibility")
     body = _publication_body(
         application=application,
@@ -243,6 +317,7 @@ def record_publication(state_dir, *, application, selection_revision,
         operation_revision=operation_revision,
         artifact=artifact,
         view=view,
+        rootfs_generation=canonical_generation,
         rootfs_compatibility=canonical_rootfs,
         binding_digest=binding_digest,
         artifact_revision=resolved.manifest["revision"],
@@ -349,6 +424,62 @@ def _observation_for(attempt, command_key, checkpoint):
         return False
 
 
+def _command_provenance(attempt, command):
+    view_path = attempt / PurePosixPath(command["command_key"])
+    stem = view_path.name.removesuffix(".view.json")
+    trace_path = view_path.with_name(stem + ".trace.json")
+    trace_identity = None
+    if trace_path.exists():
+        try:
+            trace = json.loads(trace_path.read_text())
+        except (OSError, ValueError, TypeError):
+            return False, None, None
+        if (
+            trace.get("schema") != 1
+            or trace.get("attempt_id") != command["attempt_id"]
+            or trace.get("pipeline_id") != command["pipeline_id"]
+            or trace.get("stage_id") != command["stage_id"]
+            or trace.get("package") != command["package"]
+            or trace.get("phase") != command["phase"]
+            or trace.get("command_index") != command["command_index"]
+        ):
+            return False, None, None
+        trace_provenance = trace.get("provenance")
+        if (
+            not isinstance(trace_provenance, dict)
+            or trace_provenance.get("recipe_identity") != command["recipe_identity"]
+            or trace_provenance.get("pin_set_identity")
+            != command["source_pin_identity"]
+        ):
+            return False, None, None
+        trace_identity = "sha256:" + hashlib.sha256(
+            _canonical(trace).encode()
+        ).hexdigest()
+
+    provenance_path = view_path.parent / "provenance.json"
+    build_record = None
+    if provenance_path.exists():
+        try:
+            provenance = json.loads(provenance_path.read_text())
+        except (OSError, ValueError, TypeError):
+            return False, trace_identity, None
+        if (
+            provenance.get("schema") != 1
+            or provenance.get("build_id") != "attempt:" + command["attempt_id"]
+        ):
+            return False, trace_identity, None
+        build_record = {}
+        for key in ("prepared", "inputs", "result", "output"):
+            value = provenance.get(key)
+            if value is not None:
+                try:
+                    _sha(value, "build-record identity")
+                except ImageBuildError:
+                    return False, trace_identity, None
+            build_record[key] = value
+    return True, trace_identity, build_record
+
+
 def _command_state(command, observation):
     if command["request_id"] is None:
         return "waiting", "command-awaiting-controller-request"
@@ -356,8 +487,16 @@ def _command_state(command, observation):
         return "uncertain", "command-observation-missing"
     if observation is False or not isinstance(observation, dict):
         return "unknown", "command-evidence-conflict"
-    if (observation.get("request_id") != command["request_id"]
-            or observation.get("job_id") not in (None, command["job_id"])):
+    try:
+        _aware_timestamp(observation.get("observed_at"))
+        _boot(observation.get("boot_id"))
+    except ImageBuildError:
+        return "unknown", "command-evidence-conflict"
+    if (
+        observation.get("schema") != 1
+        or observation.get("request_id") != command["request_id"]
+        or observation.get("job_id") != command["job_id"]
+    ):
         return "unknown", "command-evidence-conflict"
     state, outcome = observation.get("state"), observation.get("outcome")
     cleanup = observation.get("process_cleanup_complete")
@@ -403,6 +542,13 @@ def _safe_command(attempt, command, pipeline_source):
         raise ImageBuildError("invalid build job identity")
     observation = _observation_for(attempt, command["command_key"], command["checkpoint"])
     state, code = _command_state(command, observation)
+    provenance_ok, trace_identity, build_record = _command_provenance(attempt, command)
+    if not provenance_ok:
+        state, code = "unknown", "command-evidence-conflict"
+    elif state == "succeeded" and (trace_identity is None or build_record is None):
+        state, code = "unknown", "command-provenance-unobserved"
+    observed_at = observation.get("observed_at") if isinstance(observation, dict) else None
+    boot_id = observation.get("boot_id") if isinstance(observation, dict) else None
     return {
         "attempt_id": command["attempt_id"],
         "stage_id": command["stage_id"],
@@ -413,6 +559,10 @@ def _safe_command(attempt, command, pipeline_source):
         "build_job_id": job_id,
         "recipe_identity": command["recipe_identity"],
         "source_pin_identity": command["source_pin_identity"],
+        "trace_identity": trace_identity,
+        "build_record": build_record,
+        "controller_observed_at": observed_at,
+        "controller_boot_id": boot_id,
         "state": state,
         "message_code": code,
         "progress": None,
@@ -426,7 +576,8 @@ def _publication(state, application, selection_revision, operation_revision):
         return {
             "state": "unknown", "message_code": "publication-unobserved",
             "artifact_id": None, "view_id": None, "receipt": None,
-            "compatibility_checked": False, "binding_digest": None,
+            "compatibility_checked": False, "rootfs_generation": None,
+            "binding_digest": None,
             "artifact_revision": None, "artifact_source_identity": None,
         }
     try:
@@ -434,7 +585,7 @@ def _publication(state, application, selection_revision, operation_revision):
         body_keys = {
             "schema", "contract", "producer", "application", "selection_revision",
             "operation_revision", "artifact", "view", "compatibility_checked",
-            "rootfs_compatibility", "binding_digest", "artifact_revision",
+            "rootfs_generation", "rootfs_compatibility", "binding_digest", "artifact_revision",
             "artifact_source_identity",
         }
         body = {key: raw[key] for key in body_keys}
@@ -457,7 +608,11 @@ def _publication(state, application, selection_revision, operation_revision):
                 or raw["artifact_source_identity"] != source_identity):
             raise ValueError("artifact source")
         if raw["view"] is None:
-            if raw["compatibility_checked"] or raw["binding_digest"] is not None:
+            if (
+                raw["compatibility_checked"]
+                or raw["binding_digest"] is not None
+                or raw["rootfs_generation"] is not None
+            ):
                 raise ValueError("artifact-only compatibility")
             state_value, code = "succeeded", "artifact-published"
         else:
@@ -469,7 +624,19 @@ def _publication(state, application, selection_revision, operation_revision):
             if raw["compatibility_checked"] is not True:
                 state_value, code = "uncertain", "view-published-compatibility-unchecked"
             else:
-                binding = views.consumer_manifest(raw["view"], raw["rootfs_compatibility"])
+                generation = _generation(raw["rootfs_generation"])
+                from .engine import read_selection
+                from .rootfs_compatibility import FIELD
+                selected = read_selection(
+                    state / "image-build" / "generations" / generation
+                )
+                expected_rootfs = compatibility(raw["rootfs_compatibility"])
+                if (
+                    selected.manifest.get("kind") != "image"
+                    or selected.manifest.get(FIELD) != expected_rootfs
+                ):
+                    raise ValueError("rootfs generation compatibility")
+                binding = views.consumer_manifest(raw["view"], expected_rootfs)
                 if binding["binding_digest"] != raw["binding_digest"]:
                     raise ValueError("binding digest")
                 state_value, code = "succeeded", "view-published-compatible"
@@ -480,6 +647,7 @@ def _publication(state, application, selection_revision, operation_revision):
             "view_id": raw["view"],
             "receipt": raw["receipt"],
             "compatibility_checked": bool(raw["compatibility_checked"]),
+            "rootfs_generation": raw["rootfs_generation"],
             "binding_digest": raw["binding_digest"],
             "artifact_revision": raw["artifact_revision"],
             "artifact_source_identity": raw["artifact_source_identity"],
@@ -488,7 +656,8 @@ def _publication(state, application, selection_revision, operation_revision):
         return {
             "state": "unknown", "message_code": "publication-evidence-conflict",
             "artifact_id": None, "view_id": None, "receipt": None,
-            "compatibility_checked": False, "binding_digest": None,
+            "compatibility_checked": False, "rootfs_generation": None,
+            "binding_digest": None,
             "artifact_revision": None, "artifact_source_identity": None,
         }
 
@@ -498,6 +667,8 @@ def _app_item(state, application, selection, *, command_limit):
     base = {
         "application": application,
         "producer": "image-build",
+        "producer_source": source,
+        "boot_id": boot_id,
         "selection_owner": SELECTION_OWNER,
         "selection_revision": None,
         "selection_sequence": None,
@@ -511,7 +682,8 @@ def _app_item(state, application, selection, *, command_limit):
         "publication": {
             "state": "unknown", "message_code": "publication-unobserved",
             "artifact_id": None, "view_id": None, "receipt": None,
-            "compatibility_checked": False, "binding_digest": None,
+            "compatibility_checked": False, "rootfs_generation": None,
+            "binding_digest": None,
             "artifact_revision": None, "artifact_source_identity": None,
         },
         "runtime_admission": "unobserved",
@@ -611,9 +783,12 @@ def _app_item(state, application, selection, *, command_limit):
     return base
 
 
-def snapshot(state_dir, *, applications, after=None, limit=4, command_limit=16):
+def snapshot(state_dir, *, applications, producer_source=None, producer_boot_id=None,
+             after=None, limit=4, command_limit=16):
     """Return a bounded sanitized projection. It never refreshes controller state."""
     state = Path(state_dir)
+    source = None if producer_source is None else _producer_source(producer_source)
+    boot_id = _boot(producer_boot_id)
     names = sorted({_name(value) for value in applications})
     if type(limit) is not int or not 1 <= limit <= 16:
         raise ValueError("post-install progress limit must be 1..16")
