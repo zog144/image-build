@@ -503,3 +503,29 @@ def test_success_without_trace_or_build_record_is_not_authoritative(tmp_path):
     command = snap(state, ["firefox"])["items"][0]["commands"][0]
     assert command["state"] == "unknown"
     assert command["message_code"] == "command-provenance-unobserved"
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected_state", "expected_code"),
+    [
+        ("nonzero-exit", "failed", "command-failed"),
+        ("cancelled", "cancelled", "command-cancelled"),
+    ],
+)
+def test_terminal_command_outcome_is_distinct_from_pending_recovery(
+    tmp_path, outcome, expected_state, expected_code
+):
+    state = tmp_path / "state"
+    receipt = selection(state)
+    pipeline(state, receipt, status="pending")
+    observation = next(
+        (state / "image-build" / "attempts").rglob("*.observation.json")
+    )
+    raw = json.loads(observation.read_text())
+    raw["outcome"] = outcome
+    write_json(observation, raw)
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["pipeline_state"] == "pending"
+    assert item["state"] == expected_state
+    assert item["message_code"] == expected_code
+    assert item["publication"]["state"] == "unknown"
