@@ -149,8 +149,17 @@ Deployment parameters are fixed by host-install/systemd, not the UI:
 The service must run as the distinct non-root image-build progress producer UID.
 It refuses root execution and refuses using the consumer UID as the producer UID.
 
-Authentication uses Linux `SO_PEERCRED` **before request parsing**. Only the
-configured observer UID receives a reply.
+Consumer authentication uses Linux `SO_PEERCRED` on the accepted socket
+**before request parsing**. Only the configured observer UID receives a reply.
+
+Producer authentication is separate. With systemd socket activation the connected
+client's ordinary listener `SO_PEERCRED` identifies PID 1/root, not the accepting
+non-root broker, so it is not producer evidence. Under
+`image-build-post-install-progress-linux-credentials-v1` the broker sends the
+first byte of every reply with a Linux `SCM_CREDENTIALS` ancillary record.
+Host-welcome must enable `SO_PASSCRED`, receive that header with `recvmsg`,
+require exactly one kernel credential record whose UID matches the protected
+producer UID, and only then decode the remaining frame.
 
 Request framing is a 4-byte network-order length followed by JSON, maximum 4096
 bytes. Reply maximum is 65536 bytes. The only operation is:
@@ -223,7 +232,7 @@ Sanitized source fixtures live under
 
 These are schema examples, not live host evidence. The authenticated host-welcome
 consumer must use the fixed broker, verify the expected image-build source commit,
-peer UID, current response freshness/boot, and then separately join current
+credential-bearing reply UID, current response freshness/boot, and then separately join current
 box-control runtime evidence. It must not treat `published` as mounted, launched,
 display-ready, authenticated-login-ready, or physical-seat-ready.
 

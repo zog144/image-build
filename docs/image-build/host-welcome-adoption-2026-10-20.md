@@ -9,6 +9,8 @@ reviewed image-build commit supplied with the implementation handoff.
 
 - projection: `image-build-post-install-progress-v2`
 - local wire: `image-build-post-install-progress-rpc-v2`
+- transport authentication: `image-build-post-install-progress-linux-credentials-v1`
+- reviewed runtime source: `7348ec730a3181f1a8ecc62a6e4d633ce191674a`
 - producer source binding: `image-build-post-install-source-v1`
 - intent owner: `host-install`
 - publication: `image-build-post-install-publication-v2`
@@ -17,8 +19,13 @@ reviewed image-build commit supplied with the implementation handoff.
 - consumer binding: `application-software-consumer-v1`
 
 The fixed systemd deployment owns state path, application allowlist, source
-repository/revision and numeric host-welcome UID. The broker uses `SO_PEERCRED`
-before parsing a request and supports only bounded read-only snapshots.
+repository/revision and numeric host-welcome UID. On each accepted connection the
+broker uses `SO_PEERCRED` to authenticate that consumer **before request parsing**.
+Because systemd owns the listening socket, host-welcome must not authenticate the
+producer with listener `SO_PEERCRED` (which identifies PID 1/root). Instead it
+enables `SO_PASSCRED`, receives the reply header with `recvmsg`, and requires the
+kernel `SCM_CREDENTIALS` sender UID to equal the protected policy producer UID
+before decoding the reply. The broker supports only bounded read-only snapshots.
 
 Host-welcome should reject a snapshot whose source commit is not the deployed reviewed
 pin, whose producer boot is not acceptable for the current observation, or whose
