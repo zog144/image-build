@@ -12,6 +12,7 @@ import struct
 from .post_install_progress import SCHEMA, producer_source, snapshot
 
 WIRE = "image-build-post-install-progress-rpc-v2"
+TRANSPORT_AUTH = "image-build-post-install-progress-linux-credentials-v1"
 MAX_REQUEST = 4096
 MAX_RESPONSE = 65536
 
@@ -24,6 +25,33 @@ def _peer_uid(conn):
     raw = conn.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize("3i"))
     _pid, uid, _gid = struct.unpack("3i", raw)
     return uid
+
+
+def _sender_credentials():
+    if not hasattr(socket, "SCM_CREDENTIALS"):
+        raise ProgressBrokerError("kernel credential messages required")
+    return struct.pack("3i", os.getpid(), os.geteuid(), os.getegid())
+
+
+def _send_authenticated_frame(conn, data):
+    """Send one reply with kernel-validated broker credentials on its first byte."""
+    if not hasattr(conn, "sendmsg") or not hasattr(socket, "SCM_CREDENTIALS"):
+        raise ProgressBrokerError("kernel credential messages required")
+    credentials = [(
+        socket.SOL_SOCKET,
+        socket.SCM_CREDENTIALS,
+        _sender_credentials(),
+    )]
+    try:
+        sent = conn.sendmsg([data[:1]], credentials)
+        if sent != 1:
+            raise ProgressBrokerError("short credential-bearing progress reply")
+        conn.sendall(data[1:])
+        return True
+    except OSError:
+        # A disconnected authorized consumer is a per-connection outcome. It must
+        # never terminate the long-lived socket-activated broker.
+        return False
 
 
 def _frame(value, maximum):
@@ -132,14 +160,14 @@ def respond_one(broker, conn):
     with conn:
         conn.settimeout(20)
         if _peer_uid(conn) != broker.authorized_uid:
-            return
+            return False
         try:
             result=broker.handle(_decode(conn))
             payload={"ok":True,"result":result}
             data=_frame(payload,MAX_RESPONSE)
         except Exception:
             data=_frame({"ok":False,"error":"progress-unavailable"},4096)
-        conn.sendall(data)
+        return _send_authenticated_frame(conn, data)
 
 
 def main(argv=None):
@@ -150,6 +178,8 @@ def main(argv=None):
     parser.add_argument("--source-repository", required=True)
     parser.add_argument("--source-revision", required=True)
     args=parser.parse_args(argv)
+    if not hasattr(socket, "SCM_CREDENTIALS") or not hasattr(socket.socket, "sendmsg"):
+        raise ProgressBrokerError("Linux credential-bearing AF_UNIX replies required")
     if os.geteuid() == 0 or os.geteuid() == args.authorized_uid:
         raise ProgressBrokerError("distinct nonroot producer and consumer identities required")
     broker=PostInstallProgressBroker(
