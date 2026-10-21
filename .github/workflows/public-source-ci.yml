@@ -58,6 +58,7 @@ jobs:
             tests/test_public_candidate_preflight.py \
             tests/test_post_install_progress.py \
             tests/test_post_install_progress_deployment.py \
+            tests/test_post_install_progress_broker_transport.py \
             tests/test_post_install_progress_examples.py \
             tests/test_graphical_application_catalogue.py \
             tests/test_verification_environment.py \

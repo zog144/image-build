@@ -10,6 +10,7 @@ from zog.image_build.post_install_progress_deployment import (
     POLICY_PATH,
     POLICY_SCHEMA,
     SERVICE_UNIT,
+    TRANSPORT_AUTH,
     SOCKET_PATH,
     SOCKET_UNIT,
     SOURCE_FILES,
@@ -32,7 +33,8 @@ def test_native_observer_contract_matches_reviewed_host_welcome_v1():
     assert POLICY_PATH == "/etc/zog/host-welcome-image-progress-observer.json"
     assert SOCKET_PATH == "/run/host-welcome/image-progress.sock"
     assert SOURCE_REPOSITORY == "zog144/image-build"
-    assert SOURCE_REVISION == "fcc12f3db959afe395b1adfb5b0b4dc1f16a3258"
+    assert SOURCE_REVISION == "7348ec730a3181f1a8ecc62a6e4d633ce191674a"
+    assert TRANSPORT_AUTH == "image-build-post-install-progress-linux-credentials-v1"
     assert APPLICATIONS == (
         "agreety", "firefox-esr", "greetd", "i3", "xorg-server",
     )
@@ -149,7 +151,8 @@ def test_deployment_contract_is_manifest_only_and_never_activation_authority():
         consumer_uid=1501,
         producer_uid=1502,
     )
-    assert value["contract"] == "image-build-post-install-progress-native-deployment-v1"
+    assert value["contract"] == "image-build-post-install-progress-native-deployment-v2"
+    assert value["transport_auth"] == TRANSPORT_AUTH
     assert value["applications"] == list(APPLICATIONS)
     assert value["read_only"] is True
     assert value["mutation_authorized"] is False

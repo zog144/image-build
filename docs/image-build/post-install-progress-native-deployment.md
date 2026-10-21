@@ -13,14 +13,17 @@ systemd units or authorize production activation.
 The consumer-reviewed progress implementation remains:
 
 - repository: `zog144/image-build`
-- source revision: `fcc12f3db959afe395b1adfb5b0b4dc1f16a3258`
+- source revision: `7348ec730a3181f1a8ecc62a6e4d633ce191674a`
 - projection: `image-build-post-install-progress-v2`
 - wire: `image-build-post-install-progress-rpc-v2`
 - source binding: `image-build-post-install-source-v1`
+- transport authentication: `image-build-post-install-progress-linux-credentials-v1`
 
-The broker, projection and all security-critical modules used by the snapshot path
-are byte-identical between that reviewed revision and the image-build source that
-introduced this deployment reference. The reference inventory pins 13 Git blob
+The reviewed runtime revision contains the socket-activation correction from the
+2026-10-21 native pass. The projection and twelve supporting modules remain
+byte-identical to the earlier reviewed source; the broker changed only to attach
+kernel-validated Linux `SCM_CREDENTIALS` to each reply and to contain disconnected
+client writes per connection. The reference inventory pins all 13 exact Git blob
 identities and computes independent SHA-256 values when host-install reviews a
 source checkout.
 
@@ -44,7 +47,7 @@ with schema `zog-host-welcome-image-progress-observer-v1` and exactly:
 - independently resolved numeric `consumer_uid`;
 - independently resolved distinct numeric `producer_uid`;
 - `socket=/run/host-welcome/image-progress.sock`;
-- `image_build_source_commit=fcc12f3db959afe395b1adfb5b0b4dc1f16a3258`.
+- `image_build_source_commit=7348ec730a3181f1a8ecc62a6e4d633ce191674a`.
 
 The first-wave immutable graphical allowlist is exactly:
 
@@ -76,7 +79,17 @@ The socket is dedicated to host-welcome:
 - `Accept=no`, bounded backlog, removal on stop.
 
 The service runs as the separately resolved image-build producer UID/GID and invokes
-only `zog.image_build.post_install_progress_broker`. The state directory,
+only `zog.image_build.post_install_progress_broker`. systemd may create the
+listening socket as PID 1/root; clients therefore MUST NOT use listener
+`SO_PEERCRED` as producer authentication. The broker authenticates the client on
+the accepted connection with `SO_PEERCRED` before parsing, then sends the first
+byte of every reply with an `SCM_CREDENTIALS` ancillary record containing the
+actual broker PID/UID/GID. A host-welcome consumer must enable Linux
+`SO_PASSCRED`, receive the reply header with `recvmsg`, require exactly one
+kernel credential record matching the protected policy producer UID, and only then
+decode the frame body.
+
+The state directory,
 authorized consumer UID, application allowlist, repository and source revision are
 fixed in the root-rendered unit. No request can select a state path, source,
 application, pipeline, job or mutation operation.
@@ -127,7 +140,10 @@ A disposable host must still prove:
 - protected socket parent/inode/mode plus host SELinux/LSM labeling;
 - authorized observer success;
 - wrong-UID denial both by DAC and broker `SO_PEERCRED`;
-- exact producer peer UID seen by host-welcome;
+- exact producer reply UID seen by host-welcome through `SCM_CREDENTIALS`
+  (listener `SO_PEERCRED` is expected to be PID 1/root under socket activation);
+- authorized disconnect before request framing and during reply completion does not
+  terminate/restart the broker, and a subsequent client is served by the same process;
 - source-pin and stale/wrong-boot replay rejection;
 - service activation/restart/reboot cleanup;
 - read-only state mount and inability to mutate build state;

@@ -12,7 +12,8 @@ from pathlib import Path
 
 from .errors import ImageBuildError
 
-CONTRACT = "image-build-post-install-progress-native-deployment-v1"
+CONTRACT = "image-build-post-install-progress-native-deployment-v2"
+TRANSPORT_AUTH = "image-build-post-install-progress-linux-credentials-v1"
 POLICY_SCHEMA = "zog-host-welcome-image-progress-observer-v1"
 POLICY_PATH = "/etc/zog/host-welcome-image-progress-observer.json"
 SOCKET_PATH = "/run/host-welcome/image-progress.sock"
@@ -20,7 +21,7 @@ SOCKET_UNIT = "zog-host-welcome-image-progress.socket"
 SERVICE_UNIT = "zog-host-welcome-image-progress.service"
 
 SOURCE_REPOSITORY = "zog144/image-build"
-SOURCE_REVISION = "fcc12f3db959afe395b1adfb5b0b4dc1f16a3258"
+SOURCE_REVISION = "7348ec730a3181f1a8ecc62a6e4d633ce191674a"
 
 APPLICATIONS = (
     "agreety",
@@ -32,7 +33,7 @@ APPLICATIONS = (
 
 MODULE_BLOBS = {
     "zog.image_build.post_install_progress_broker":
-        "fc50a6f86b5e1ddc088dc5b33e443a516a0c9189",
+        "e7ba6eab10e70e91fc5921bba1eec26f31ace1db",
     "zog.image_build.post_install_progress":
         "5c4e03e1f496b704935caabebfa7eca63188f89e",
     "zog.image_build.application_software":
@@ -177,6 +178,7 @@ def deployment_contract(*, state_dir, consumer_uid, producer_uid):
         "service_unit": SERVICE_UNIT,
         "source_repository": SOURCE_REPOSITORY,
         "source_revision": SOURCE_REVISION,
+        "transport_auth": TRANSPORT_AUTH,
         "applications": list(APPLICATIONS),
         "state_dir": _absolute_path(state_dir, "image-build state directory"),
         "consumer_uid": consumer_uid,
