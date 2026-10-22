@@ -115,13 +115,20 @@ Publication is inactive: the operation does not update `active`,
 Regular implementation cannot produce the actual derived generation ID because the
 operation must reopen the retained parent bytes on the compiler host.
 
-After this source revision is independently reviewed/deployed, Work may run the
-finite local operation against the exact existing image-build state directory:
+The first native attempt froze operation
+`certify-manage-runtime-recovery-2026-10-22` to source
+`13d4422b2b57be1abe2cd34613bacf46fcc46f21` and stopped before publication on
+the now-corrected inventory-order guard. That failed operation, its staging and
+retained evidence must not be edited or reused with a new source revision.
+
+After the inventory-order correction is independently reviewed/deployed, Work must
+run a **successor operation** against the exact existing image-build state
+directory:
 
 ```
 python -m zog.image_build.accepted_image_derivation \
   --state-dir <protected-existing-image-build-state> \
-  --operation-name certify-manage-runtime-recovery-2026-10-22 \
+  --operation-name certify-manage-runtime-recovery-2026-10-22-order-fix \
   --source-revision <exact-reviewed-image-build-commit>
 ```
 
@@ -142,3 +149,21 @@ Work must retain and review:
 
 Only after that evidence exists should certify-manage/host-deploy decide whether the
 new inactive generation is acceptable for issuer-rootfs/application admission.
+
+
+## Inventory-order correction
+
+The first real staging run proved that all 40,945 parent records were unchanged and
+that the only additions were the three reviewed empty application-data targets, but
+publication was rejected because expected records used lexical string ordering while
+`filesystem.inventory()` canonically orders `Path` objects by path components.
+
+The correction makes the expected-record order use `sorted(records, key=Path)`,
+matching the canonical inventory producer. A regression includes a directory and a
+punctuation-bearing sibling whose lexical/component ordering differs, derives the
+image successfully, and verifies every retained parent record remains exactly
+identical.
+
+This changes only sequence comparison; it does not weaken the path-to-record equality,
+payload preservation, ABI equality, target-mode/emptiness, parent identity,
+historical-provenance gap, or durable recovery checks.
