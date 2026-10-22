@@ -190,6 +190,23 @@ class _Report:
                     value.generation,
                     metadata={"kind": value.manifest["kind"]},
                 )
+                from .accepted_image_derivation import FIELD as DERIVATION_FIELD
+                derivation = value.manifest.get("inputs", {}).get(DERIVATION_FIELD)
+                if isinstance(derivation, dict):
+                    parent = derivation.get("parent", {}).get("generation")
+                    if _generation_id(parent):
+                        self.edge(
+                            source_kind="generation",
+                            source_id=value.generation,
+                            relation="accepted-image-parent",
+                            target_kind="generation",
+                            target_id=parent,
+                            protects=True,
+                        )
+                    else:
+                        raise ImageBuildError(
+                            "accepted-image derivation parent reference is invalid"
+                        )
             except Exception as error:
                 self.object("generation", path.name, error=error)
 
@@ -498,6 +515,82 @@ class _Report:
                 reference=True,
             )
 
+    def scan_accepted_image_derivations(self):
+        root = self.image / "accepted-image-derivations"
+        if not root.exists():
+            return
+        if root.is_symlink() or not root.is_dir():
+            self.fault(
+                "accepted-image-derivation-store",
+                root.name,
+                ImageBuildError("invalid accepted-image derivation store"),
+                reference=True,
+            )
+            return
+        for directory in sorted(root.iterdir(), key=lambda value: value.name):
+            try:
+                if directory.is_symlink() or not directory.is_dir():
+                    raise ImageBuildError(
+                        "invalid accepted-image derivation operation directory"
+                    )
+                intent_path = directory / "intent.json"
+                if intent_path.is_symlink() or not intent_path.is_file():
+                    raise ImageBuildError(
+                        "accepted-image derivation has no frozen intent"
+                    )
+                intent = json.loads(intent_path.read_text())
+                if (
+                    not isinstance(intent, dict)
+                    or intent.get("schema") != 1
+                    or intent.get("contract")
+                    != "image-build-accepted-image-derivation-operation-v1"
+                    or intent.get("operation_name") != directory.name
+                ):
+                    raise ImageBuildError(
+                        "invalid accepted-image derivation intent"
+                    )
+                parent = intent.get("parent", {}).get("generation")
+                if not _generation_id(parent):
+                    raise ImageBuildError(
+                        "invalid accepted-image derivation parent"
+                    )
+                result_path = directory / "result.json"
+                complete = result_path.is_file() and not result_path.is_symlink()
+                if result_path.exists() and not complete:
+                    raise ImageBuildError(
+                        "invalid accepted-image derivation result"
+                    )
+                self.edge(
+                    source_kind="accepted-image-derivation",
+                    source_id=directory.name,
+                    relation="parent-generation",
+                    target_kind="generation",
+                    target_id=parent,
+                    protects=not complete,
+                )
+                if complete:
+                    result = json.loads(result_path.read_text())
+                    generation = result.get("generation")
+                    if not _generation_id(generation):
+                        raise ImageBuildError(
+                            "invalid accepted-image derivation output"
+                        )
+                    self.edge(
+                        source_kind="accepted-image-derivation",
+                        source_id=directory.name,
+                        relation="published-generation",
+                        target_kind="generation",
+                        target_id=generation,
+                        protects=False,
+                    )
+            except Exception as error:
+                self.fault(
+                    "accepted-image-derivation",
+                    directory.name,
+                    error,
+                    reference=True,
+                )
+
     def scan_application_operations(self):
         root = self.image / "application-software"
         operations = root / "operations"
@@ -686,6 +779,7 @@ def report(state_dir):
         value._selection("toolchain-active")
         value.scan_pipelines()
         value.scan_remote_operations()
+        value.scan_accepted_image_derivations()
         value.scan_application_operations()
         return value.finalize()
 

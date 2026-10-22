@@ -57,6 +57,10 @@ def read_selection(directory):
             validate_manifest as validate_application_data_targets,
         )
         validate_application_data_targets(manifest['inputs'], manifest)
+        from .accepted_image_derivation import (
+            validate_manifest as validate_accepted_image_derivation,
+        )
+        validate_accepted_image_derivation(manifest['inputs'], manifest)
         if inventory(directory / "root") != manifest["outputs"]:
             raise ImageBuildError(f"generation outputs changed: {directory}")
         return ImageSelection(directory.name, directory / "root", manifest, True)
@@ -177,6 +181,10 @@ class ImageBuild(PipelineMixin):
         validate_manifest(inputs, details)
         from .runtime_facilities import validate_manifest as validate_runtime_facilities
         validate_runtime_facilities(inputs, details)
+        from .accepted_image_derivation import (
+            validate_manifest as validate_accepted_image_derivation,
+        )
+        validate_accepted_image_derivation(inputs, details)
         if FIELD in inputs:
             actual = derive({'candidate': {'root': str(root), 'outputs': inventory(root)}},
                             inputs[FIELD]['architecture'])
