@@ -33,7 +33,7 @@ SOURCE_REVISION = "a" * 40
 def fixture(tmp_path):
     state = tmp_path / "state"
     package_dir = tmp_path / "packages"
-    package_dir.mkdir()
+    package_dir.mkdir(parents=True)
     builder = ImageBuild(
         package_dir=package_dir,
         state_dir=state,
@@ -149,8 +149,12 @@ def test_derivation_preserves_parent_payload_and_abi_and_adds_empty_targets(tmp_
     for name, mode in expected_modes.items():
         path = selected.root / name
         assert path.is_dir() and not path.is_symlink()
-        assert list(path.iterdir()) == []
+        if name != "var/lib":
+            assert list(path.iterdir()) == []
         assert path.stat().st_mode & 0o7777 == mode
+    assert {path.name for path in (selected.root / "var/lib").iterdir()} == {
+        "archive-mirror", "station-access", "zog-certify-manage"
+    }
 
     derivation = selected.manifest[FIELD]
     assert derivation["contract"] == CONTRACT
