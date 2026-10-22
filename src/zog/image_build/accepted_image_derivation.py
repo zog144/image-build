@@ -290,6 +290,45 @@ def _acceptance(parent, profile, binding, candidate_outputs, added):
     }
 
 
+def _complete_status(selected, parent):
+    return {
+        "schema": 1,
+        "phase": "complete",
+        "generation": selected.generation,
+        "parent_generation": parent.generation,
+    }
+
+
+def _reconcile_completed_status(work, selected, parent):
+    """Repair only an interrupted nonterminal status after validated publication."""
+    expected = _complete_status(selected, parent)
+    path = Path(work) / "status.json"
+    if not path.exists():
+        write_json(path, expected)
+        return expected
+    if path.is_symlink() or not path.is_file():
+        raise ImageBuildError("invalid accepted-image derivation status")
+    try:
+        current = json.loads(path.read_text())
+    except (OSError, ValueError, UnicodeError) as error:
+        raise ImageBuildError("invalid accepted-image derivation status") from error
+    if current == expected:
+        return current
+    if (
+        isinstance(current, dict)
+        and current.get("schema") == 1
+        and current.get("phase") in {"prepared", "assembled"}
+        and current.get("parent_generation") == parent.generation
+        and (
+            "generation" not in current
+            or current.get("generation") == selected.generation
+        )
+    ):
+        write_json(path, expected)
+        return expected
+    raise ImageBuildError("conflicting completed accepted-image derivation status")
+
+
 def _manifest_contract(source_revision, profile, parent_binding, gap, acceptance):
     if re.fullmatch(r"[0-9a-f]{40}", source_revision or "") is None:
         raise ImageBuildError("exact producer source revision required")
@@ -413,15 +452,14 @@ def derive(builder, operation_name, source_revision, profile=CERTIFY_MANAGE_RECO
                     raise ImageBuildError("frozen accepted-image derivation changed")
             else:
                 write_json(intent_path, intent)
-            write_json(work / "status.json", {
-                "schema": 1,
-                "phase": "prepared",
-                "parent_generation": parent.generation,
-            })
-
             result_path = work / "result.json"
             if result_path.exists():
-                result = json.loads(result_path.read_text())
+                if result_path.is_symlink() or not result_path.is_file():
+                    raise ImageBuildError("invalid retained derivation result")
+                try:
+                    result = json.loads(result_path.read_text())
+                except (OSError, ValueError, UnicodeError) as error:
+                    raise ImageBuildError("invalid retained derivation result") from error
                 generation = result.get("generation")
                 selected = read_selection(
                     builder.state / "image-build" / "generations" / str(generation)
@@ -431,10 +469,18 @@ def derive(builder, operation_name, source_revision, profile=CERTIFY_MANAGE_RECO
                     selected.manifest[FIELD].get("source_revision") != source_revision
                     or selected.manifest[FIELD].get("parent") != parent_binding
                     or result.get("phase") != "complete"
+                    or result.get("generation") != selected.generation
                     or result.get("parent_generation") != parent.generation
                 ):
                     raise ImageBuildError("retained derivation result differs")
+                _reconcile_completed_status(work, selected, parent)
                 return result
+
+            write_json(work / "status.json", {
+                "schema": 1,
+                "phase": "prepared",
+                "parent_generation": parent.generation,
+            })
 
             # Validate the parent target state before copying any bytes.
             data_targets = bind_application_data_targets(parent.manifest["outputs"])
@@ -501,12 +547,7 @@ def derive(builder, operation_name, source_revision, profile=CERTIFY_MANAGE_RECO
                 "source_revision": source_revision,
             }
             write_json(result_path, result)
-            write_json(work / "status.json", {
-                "schema": 1,
-                "phase": "complete",
-                "generation": selected.generation,
-                "parent_generation": parent.generation,
-            })
+            write_json(work / "status.json", _complete_status(selected, parent))
             return result
 
 

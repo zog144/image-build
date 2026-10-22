@@ -291,3 +291,81 @@ def test_interrupted_publication_protects_parent_and_recovers_same_operation(
         and edge["relation"] == "accepted-image-parent"
         for edge in parent_row["protected_by"]
     )
+
+
+def test_completed_rerun_preserves_durable_terminal_status(tmp_path):
+    builder, _parent, profile, _components = fixture(tmp_path)
+    first = derive(builder, "completed-status-regression", SOURCE_REVISION, profile)
+    operation = operation_directory(builder.state, "completed-status-regression")
+    before = json.loads((operation / "status.json").read_text())
+    assert before == {
+        "schema": 1,
+        "phase": "complete",
+        "generation": first["generation"],
+        "parent_generation": first["parent_generation"],
+    }
+    second = derive(builder, "completed-status-regression", SOURCE_REVISION, profile)
+    assert second == first
+    assert json.loads((operation / "status.json").read_text()) == before
+
+
+@pytest.mark.parametrize("phase", [None, "prepared", "assembled"])
+def test_completed_result_repairs_interrupted_terminal_status(tmp_path, phase):
+    builder, _parent, profile, _components = fixture(tmp_path)
+    first = derive(builder, "finalization-recovery", SOURCE_REVISION, profile)
+    operation = operation_directory(builder.state, "finalization-recovery")
+    status = operation / "status.json"
+    if phase is None:
+        status.unlink()
+    elif phase == "prepared":
+        status.write_text(json.dumps({
+            "schema": 1,
+            "phase": "prepared",
+            "parent_generation": first["parent_generation"],
+        }))
+    else:
+        status.write_text(json.dumps({
+            "schema": 1,
+            "phase": "assembled",
+            "parent_generation": first["parent_generation"],
+            "acceptance_identity": first["acceptance_identity"],
+        }))
+
+    second = derive(builder, "finalization-recovery", SOURCE_REVISION, profile)
+    assert second == first
+    assert json.loads(status.read_text()) == {
+        "schema": 1,
+        "phase": "complete",
+        "generation": first["generation"],
+        "parent_generation": first["parent_generation"],
+    }
+
+
+def test_completed_result_rejects_conflicting_terminal_status(tmp_path):
+    builder, _parent, profile, _components = fixture(tmp_path)
+    first = derive(builder, "terminal-conflict", SOURCE_REVISION, profile)
+    operation = operation_directory(builder.state, "terminal-conflict")
+    status = operation / "status.json"
+    status.write_text(json.dumps({
+        "schema": 1,
+        "phase": "complete",
+        "generation": "0" * 64,
+        "parent_generation": first["parent_generation"],
+    }))
+    with pytest.raises(
+        ImageBuildError,
+        match="conflicting completed accepted-image derivation status",
+    ):
+        derive(builder, "terminal-conflict", SOURCE_REVISION, profile)
+
+
+def test_completed_result_rejects_generation_mismatch(tmp_path):
+    builder, _parent, profile, _components = fixture(tmp_path)
+    first = derive(builder, "result-conflict", SOURCE_REVISION, profile)
+    operation = operation_directory(builder.state, "result-conflict")
+    result_path = operation / "result.json"
+    result = json.loads(result_path.read_text())
+    result["generation"] = "0" * 64
+    result_path.write_text(json.dumps(result))
+    with pytest.raises(ImageBuildError):
+        derive(builder, "result-conflict", SOURCE_REVISION, profile)
