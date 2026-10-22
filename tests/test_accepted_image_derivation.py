@@ -369,3 +369,41 @@ def test_completed_result_rejects_generation_mismatch(tmp_path):
     result_path.write_text(json.dumps(result))
     with pytest.raises(ImageBuildError):
         derive(builder, "result-conflict", SOURCE_REVISION, profile)
+
+
+def test_real_inventory_path_order_preserves_payload(tmp_path):
+    import shutil
+
+    builder, parent, profile, _components = fixture(tmp_path)
+    root = tmp_path / "ordered-parent"
+    shutil.copytree(parent.root, root, symlinks=True)
+    (root / "alpha").mkdir()
+    (root / "alpha" / "child").write_text("retained child\n")
+    (root / "alpha.txt").write_text("retained sibling\n")
+
+    parent = builder._publish(
+        root,
+        parent.manifest["inputs"] | {"order_fixture": True},
+        "image",
+        {
+            COMPATIBILITY_FIELD: parent.manifest[COMPATIBILITY_FIELD],
+            "host_boot_ready": False,
+        },
+    )
+    profile = dict(
+        profile,
+        parent_generation=parent.generation,
+        parent_manifest_sha256=digest(parent.root.parent / "manifest.json"),
+        parent_output_count=len(parent.manifest["outputs"]),
+    )
+
+    result = derive(builder, "path-order-regression", SOURCE_REVISION, profile)
+    assert result["phase"] == "complete"
+    selected = read_selection(
+        builder.state / "image-build" / "generations" / result["generation"]
+    )
+    parent_records = {row["path"]: row for row in parent.manifest["outputs"]}
+    derived_records = {row["path"]: row for row in selected.manifest["outputs"]}
+    assert {name: derived_records[name] for name in parent_records} == parent_records
+    assert (selected.root / "alpha/child").read_text() == "retained child\n"
+    assert (selected.root / "alpha.txt").read_text() == "retained sibling\n"

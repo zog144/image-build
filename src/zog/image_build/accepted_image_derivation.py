@@ -223,7 +223,7 @@ def _expected_outputs(parent_outputs, added):
         if path in records:
             raise ImageBuildError("derivation addition collides with parent output")
         records[path] = {"path": path, "kind": "directory", "mode": mode}
-    return [records[name] for name in sorted(records)]
+    return [records[name] for name in sorted(records, key=Path)]
 
 
 def _materialize_targets(root, parent_outputs):
