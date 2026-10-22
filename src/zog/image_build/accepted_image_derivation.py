@@ -47,7 +47,7 @@ CERTIFY_MANAGE_RECOVERY = {
     "missing_component_output_count": 54,
     "required_new_target": "/var/lib/zog-certify-manage",
     "evidence": {
-        "repository": "zog144/know-file",
+        "source": "retained-review-record",
         "revision": "1347dbf3021de2cdcd07cd0ae7b69ea5362f853f",
         "path": (
             "image-build/verification/certbot-offline-wheels-2026-10-22/"
@@ -99,9 +99,8 @@ def _profile(value):
     evidence = value["evidence"]
     if (
         not isinstance(evidence, dict)
-        or set(evidence) != {"repository", "revision", "path"}
-        or not isinstance(evidence["repository"], str)
-        or not evidence["repository"]
+        or set(evidence) != {"source", "revision", "path"}
+        or evidence.get("source") != "retained-review-record"
         or re.fullmatch(r"[0-9a-f]{40}", evidence.get("revision", "")) is None
         or not isinstance(evidence["path"], str)
         or evidence["path"].startswith("/")

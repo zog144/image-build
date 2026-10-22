@@ -84,7 +84,7 @@ def fixture(tmp_path):
         "missing_component_output_count": len(components),
         "required_new_target": "/var/lib/zog-certify-manage",
         "evidence": {
-            "repository": "zog144/know-file",
+            "source": "retained-review-record",
             "revision": "b" * 40,
             "path": "image-build/verification/fixture.md",
         },
@@ -105,7 +105,7 @@ def test_production_recovery_profile_binds_recorded_parent_and_gap():
         "missing_component_output_count": 54,
         "required_new_target": "/var/lib/zog-certify-manage",
         "evidence": {
-            "repository": "zog144/know-file",
+            "source": "retained-review-record",
             "revision": "1347dbf3021de2cdcd07cd0ae7b69ea5362f853f",
             "path": (
                 "image-build/verification/certbot-offline-wheels-2026-10-22/"
