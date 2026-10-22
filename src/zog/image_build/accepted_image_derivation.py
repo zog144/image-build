@@ -510,13 +510,17 @@ def derive(builder, operation_name, source_revision, profile=CERTIFY_MANAGE_RECO
             return result
 
 
-def run(project, operation_name, source_revision):
+def run(state_dir, operation_name, source_revision):
     from . import ImageBuild
 
-    project = Path(project).resolve()
+    state = Path(state_dir).resolve()
+    if state.is_symlink() or not state.is_dir():
+        raise ImageBuildError(
+            "accepted-image derivation requires an existing real image-build state directory"
+        )
     builder = ImageBuild(
-        package_dir=project / "project" / "package",
-        state_dir=project / "state",
+        package_dir=state / "image-build" / ".unused-package-catalogue",
+        state_dir=state,
         maximum_generations=32,
         provenance=None,
     )
@@ -525,7 +529,7 @@ def run(project, operation_name, source_revision):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", required=True)
+    parser.add_argument("--state-dir", required=True)
     parser.add_argument("--operation-name", required=True)
     parser.add_argument("--source-revision", required=True)
     args = parser.parse_args()
