@@ -128,7 +128,7 @@ def operation_directory(state_dir, operation_name):
     )
 
 
-def _parent_binding(parent, profile):
+def _parent_binding(parent, profile, state_dir):
     manifest_path = parent.root.parent / "manifest.json"
     if manifest_path.is_symlink() or not manifest_path.is_file():
         raise ImageBuildError("accepted parent manifest is unavailable")
@@ -161,6 +161,26 @@ def _parent_binding(parent, profile):
         )
     ):
         raise ImageBuildError("accepted parent component-output inventory differs")
+    historical_base = (
+        Path(state_dir)
+        / "image-build"
+        / "generations"
+        / profile["missing_base_generation"]
+    )
+    if historical_base.exists() or historical_base.is_symlink():
+        raise ImageBuildError(
+            "historical base generation is available; provenance-complete publisher required"
+        )
+    available_components = sorted(
+        path
+        for path in components.values()
+        if Path(path).exists() or Path(path).is_symlink()
+    )
+    if available_components:
+        raise ImageBuildError(
+            "historical component outputs are available; provenance-complete publisher required"
+        )
+
     by_path = {record["path"]: record for record in manifest["outputs"]}
     target = profile["required_new_target"].lstrip("/")
     if target in by_path or any(name.startswith(target + "/") for name in by_path):
@@ -377,7 +397,7 @@ def derive(builder, operation_name, source_revision, profile=CERTIFY_MANAGE_RECO
                 / profile["parent_generation"]
             )
             parent = read_selection(parent_path)
-            parent_binding = _parent_binding(parent, profile)
+            parent_binding = _parent_binding(parent, profile, builder.state)
             gap = _gap(parent_binding, profile)
             intent = {
                 "schema": 1,
