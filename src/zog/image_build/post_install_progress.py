@@ -710,12 +710,41 @@ def _app_item(state, application, selection, *, command_limit):
         base.update(state="not-requested", message_code="application-not-requested")
         return base
 
+    # Publication is independently retained and reverified.  A valid receipt can
+    # outlive or predate the post-install pipeline ledger (for example a finite
+    # controller build that later receives a current host-install selection).
+    # Observing publication never fabricates build/pipeline evidence or runtime
+    # admission.
+    publication = _publication(
+        state, application, selection["selection_revision"], row["operation_revision"]
+    )
+    base["publication"] = publication
+
     owner = pipeline_owner(selection, application)
     matches = _pipelines(state, owner)
     if not matches:
-        base.update(phase="queued", state="waiting", message_code="intent-awaiting-pipeline")
+        if publication["state"] in {"succeeded", "uncertain"}:
+            base.update(
+                phase="publishing",
+                state=publication["state"],
+                message_code=publication["message_code"],
+            )
+        elif publication["message_code"] == "publication-evidence-conflict":
+            base.update(
+                phase="publishing",
+                state="unknown",
+                message_code="publication-evidence-conflict",
+            )
+        else:
+            base.update(
+                phase="queued",
+                state="waiting",
+                message_code="intent-awaiting-pipeline",
+            )
         return base
     if len(matches) != 1:
+        # Preserve the independent publication observation, but do not let it
+        # hide contradictory build history.
         base.update(phase="building", state="uncertain", message_code="pipeline-conflict")
         return base
     pipeline = matches[0]
@@ -790,10 +819,6 @@ def _app_item(state, application, selection, *, command_limit):
         elif build_state in {"running", "waiting"}:
             build_state, code, phase = "uncertain", command_code, "building"
 
-    publication = _publication(
-        state, application, selection["selection_revision"], row["operation_revision"]
-    )
-    base["publication"] = publication
     if publication["state"] == "succeeded":
         base.update(phase="publishing", state="succeeded",
                     message_code=publication["message_code"])

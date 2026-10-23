@@ -529,3 +529,154 @@ def test_terminal_command_outcome_is_distinct_from_pending_recovery(
     assert item["state"] == expected_state
     assert item["message_code"] == expected_code
     assert item["publication"]["state"] == "unknown"
+
+
+def test_valid_publication_without_pipeline_is_observed_without_build_claims(tmp_path):
+    state = tmp_path / "state"
+    receipt = selection(state)
+    publication = publish(state, receipt)
+
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["pipeline_id"] is None
+    assert item["pipeline_state"] is None
+    assert item["source_pin_identity"] is None
+    assert item["commands"] == []
+    assert item["commands_truncated"] is False
+    assert item["publication"]["state"] == "succeeded"
+    assert item["publication"]["message_code"] == "view-published-compatible"
+    assert item["publication"]["receipt"] == publication["receipt"]
+    assert item["state"] == "succeeded"
+    assert item["phase"] == "publishing"
+    assert item["message_code"] == "view-published-compatible"
+    assert item["runtime_admission"] == "unobserved"
+
+
+def test_missing_publication_without_pipeline_remains_waiting_for_pipeline(tmp_path):
+    state = tmp_path / "state"
+    selection(state)
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["pipeline_id"] is None
+    assert item["publication"]["state"] == "unknown"
+    assert item["publication"]["message_code"] == "publication-unobserved"
+    assert item["state"] == "waiting"
+    assert item["phase"] == "queued"
+    assert item["message_code"] == "intent-awaiting-pipeline"
+
+
+def test_invalid_publication_without_pipeline_is_explicit_conflict(tmp_path):
+    state = tmp_path / "state"
+    receipt = selection(state)
+    publication = publish(state, receipt)
+    path = (
+        state / "image-build" / "post-install-publications" / "firefox"
+        / (receipt["applications"][0]["operation_revision"][7:] + ".json")
+    )
+    raw = json.loads(path.read_text())
+    raw["receipt"] = "sha256:" + "0" * 64
+    write_json(path, raw)
+
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["pipeline_id"] is None
+    assert item["commands"] == []
+    assert item["publication"]["state"] == "unknown"
+    assert item["publication"]["message_code"] == "publication-evidence-conflict"
+    assert item["state"] == "unknown"
+    assert item["phase"] == "publishing"
+    assert item["message_code"] == "publication-evidence-conflict"
+    assert publication["receipt"] != raw["receipt"]
+
+
+def test_publication_selection_mismatch_without_pipeline_is_conflict(tmp_path):
+    state = tmp_path / "state"
+    receipt = selection(state)
+    publish(state, receipt)
+    path = (
+        state / "image-build" / "post-install-publications" / "firefox"
+        / (receipt["applications"][0]["operation_revision"][7:] + ".json")
+    )
+    raw = json.loads(path.read_text())
+    raw["selection_revision"] = "sha256:" + "f" * 64
+    body_keys = {
+        "schema", "contract", "producer", "application", "selection_revision",
+        "operation_revision", "artifact", "view", "compatibility_checked",
+        "rootfs_generation", "rootfs_compatibility", "binding_digest",
+        "artifact_revision", "artifact_source_identity",
+    }
+    body = {key: raw[key] for key in body_keys}
+    raw["receipt"] = "sha256:" + hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    write_json(path, raw)
+
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["publication"]["message_code"] == "publication-evidence-conflict"
+    assert item["state"] == "unknown"
+    assert item["pipeline_id"] is None
+
+
+def test_publication_operation_mismatch_without_pipeline_is_conflict(tmp_path):
+    state = tmp_path / "state"
+    receipt = selection(state)
+    publish(state, receipt)
+    operation = receipt["applications"][0]["operation_revision"]
+    directory = state / "image-build" / "post-install-publications" / "firefox"
+    original = directory / (operation[7:] + ".json")
+    raw = json.loads(original.read_text())
+    wrong = "sha256:" + "b" * 64
+    raw["operation_revision"] = wrong
+    body_keys = {
+        "schema", "contract", "producer", "application", "selection_revision",
+        "operation_revision", "artifact", "view", "compatibility_checked",
+        "rootfs_generation", "rootfs_compatibility", "binding_digest",
+        "artifact_revision", "artifact_source_identity",
+    }
+    body = {key: raw[key] for key in body_keys}
+    raw["receipt"] = "sha256:" + hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    # Keep the mismatched receipt at the selected operation's canonical path so
+    # observation sees evidence and classifies it as conflict rather than absence.
+    write_json(original, raw)
+
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["publication"]["message_code"] == "publication-evidence-conflict"
+    assert item["state"] == "unknown"
+    assert item["operation_revision"] == operation
+
+
+def test_incompatible_rootfs_publication_without_pipeline_fails_closed(tmp_path):
+    state = tmp_path / "state"
+    receipt = selection(state)
+    publication = publish(state, receipt)
+    manifest_path = (
+        state / "image-build" / "generations"
+        / publication["rootfs_generation"] / "manifest.json"
+    )
+    manifest = json.loads(manifest_path.read_text())
+    manifest["application_software_compatibility"]["libraries"] = []
+    write_json(manifest_path, manifest)
+
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["pipeline_id"] is None
+    assert item["publication"]["message_code"] == "publication-evidence-conflict"
+    assert item["state"] == "unknown"
+    assert item["message_code"] == "publication-evidence-conflict"
+
+
+def test_pipeline_conflict_is_not_hidden_by_valid_publication(tmp_path):
+    state = tmp_path / "state"
+    receipt = selection(state)
+    publish(state, receipt)
+    pipeline(state, receipt)
+    first = state / "image-build" / "pipelines" / ("1" * 32) / "pipeline.json"
+    value = json.loads(first.read_text())
+    value["pipeline_id"] = "9" * 32
+    second = state / "image-build" / "pipelines" / ("9" * 32)
+    second.mkdir()
+    write_json(second / "pipeline.json", value)
+
+    item = snap(state, ["firefox"])["items"][0]
+    assert item["publication"]["state"] == "succeeded"
+    assert item["publication"]["message_code"] == "view-published-compatible"
+    assert item["state"] == "uncertain"
+    assert item["message_code"] == "pipeline-conflict"
