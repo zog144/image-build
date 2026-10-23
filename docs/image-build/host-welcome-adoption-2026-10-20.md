@@ -10,7 +10,7 @@ reviewed image-build commit supplied with the implementation handoff.
 - projection: `image-build-post-install-progress-v2`
 - local wire: `image-build-post-install-progress-rpc-v2`
 - transport authentication: `image-build-post-install-progress-linux-credentials-v1`
-- reviewed runtime source: `7348ec730a3181f1a8ecc62a6e4d633ce191674a`
+- reviewed runtime source: `7b653e8be3f89730a52688d71df28513456f9cf3`
 - producer source binding: `image-build-post-install-source-v1`
 - intent owner: `host-install`
 - publication: `image-build-post-install-publication-v2`
@@ -39,6 +39,8 @@ selected-rootfs compatibility and runtime admission are independent facts. In
 particular:
 
 - command success never means software published;
+- a verified publication may exist without retained post-install pipeline history;
+  that never implies build success and leaves pipeline/command identities absent;
 - publication never means box-control admitted or mounted it;
 - runtime observation never means graphical rendering or a usable local seat;
 - greetd compilation/publication never grants a privileged PAM/logind role.

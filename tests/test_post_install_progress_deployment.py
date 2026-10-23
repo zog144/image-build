@@ -33,7 +33,7 @@ def test_native_observer_contract_matches_reviewed_host_welcome_v1():
     assert POLICY_PATH == "/etc/zog/host-welcome-image-progress-observer.json"
     assert SOCKET_PATH == "/run/host-welcome/image-progress.sock"
     assert SOURCE_REPOSITORY == "zog144/image-build"
-    assert SOURCE_REVISION == "7348ec730a3181f1a8ecc62a6e4d633ce191674a"
+    assert SOURCE_REVISION == "7b653e8be3f89730a52688d71df28513456f9cf3"
     assert TRANSPORT_AUTH == "image-build-post-install-progress-linux-credentials-v1"
     assert APPLICATIONS == (
         "agreety", "firefox-esr", "greetd", "i3", "xorg-server",

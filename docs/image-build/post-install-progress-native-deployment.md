@@ -13,19 +13,21 @@ systemd units or authorize production activation.
 The consumer-reviewed progress implementation remains:
 
 - repository: `zog144/image-build`
-- source revision: `7348ec730a3181f1a8ecc62a6e4d633ce191674a`
+- source revision: `7b653e8be3f89730a52688d71df28513456f9cf3`
 - projection: `image-build-post-install-progress-v2`
 - wire: `image-build-post-install-progress-rpc-v2`
 - source binding: `image-build-post-install-source-v1`
 - transport authentication: `image-build-post-install-progress-linux-credentials-v1`
 
-The reviewed runtime revision contains the socket-activation correction from the
-2026-10-21 native pass. The projection and twelve supporting modules remain
-byte-identical to the earlier reviewed source; the broker changed only to attach
-kernel-validated Linux `SCM_CREDENTIALS` to each reply and to contain disconnected
-client writes per connection. The reference inventory pins all 13 exact Git blob
-identities and computes independent SHA-256 values when host-install reviews a
-source checkout.
+The reviewed runtime revision includes the socket-activation correction from the
+2026-10-21 native pass and the Gate C receipt-only publication correction. The
+broker still attaches kernel-validated Linux `SCM_CREDENTIALS` to each reply and
+contains disconnected client writes per connection. The progress projection now
+reverifies a matching publication receipt even when no matching post-install
+pipeline exists; it leaves pipeline/command identities absent and never infers
+build success or runtime admission from publication. The reference inventory pins
+all 13 exact Git blob identities and computes independent SHA-256 values when
+host-install reviews a source checkout.
 
 The source binding names the reviewed projection implementation. It does not claim
 that every file in a later aggregate `zog` wheel came from that old commit.
@@ -47,7 +49,7 @@ with schema `zog-host-welcome-image-progress-observer-v1` and exactly:
 - independently resolved numeric `consumer_uid`;
 - independently resolved distinct numeric `producer_uid`;
 - `socket=/run/host-welcome/image-progress.sock`;
-- `image_build_source_commit=7348ec730a3181f1a8ecc62a6e4d633ce191674a`.
+- `image_build_source_commit=7b653e8be3f89730a52688d71df28513456f9cf3`.
 
 The first-wave immutable graphical allowlist is exactly:
 
@@ -155,3 +157,26 @@ A disposable host must still prove:
 
 Passing source CI is not native deployment acceptance and does not authorize
 production enablement.
+
+
+## Gate C receipt-only publication semantics
+
+A current host-install selection can legitimately reference an image-build
+artifact/view that was produced by a finite controller path rather than a retained
+post-install pipeline. In that case the read-only projection independently checks
+the publication receipt, immutable artifact/view, exact selected rootfs generation,
+compatibility descriptor and consumer binding.
+
+When no matching pipeline exists:
+
+- missing publication remains `waiting / intent-awaiting-pipeline`;
+- corrupt, selection-mismatched, operation-mismatched, or incompatible publication
+  evidence is `unknown / publication-evidence-conflict`;
+- a verified artifact/view publication reports its publication state/message at
+  top level with `phase=publishing`;
+- `pipeline_id`, `pipeline_state`, `source_pin_identity` and `commands`
+  remain absent/empty;
+- `runtime_admission` remains `unobserved`.
+
+If conflicting pipeline history does exist, the top-level pipeline conflict remains
+visible even when the independent publication object itself verifies successfully.
