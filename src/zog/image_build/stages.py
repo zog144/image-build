@@ -172,6 +172,7 @@ def run(project, catalogue, plan_path, controller, seed_path, operation_name='cr
         attempts_bound = pipeline.get('attempts')
         if (
             not isinstance(attempts_bound, dict)
+            or not all(isinstance(value, str) for value in attempts_bound.values())
             or len(set(attempts_bound.values())) != len(attempts_bound)
         ):
             raise ImageBuildError('recorded bootstrap attempts are ambiguous')

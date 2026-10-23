@@ -576,16 +576,14 @@ class ToolchainRemoteExecutor:
 
     def _pipeline_item(self, pipeline):
         pipeline_id = pipeline.get("pipeline_id")
-        if (
-            not isinstance(pipeline_id, str)
-            or len(pipeline_id) != 32
-            or any(c not in "0123456789abcdef" for c in pipeline_id)
-        ):
+        if not isinstance(pipeline_id, str) or not pipeline_id:
             raise ImageBuildError("invalid retained toolchain pipeline identity")
         attempts = pipeline.get("attempts")
         if not isinstance(attempts, dict):
             raise ImageBuildError("invalid retained toolchain pipeline attempts")
         attempt_ids = list(attempts.values())
+        if not all(isinstance(attempt_id, str) for attempt_id in attempt_ids):
+            raise ImageBuildError("invalid retained toolchain pipeline attempts")
         if len(set(attempt_ids)) != len(attempt_ids):
             raise ImageBuildError("ambiguous retained toolchain pipeline attempts")
         for attempt_id in attempt_ids:
