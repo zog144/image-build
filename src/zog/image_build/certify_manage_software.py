@@ -396,16 +396,73 @@ def verify_staging(root, runtime_lock):
     return lock
 
 
+def _verify_publication_intent(manifest, intent):
+    expected = {
+        "application": intent["application"],
+        "revision": intent["revision"],
+        "architecture": intent["compatibility"]["architecture"],
+        "sources": intent["sources"],
+        "compatibility": intent["compatibility"],
+        "notices": intent["notices"],
+        "provenance": intent["provenance"],
+    }
+    observed = {key: manifest.get(key) for key in expected}
+    if observed != expected:
+        raise ImageBuildError(
+            "certify-manage frozen publication differs from retained runtime lock"
+        )
+
+
+def _verify_recovery_payload(store, operation_state, runtime_lock):
+    operation_path = store.root / "operations" / operation_state.operation
+    if operation_state.artifact is not None:
+        artifact = store.resolve(operation_state.artifact)
+        _verify_publication_intent(artifact.manifest, operation_state.intent)
+        verify_staging(artifact.root, runtime_lock)
+        return
+
+    if not operation_state.frozen:
+        verify_staging(operation_state.root, runtime_lock)
+        return
+
+    # A frozen operation may have been interrupted before candidate publication,
+    # after candidate preparation, or after the artifact rename but before its
+    # operation receipt.  Validate the exact retained bytes for that state before
+    # asking the lower store to reconcile the missing receipt.
+    frozen = store._freeze(operation_path, operation_state.intent)
+    _verify_publication_intent(frozen["manifest"], operation_state.intent)
+    artifact_id = frozen["artifact"]
+    target = store.root / "artifacts" / artifact_id.removeprefix("sha256:")
+    candidate_root = (
+        store.root / "candidates" / operation_state.operation / "root"
+    )
+    if target.exists() or target.is_symlink():
+        artifact = store.resolve(artifact_id)
+        verify_staging(artifact.root, runtime_lock)
+    elif candidate_root.exists() or candidate_root.is_symlink():
+        verify_staging(candidate_root, runtime_lock)
+    elif operation_state.root.exists() or operation_state.root.is_symlink():
+        verify_staging(operation_state.root, runtime_lock)
+    else:
+        raise ImageBuildError(
+            "certify-manage frozen publication payload is unavailable"
+        )
+
+
 def finalize(state_dir, operation, runtime_lock, rootfs_compatibility):
     lock = validate_lock(runtime_lock)
     store = ApplicationSoftwareStore(state_dir)
-    operation_path = store.root / "operations" / operation
-    if (operation_path / "result.json").exists():
-        artifact = store.finalize(operation)
-        verify_staging(artifact.root, runtime_lock)
-    else:
-        verify_staging(operation_path / "root", runtime_lock)
-        artifact = store.finalize(operation)
+
+    # Re-open through begin() first.  This revalidates the caller's exact
+    # runtime-lock-derived intent against the durable operation without creating
+    # a new identity or substituting inputs.
+    operation_state = begin(state_dir, operation, runtime_lock)
+    _verify_recovery_payload(store, operation_state, runtime_lock)
+
+    artifact = store.finalize(operation)
+    _verify_publication_intent(artifact.manifest, operation_state.intent)
+    verify_staging(artifact.root, runtime_lock)
+
     views = ApplicationSoftwareViewStore(state_dir)
     view = views.publish(
         operation + "-view",

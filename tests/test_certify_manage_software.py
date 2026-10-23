@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 
+import zog.image_build.application_software as application_software
+import zog.image_build.application_views as application_views
 from zog.image_build.certify_manage_software import (
     APPLICATION,
     CERTBOT,
@@ -127,6 +129,137 @@ def test_exact_runtime_lock_and_immutable_publication(profile, tmp_path):
     assert result["binding"]["reclamation_protection"]["view"] == result["view"]
     assert result["artifact"] in result["binding"]["reclamation_protection"]["artifacts"]
     assert finalize(state, operation.operation, lock, rootfs) == result
+
+
+def test_finalize_recovers_frozen_candidate_before_artifact_publication(
+    tmp_path, monkeypatch
+):
+    state, lock, operation = prepared(tmp_path)
+    rootfs = descriptor()
+    original = application_software._publish_artifact_candidate
+
+    def interrupt_before_publish(candidate, target):
+        del candidate, target
+        raise KeyboardInterrupt("interrupted before artifact publication")
+
+    monkeypatch.setattr(
+        application_software,
+        "_publish_artifact_candidate",
+        interrupt_before_publish,
+    )
+    with pytest.raises(KeyboardInterrupt, match="before artifact publication"):
+        finalize(state, operation.operation, lock, rootfs)
+
+    software = state / "image-build" / "application-software"
+    operation_path = software / "operations" / operation.operation
+    candidate_root = software / "candidates" / operation.operation / "root"
+    assert (operation_path / "frozen.json").is_file()
+    assert not (operation_path / "result.json").exists()
+    assert candidate_root.is_dir()
+    assert not operation.root.exists()
+
+    monkeypatch.setattr(
+        application_software,
+        "_publish_artifact_candidate",
+        original,
+    )
+    result = finalize(state, operation.operation, lock, rootfs)
+    assert result["artifact"].startswith("sha256:")
+    assert (operation_path / "result.json").is_file()
+    assert not candidate_root.exists()
+    assert finalize(state, operation.operation, lock, rootfs) == result
+
+
+def test_finalize_recovers_published_artifact_without_receipt_and_rejects_conflict(
+    tmp_path, monkeypatch
+):
+    state, lock, operation = prepared(tmp_path)
+    rootfs = descriptor()
+    original = application_software._publish_artifact_candidate
+
+    def publish_then_interrupt(candidate, target):
+        original(candidate, target)
+        raise KeyboardInterrupt("artifact published; receipt not saved")
+
+    monkeypatch.setattr(
+        application_software,
+        "_publish_artifact_candidate",
+        publish_then_interrupt,
+    )
+    with pytest.raises(KeyboardInterrupt, match="receipt not saved"):
+        finalize(state, operation.operation, lock, rootfs)
+
+    software = state / "image-build" / "application-software"
+    operation_path = software / "operations" / operation.operation
+    assert (operation_path / "frozen.json").is_file()
+    assert not (operation_path / "result.json").exists()
+    assert not operation.root.exists()
+    assert len(list((software / "artifacts").iterdir())) == 1
+
+    monkeypatch.setattr(
+        application_software,
+        "_publish_artifact_candidate",
+        original,
+    )
+    conflicting = runtime_lock()
+    conflicting["certify_manage_revision"] = "b" * 40
+    with pytest.raises(ImageBuildError, match="operation changed"):
+        finalize(state, operation.operation, conflicting, rootfs)
+    assert not (operation_path / "result.json").exists()
+
+    result = finalize(state, operation.operation, lock, rootfs)
+    assert (operation_path / "result.json").is_file()
+    assert result["artifact"].startswith("sha256:")
+    assert finalize(state, operation.operation, lock, rootfs) == result
+
+
+def test_finalize_recovers_published_view_without_view_receipt(
+    tmp_path, monkeypatch
+):
+    state, lock, operation = prepared(tmp_path)
+    rootfs = descriptor()
+    original = application_views._publish_candidate
+
+    def publish_then_interrupt(candidate, target):
+        original(candidate, target)
+        raise KeyboardInterrupt("view published; receipt not saved")
+
+    monkeypatch.setattr(
+        application_views,
+        "_publish_candidate",
+        publish_then_interrupt,
+    )
+    with pytest.raises(KeyboardInterrupt, match="view published"):
+        finalize(state, operation.operation, lock, rootfs)
+
+    software = state / "image-build" / "application-software"
+    artifact_result = software / "operations" / operation.operation / "result.json"
+    view_operation = (
+        software
+        / "view-operations"
+        / (operation.operation + "-view")
+        / "result.json"
+    )
+    assert artifact_result.is_file()
+    assert not view_operation.exists()
+    assert len(list((software / "views").iterdir())) == 1
+
+    monkeypatch.setattr(application_views, "_publish_candidate", original)
+    result = finalize(state, operation.operation, lock, rootfs)
+    assert view_operation.is_file()
+    assert result["view"].startswith("sha256:")
+    assert finalize(state, operation.operation, lock, rootfs) == result
+
+
+def test_finalize_lost_response_reconstructs_identical_result(tmp_path):
+    state, lock, operation = prepared(tmp_path)
+    rootfs = descriptor()
+    first = finalize(state, operation.operation, lock, rootfs)
+
+    # The caller deliberately retains no wrapper-level result.  Durable artifact
+    # and view receipts must be sufficient to reconstruct the exact response.
+    second = finalize(state, operation.operation, lock, rootfs)
+    assert second == first
 
 
 def test_lock_rejects_missing_extra_or_changed_dependency(tmp_path):
