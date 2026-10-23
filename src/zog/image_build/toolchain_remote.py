@@ -574,21 +574,102 @@ class ToolchainRemoteExecutor:
             work,
         )
 
+    def _pipeline_item(self, pipeline):
+        pipeline_id = pipeline.get("pipeline_id")
+        if (
+            not isinstance(pipeline_id, str)
+            or len(pipeline_id) != 32
+            or any(c not in "0123456789abcdef" for c in pipeline_id)
+        ):
+            raise ImageBuildError("invalid retained toolchain pipeline identity")
+        attempts = pipeline.get("attempts")
+        if not isinstance(attempts, dict):
+            raise ImageBuildError("invalid retained toolchain pipeline attempts")
+        attempt_ids = list(attempts.values())
+        if len(set(attempt_ids)) != len(attempt_ids):
+            raise ImageBuildError("ambiguous retained toolchain pipeline attempts")
+        for attempt_id in attempt_ids:
+            names([attempt_id])
+        return {
+            "pipeline_id": pipeline_id,
+            "status": pipeline.get("status"),
+            "attempt_ids": sorted(attempt_ids)[:MAX_EVIDENCE],
+        }
+
     def _pipeline_evidence(self, generation):
         try:
             pipeline = self._pipeline_for_generation(generation)
         except ImageBuildError:
             return None
-        return {
-            "pipeline_id": pipeline.get("pipeline_id"),
-            "status": pipeline.get("status"),
-            "attempt_ids": sorted(
-                set(pipeline.get("attempts", {}).values())
-            )[:MAX_EVIDENCE],
-        }
+        return self._pipeline_item(pipeline)
 
-    def _controller_evidence(self, binding, outputs):
+    def _bound_pipeline(self, binding, record):
+        if not isinstance(record, dict) or "pipeline_id" not in record:
+            return None
+        if binding["phase"] != "cross-bootstrap":
+            raise ImageBuildError(
+                "retained toolchain phase has an unexpected pipeline association"
+            )
+        pipeline_id = record["pipeline_id"]
+        try:
+            pipeline = self.builder.inspect_pipeline(pipeline_id)
+        except (OSError, ValueError, TypeError, ImageBuildError) as error:
+            raise ImageBuildError(
+                "retained toolchain pipeline association is unavailable"
+            ) from error
+        intent = record.get("intent")
+        expected_owner = {
+            "contract": "image-build-toolchain-phase-pipeline-v1",
+            "work_name": binding["work_name"],
+        }
+        selection = (
+            self.state
+            / "image-build"
+            / "generations"
+            / binding["inputs"]["seed_generation"]
+        ).resolve()
+        if (
+            not isinstance(intent, dict)
+            or intent.get("seed") != binding["inputs"]["seed_generation"]
+            or not isinstance(intent.get("plan"), dict)
+            or pipeline.get("pipeline_id") != pipeline_id
+            or pipeline.get("operation") != "seed-check"
+            or pipeline.get("selection") != str(selection)
+            or pipeline.get("arguments")
+            != {"targets": intent["plan"].get("targets")}
+            or pipeline.get("recipes") != intent.get("recipes")
+            or pipeline.get("policy") != intent.get("policy")
+            or pipeline.get("owner") not in (None, expected_owner)
+        ):
+            raise ImageBuildError(
+                "retained toolchain pipeline association differs"
+            )
+        self._pipeline_item(pipeline)
+        for attempt_id in pipeline["attempts"].values():
+            status_path = (
+                self.state
+                / "image-build"
+                / "attempts"
+                / attempt_id
+                / "status.json"
+            )
+            try:
+                attempt = json.loads(status_path.read_text())
+            except (OSError, ValueError, TypeError) as error:
+                raise ImageBuildError(
+                    "retained toolchain attempt association is unavailable"
+                ) from error
+            if attempt.get("pipeline_id") != pipeline_id:
+                raise ImageBuildError(
+                    "retained toolchain attempt association differs"
+                )
+        return pipeline
+
+    def _controller_evidence(self, binding, outputs, bound_pipeline=None):
         roots = [self._work(binding)]
+        pipelines = []
+        if bound_pipeline is not None:
+            pipelines.append(bound_pipeline)
         for value in outputs.values():
             if not isinstance(value, str) or len(value) != _GENERATION_LENGTH:
                 continue
@@ -596,6 +677,12 @@ class ToolchainRemoteExecutor:
                 pipeline = self._pipeline_for_generation(value)
             except ImageBuildError:
                 continue
+            if all(
+                item.get("pipeline_id") != pipeline.get("pipeline_id")
+                for item in pipelines
+            ):
+                pipelines.append(pipeline)
+        for pipeline in pipelines:
             for attempt_id in set(pipeline.get("attempts", {}).values()):
                 roots.append(
                     self.state / "image-build" / "attempts" / attempt_id
@@ -612,26 +699,72 @@ class ToolchainRemoteExecutor:
                 seen.add(key)
                 try:
                     value = json.loads(path.read_text())
-                except (OSError, ValueError, TypeError):
-                    continue
+                except (OSError, ValueError, TypeError) as error:
+                    raise ImageBuildError(
+                        "invalid retained controller checkpoint"
+                    ) from error
+                if not isinstance(value, dict):
+                    raise ImageBuildError(
+                        "invalid retained controller checkpoint"
+                    )
                 item = {
                     k: value.get(k)
                     for k in (
                         "request_id",
                         "job_id",
-                        "state",
-                        "outcome",
-                        "exit_code",
-                        "invocation_id",
-                        "journal_reference",
-                        "process_cleanup_complete",
+                        "resource_id",
                     )
                     if k in value
                 }
+                observation = path.with_name(
+                    path.name.removesuffix(".controller.json")
+                    + ".observation.json"
+                )
+                if observation.exists():
+                    try:
+                        observed = json.loads(observation.read_text())
+                    except (OSError, ValueError, TypeError) as error:
+                        raise ImageBuildError(
+                            "invalid retained controller observation"
+                        ) from error
+                    if (
+                        not isinstance(observed, dict)
+                        or observed.get("request_id") != value.get("request_id")
+                        or observed.get("job_id") != value.get("job_id")
+                    ):
+                        raise ImageBuildError(
+                            "retained controller observation identity differs"
+                        )
+                    for name in (
+                        "state",
+                        "outcome",
+                        "exit_code",
+                        "runtime_id",
+                        "invocation_id",
+                        "boot_id",
+                        "unit_name",
+                        "journal_reference",
+                        "process_cleanup_complete",
+                        "resources_released",
+                        "cancel_requested",
+                        "completed_at",
+                    ):
+                        if name in observed:
+                            item[name] = observed[name]
+                    try:
+                        item["observation_locator"] = str(
+                            observation.relative_to(self.state)
+                        )
+                    except ValueError:
+                        raise ImageBuildError(
+                            "retained controller observation escaped state"
+                        )
                 try:
                     item["locator"] = str(path.relative_to(self.state))
-                except ValueError:
-                    continue
+                except ValueError as error:
+                    raise ImageBuildError(
+                        "retained controller checkpoint escaped state"
+                    ) from error
                 result.append(item)
                 if len(result) >= MAX_EVIDENCE:
                     return result
@@ -650,6 +783,7 @@ class ToolchainRemoteExecutor:
             if key in outputs:
                 selected = outputs[key]
                 break
+        bound_pipeline = self._bound_pipeline(binding, record)
         artifact = {
             "contract": REMOTE_EXECUTION_CONTRACT,
             "phase": binding["phase"],
@@ -661,8 +795,14 @@ class ToolchainRemoteExecutor:
             "outputs": outputs,
             "work_record": None,
             "pipelines": [],
-            "controller_jobs": self._controller_evidence(binding, outputs),
+            "controller_jobs": self._controller_evidence(
+                binding, outputs, bound_pipeline
+            ),
         }
+        if bound_pipeline is not None:
+            artifact["pipelines"].append(
+                self._pipeline_item(bound_pipeline)
+            )
         if path.exists():
             artifact["work_record"] = {
                 "locator": str(path.relative_to(self.state)),

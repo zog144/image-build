@@ -133,7 +133,49 @@ def run(project, catalogue, plan_path, controller, seed_path, operation_name='cr
             if saved['operation']=='seed-check' and saved['selection']==str(seed.root.parent) and saved['arguments']['targets']==plan['targets'] and saved['recipes']==intent['recipes']:
                 matches.append(path)
         if len(matches)>1: raise ImageBuildError('ambiguous bootstrap pipelines')
-        result = builder.resume(matches[0].parent.name) if matches else builder.verify_seed(plan['targets'], host_bootstrap=seed)
+        expected_owner = {
+            'contract': 'image-build-toolchain-phase-pipeline-v1',
+            'work_name': operation_name,
+        }
+        pipeline_id = operation.get('pipeline_id')
+        if pipeline_id is None:
+            if matches:
+                pipeline_id = matches[0].parent.name
+                pipeline = builder.inspect_pipeline(pipeline_id)
+            else:
+                pipeline = builder.prepare_pipeline(
+                    'seed-check',
+                    seed,
+                    owner=expected_owner,
+                    targets=plan['targets'],
+                )
+                pipeline_id = pipeline['pipeline_id']
+            # The operation owns this exact pipeline before any controller
+            # submission can yield pending.  A later remote inspect follows this
+            # association instead of searching arbitrary attempts.
+            operation['pipeline_id'] = pipeline_id
+            write_json(operation_path, operation)
+        else:
+            pipeline = builder.inspect_pipeline(pipeline_id)
+        if matches and matches[0].parent.name != pipeline_id:
+            raise ImageBuildError('recorded bootstrap pipeline differs')
+        if (
+            pipeline.get('pipeline_id') != pipeline_id
+            or pipeline.get('operation') != 'seed-check'
+            or pipeline.get('selection') != str(Path(seed.root).resolve().parent)
+            or pipeline.get('arguments') != {'targets': plan['targets']}
+            or pipeline.get('recipes') != intent['recipes']
+            or pipeline.get('policy') != intent['policy']
+            or pipeline.get('owner') not in (None, expected_owner)
+        ):
+            raise ImageBuildError('recorded bootstrap pipeline binding changed')
+        attempts_bound = pipeline.get('attempts')
+        if (
+            not isinstance(attempts_bound, dict)
+            or len(set(attempts_bound.values())) != len(attempts_bound)
+        ):
+            raise ImageBuildError('recorded bootstrap attempts are ambiguous')
+        result = builder.resume(pipeline_id)
         operation.update(phase='verify-link', stages_generation=result.generation);write_json(operation_path,operation)
         def build_root(root):
             shutil.copytree(seed.root,root,symlinks=True)

@@ -171,6 +171,269 @@ def test_interrupted_phase_resumes_same_bound_operation(tmp_path, monkeypatch):
     ]
 
 
+def test_pending_cross_bootstrap_exposes_bound_pipeline_controller_evidence(
+    tmp_path, monkeypatch
+):
+    builder, remote, seed, _ = fixture(tmp_path)
+    pipeline_id = "1" * 32
+    attempt_id = "image-" + "2" * 32
+    request_id = "r1-1-" + "3" * 32 + "-" + "4" * 64
+    job_id = "5" * 32
+    resource_id = "6" * 32
+    invocation_id = "7" * 32
+    targets = ["binutils-cross-initial"]
+
+    def run(project, catalogue, plan, controller, seed_path, operation_name):
+        del project, catalogue, plan, controller, seed_path
+        state = builder.state / "image-build"
+        work = state / operation_name
+        work.mkdir(parents=True, exist_ok=True)
+        intent = {
+            "plan": {"targets": targets},
+            "recipes": [],
+            "seed": seed.generation,
+            "policy": None,
+        }
+        (work / "operation.json").write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "intent": intent,
+                    "phase": "stages",
+                    "pipeline_id": pipeline_id,
+                }
+            )
+        )
+        pipeline = state / "pipelines" / pipeline_id
+        pipeline.mkdir(parents=True, exist_ok=True)
+        (pipeline / "pipeline.json").write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "pipeline_id": pipeline_id,
+                    "operation": "seed-check",
+                    "selection": str(
+                        (
+                            state
+                            / "generations"
+                            / seed.generation
+                        ).resolve()
+                    ),
+                    "arguments": {"targets": targets},
+                    "recipes": [],
+                    "policy": None,
+                    "source_pins": "fixture",
+                    "attempts": {"image": attempt_id},
+                    "status": "pending",
+                    "owner": {
+                        "contract": "image-build-toolchain-phase-pipeline-v1",
+                        "work_name": operation_name,
+                    },
+                }
+            )
+        )
+        attempt = state / "attempts" / attempt_id
+        package = attempt / "packages" / "binutils-cross-initial"
+        package.mkdir(parents=True, exist_ok=True)
+        (attempt / "status.json").write_text(
+            json.dumps(
+                {
+                    "status": "pending",
+                    "kind": "image",
+                    "pipeline_id": pipeline_id,
+                }
+            )
+        )
+        checkpoint = package / "configure-0.controller.json"
+        checkpoint.write_text(
+            json.dumps(
+                {
+                    "request_id": request_id,
+                    "job_id": job_id,
+                    "resource_id": resource_id,
+                }
+            )
+        )
+        (package / "configure-0.observation.json").write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "origin": "captured",
+                    "observed_at": "2026-10-23T18:03:53Z",
+                    "request_id": request_id,
+                    "job_id": job_id,
+                    "state": "running",
+                    "invocation_id": invocation_id,
+                    "process_cleanup_complete": False,
+                }
+            )
+        )
+        raise KeyboardInterrupt("controller work remains pending")
+
+    import zog.image_build.stages as stages
+    monkeypatch.setattr(stages, "run", run)
+
+    submitted = remote.execute(
+        request(
+            "pending-bound-cross",
+            "toolchain.submit",
+            {
+                "phase": "cross-bootstrap",
+                "seed_generation": seed.generation,
+            },
+        )
+    )
+    assert submitted["status"] == "pending"
+    assert submitted["attempt_ids"] == [attempt_id]
+    assert submitted["artifacts"]["toolchain_execution"]["pipelines"] == [
+        {
+            "pipeline_id": pipeline_id,
+            "status": "pending",
+            "attempt_ids": [attempt_id],
+        }
+    ]
+    assert submitted["controller_jobs"] == [
+        {
+            "request_id": request_id,
+            "job_id": job_id,
+            "resource_id": resource_id,
+            "state": "running",
+            "invocation_id": invocation_id,
+            "process_cleanup_complete": False,
+            "observation_locator": (
+                "image-build/attempts/"
+                + attempt_id
+                + "/packages/binutils-cross-initial/"
+                + "configure-0.observation.json"
+            ),
+            "locator": (
+                "image-build/attempts/"
+                + attempt_id
+                + "/packages/binutils-cross-initial/"
+                + "configure-0.controller.json"
+            ),
+        }
+    ]
+
+    observation = (
+        builder.state
+        / "image-build"
+        / "attempts"
+        / attempt_id
+        / "packages"
+        / "binutils-cross-initial"
+        / "configure-0.observation.json"
+    )
+    finished = json.loads(observation.read_text())
+    finished.update(
+        state="inactive",
+        outcome="success",
+        exit_code=0,
+        process_cleanup_complete=True,
+        journal_reference="journal:fixture",
+        completed_at="2026-10-23T18:03:54Z",
+    )
+    observation.write_text(json.dumps(finished))
+
+    inspected = remote.execute(
+        request(
+            "pending-bound-cross-inspect",
+            "toolchain.inspect",
+            {"operation_id": "pending-bound-cross"},
+        )
+    )
+    assert inspected["status"] == "pending"
+    assert inspected["attempt_ids"] == [attempt_id]
+    job = inspected["controller_jobs"][0]
+    assert job["job_id"] == job_id
+    assert job["resource_id"] == resource_id
+    assert job["invocation_id"] == invocation_id
+    assert job["outcome"] == "success"
+    assert job["exit_code"] == 0
+    assert job["process_cleanup_complete"] is True
+
+
+def test_pending_cross_bootstrap_rejects_mismatched_attempt_association(
+    tmp_path, monkeypatch
+):
+    builder, remote, seed, _ = fixture(tmp_path)
+    pipeline_id = "8" * 32
+    attempt_id = "image-" + "9" * 32
+
+    def run(project, catalogue, plan, controller, seed_path, operation_name):
+        del project, catalogue, plan, controller, seed_path
+        state = builder.state / "image-build"
+        work = state / operation_name
+        work.mkdir(parents=True, exist_ok=True)
+        targets = ["binutils-cross-initial"]
+        (work / "operation.json").write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "intent": {
+                        "plan": {"targets": targets},
+                        "recipes": [],
+                        "seed": seed.generation,
+                        "policy": None,
+                    },
+                    "phase": "stages",
+                    "pipeline_id": pipeline_id,
+                }
+            )
+        )
+        pipeline = state / "pipelines" / pipeline_id
+        pipeline.mkdir(parents=True, exist_ok=True)
+        (pipeline / "pipeline.json").write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "pipeline_id": pipeline_id,
+                    "operation": "seed-check",
+                    "selection": str(
+                        (state / "generations" / seed.generation).resolve()
+                    ),
+                    "arguments": {"targets": targets},
+                    "recipes": [],
+                    "policy": None,
+                    "attempts": {"image": attempt_id},
+                    "status": "pending",
+                    "owner": {
+                        "contract": "image-build-toolchain-phase-pipeline-v1",
+                        "work_name": operation_name,
+                    },
+                }
+            )
+        )
+        attempt = state / "attempts" / attempt_id
+        attempt.mkdir(parents=True, exist_ok=True)
+        (attempt / "status.json").write_text(
+            json.dumps(
+                {
+                    "status": "pending",
+                    "kind": "image",
+                    "pipeline_id": "0" * 32,
+                }
+            )
+        )
+        raise KeyboardInterrupt("pending")
+
+    import zog.image_build.stages as stages
+    monkeypatch.setattr(stages, "run", run)
+
+    result = remote.execute(
+        request(
+            "mismatched-bound-cross",
+            "toolchain.submit",
+            {
+                "phase": "cross-bootstrap",
+                "seed_generation": seed.generation,
+            },
+        )
+    )
+    assert result["status"] == "failed"
+    assert "attempt association differs" in result["failure"]["reason"]
+
+
 def test_next_phase_is_derived_from_predecessor_not_request_paths(
     tmp_path, monkeypatch
 ):
