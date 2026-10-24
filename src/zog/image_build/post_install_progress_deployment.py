@@ -25,7 +25,7 @@ SOCKET_UNIT = "zog-host-welcome-image-progress.socket"
 SERVICE_UNIT = "zog-host-welcome-image-progress.service"
 
 SOURCE_REPOSITORY = "zog144/image-build"
-SOURCE_REVISION = "7b653e8be3f89730a52688d71df28513456f9cf3"
+SOURCE_REVISION = "fe625fd901a62ef3c877a8fbc159e3b4aae7f952"
 
 APPLICATIONS = (
     "agreety",
@@ -53,9 +53,9 @@ PROFILES = {
 
 MODULE_BLOBS = {
     "zog.image_build.post_install_progress_broker":
-        "e7ba6eab10e70e91fc5921bba1eec26f31ace1db",
+        "997f802492f5bc60724bc6cebff2c045191f2fc1",
     "zog.image_build.post_install_progress":
-        "f5de79b847b77ab55a0c6bca432a067853628609",
+        "7fa485ca5d3f067999dbe16ff66986315abcf1e3",
     "zog.image_build.application_software":
         "736cffeb3e42811f93bebb50a0fa9c52e4a7b52b",
     "zog.image_build.application_views":

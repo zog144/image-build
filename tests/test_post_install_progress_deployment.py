@@ -41,8 +41,14 @@ def test_native_observer_contract_matches_reviewed_host_welcome_v1():
     assert POLICY_PATH == "/etc/zog/host-welcome-image-progress-observer.json"
     assert SOCKET_PATH == "/run/host-welcome/image-progress.sock"
     assert SOURCE_REPOSITORY == "zog144/image-build"
-    assert SOURCE_REVISION == "7b653e8be3f89730a52688d71df28513456f9cf3"
+    assert SOURCE_REVISION == "fe625fd901a62ef3c877a8fbc159e3b4aae7f952"
     assert TRANSPORT_AUTH == "image-build-post-install-progress-linux-credentials-v1"
+    assert MODULE_BLOBS["zog.image_build.post_install_progress_broker"] == (
+        "997f802492f5bc60724bc6cebff2c045191f2fc1"
+    )
+    assert MODULE_BLOBS["zog.image_build.post_install_progress"] == (
+        "7fa485ca5d3f067999dbe16ff66986315abcf1e3"
+    )
     assert DEFAULT_PROFILE == GRAPHICAL_PROFILE
     assert APPLICATIONS == (
         "agreety", "firefox-esr", "greetd", "i3", "xorg-server",

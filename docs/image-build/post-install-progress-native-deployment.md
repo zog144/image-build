@@ -13,21 +13,28 @@ systemd units or authorize production activation.
 The consumer-reviewed progress implementation remains:
 
 - repository: `zog144/image-build`
-- source revision: `7b653e8be3f89730a52688d71df28513456f9cf3`
+- source revision: `fe625fd901a62ef3c877a8fbc159e3b4aae7f952`
 - projection: `image-build-post-install-progress-v2`
 - wire: `image-build-post-install-progress-rpc-v2`
 - source binding: `image-build-post-install-source-v1`
 - transport authentication: `image-build-post-install-progress-linux-credentials-v1`
 
-The reviewed runtime revision includes the socket-activation correction from the
-2026-10-21 native pass and the Gate C receipt-only publication correction. The
+The reviewed runtime revision includes the socket-activation correction, the Gate C
+receipt-only publication correction, and the October 24 cold-start correction. The
 broker still attaches kernel-validated Linux `SCM_CREDENTIALS` to each reply and
-contains disconnected client writes per connection. The progress projection now
-reverifies a matching publication receipt even when no matching post-install
-pipeline exists; it leaves pipeline/command identities absent and never infers
-build success or runtime admission from publication. The reference inventory pins
-all 13 exact Git blob identities and computes independent SHA-256 values when
-host-install reviews a source checkout.
+contains disconnected client writes per connection. Broker construction now
+validates only the fixed application/source/boot configuration and performs **no**
+durable publication snapshot. The first consumer request performs one full
+publication/artifact/view/rootfs verification, and every later request performs a
+fresh full verification again; no provenance result is cached across requests.
+This removes the duplicate cold-start observation without increasing the consumer
+deadline or weakening fail-closed evidence checks.
+
+The progress projection continues to reverify a matching publication receipt even
+when no matching post-install pipeline exists; it leaves pipeline/command
+identities absent and never infers build success or runtime admission from
+publication. The reference inventory pins all 13 exact Git blob identities and
+computes independent SHA-256 values when host-install reviews a source checkout.
 
 The source binding names the reviewed projection implementation. It does not claim
 that every file in a later aggregate `zog` wheel came from that old commit.

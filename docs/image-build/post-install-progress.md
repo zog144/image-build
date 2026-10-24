@@ -176,6 +176,15 @@ The application allowlist is fixed at broker startup. Pages are ordered by
 application name, maximum 16 applications, with at most 16 command observations per
 application in the broker's default producer call.
 
+Cold start deliberately validates only immutable broker configuration: canonical
+state path, application names, producer source binding and current boot identity.
+It does **not** precompute or cache a durable snapshot. The first authorized
+`snapshot` request performs the full selection/publication/artifact/view/rootfs
+verification exactly once, and each subsequent request performs that full
+verification again against current durable state. This avoids duplicate
+socket-activation cost while preserving per-request provenance verification and
+the existing consumer deadline.
+
 Every response has a fresh random 128-bit `snapshot_id`, timezone-aware
 `observed_at`, the producer's current Linux boot ID, and exact deployed source
 binding. A consumer must reject a stale/future response or an unexpected producer
