@@ -9,7 +9,12 @@ from pathlib import Path
 import socket
 import struct
 
-from .post_install_progress import SCHEMA, producer_source, snapshot
+from .post_install_progress import (
+    SCHEMA,
+    producer_source,
+    snapshot,
+    validate_snapshot_configuration,
+)
 
 WIRE = "image-build-post-install-progress-rpc-v2"
 TRANSPORT_AUTH = "image-build-post-install-progress-linux-credentials-v1"
@@ -124,21 +129,26 @@ class PostInstallProgressBroker:
         values=tuple(sorted(set(applications)))
         if not values:
             raise ProgressBrokerError("fixed application allowlist required")
-        self.source = producer_source(source_repository, source_revision)
-        self.boot_id = _boot_id() if boot_id is None else boot_id
-        # Validate the fixed allowlist and source/boot bindings once.
+        source = producer_source(source_repository, source_revision)
+        boot = _boot_id() if boot_id is None else boot_id
+        # Cold start validates only immutable broker configuration. The first
+        # consumer request performs the full durable publication/artifact/view/
+        # rootfs verification exactly once, and every later request performs it
+        # again. No provenance result is cached across requests.
         try:
-            snapshot(
-                state,
+            values, source, boot = validate_snapshot_configuration(
                 applications=values,
-                producer_source=self.source,
-                producer_boot_id=self.boot_id,
-                limit=1,
+                producer_source=source,
+                producer_boot_id=boot,
             )
         except Exception as error:
-            raise ProgressBrokerError("invalid application allowlist or state root") from error
+            raise ProgressBrokerError(
+                "invalid application allowlist or producer binding"
+            ) from error
+        self.source=source
+        self.boot_id=boot
         self.state=state
-        self.applications=values
+        self.applications=tuple(values)
         self.authorized_uid=authorized_uid
 
     def handle(self, request):

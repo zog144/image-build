@@ -3,6 +3,7 @@ import json
 
 import pytest
 
+import zog.image_build.post_install_progress_broker as broker_module
 from zog.image_build.application_software import ApplicationSoftwareStore
 from zog.image_build.application_views import ApplicationSoftwareViewStore
 from zog.image_build.errors import ImageBuildError
@@ -17,6 +18,7 @@ from zog.image_build.post_install_progress import (
     producer_source,
     record_selection,
     snapshot,
+    validate_snapshot_configuration,
 )
 from zog.image_build.post_install_progress_broker import (
     PostInstallProgressBroker,
@@ -38,6 +40,80 @@ def snap(state, applications):
         producer_source=SOURCE,
         producer_boot_id=BOOT,
     )
+
+
+def test_snapshot_configuration_validation_is_state_free(tmp_path, monkeypatch):
+    state = tmp_path / "state"
+    state.mkdir()
+    monkeypatch.setattr(
+        broker_module,
+        "snapshot",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("constructor must not perform a durable snapshot")
+        ),
+    )
+    broker = PostInstallProgressBroker(
+        state,
+        applications=["firefox"],
+        authorized_uid=9901,
+        source_repository="zog144/image-build",
+        source_revision="a" * 40,
+        boot_id=BOOT,
+    )
+    assert broker.applications == ("firefox",)
+    assert broker.source == SOURCE
+    assert broker.boot_id == BOOT
+
+
+def test_broker_cold_start_performs_one_full_snapshot_per_request(tmp_path, monkeypatch):
+    state = tmp_path / "state"
+    state.mkdir()
+    calls = []
+
+    def observed_snapshot(path, **kwargs):
+        calls.append((path, kwargs))
+        return {"schema": SCHEMA, "items": []}
+
+    monkeypatch.setattr(broker_module, "snapshot", observed_snapshot)
+    broker = PostInstallProgressBroker(
+        state,
+        applications=["firefox"],
+        authorized_uid=9901,
+        source_repository="zog144/image-build",
+        source_revision="a" * 40,
+        boot_id=BOOT,
+    )
+    assert calls == []
+
+    request = {
+        "schema": WIRE,
+        "operation": "snapshot",
+        "after": None,
+        "limit": 1,
+    }
+    assert broker.handle(request)["schema"] == SCHEMA
+    assert len(calls) == 1
+    assert broker.handle(request)["schema"] == SCHEMA
+    assert len(calls) == 2
+    assert all(call[0] == state.resolve() for call in calls)
+    assert all(call[1]["applications"] == ("firefox",) for call in calls)
+
+
+def test_configuration_validation_preserves_fail_closed_allowlist_binding():
+    names, source, boot = validate_snapshot_configuration(
+        applications=["xorg-server", "firefox", "firefox"],
+        producer_source=SOURCE,
+        producer_boot_id=BOOT,
+    )
+    assert names == ["firefox", "xorg-server"]
+    assert source == SOURCE
+    assert boot == BOOT
+    with pytest.raises(ImageBuildError):
+        validate_snapshot_configuration(
+            applications=["../firefox"],
+            producer_source=SOURCE,
+            producer_boot_id=BOOT,
+        )
 
 
 def compat():

@@ -830,13 +830,29 @@ def _app_item(state, application, selection, *, command_limit):
     return base
 
 
+def validate_snapshot_configuration(*, applications, producer_source=None,
+                                    producer_boot_id=None):
+    """Validate fixed observer inputs without reading durable progress state.
+
+    This is intentionally configuration-only. Publication/artifact/view/rootfs
+    evidence is reverified by every snapshot request and is never cached across
+    requests.
+    """
+    source = None if producer_source is None else _producer_source(producer_source)
+    boot_id = _boot(producer_boot_id)
+    names = sorted({_name(value) for value in applications})
+    return names, source, boot_id
+
+
 def snapshot(state_dir, *, applications, producer_source=None, producer_boot_id=None,
              after=None, limit=4, command_limit=16):
     """Return a bounded sanitized projection. It never refreshes controller state."""
     state = Path(state_dir)
-    source = None if producer_source is None else _producer_source(producer_source)
-    boot_id = _boot(producer_boot_id)
-    names = sorted({_name(value) for value in applications})
+    names, source, boot_id = validate_snapshot_configuration(
+        applications=applications,
+        producer_source=producer_source,
+        producer_boot_id=producer_boot_id,
+    )
     if type(limit) is not int or not 1 <= limit <= 16:
         raise ValueError("post-install progress limit must be 1..16")
     if type(command_limit) is not int or not 1 <= command_limit <= 64:
