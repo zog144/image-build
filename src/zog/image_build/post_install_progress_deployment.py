@@ -12,8 +12,12 @@ from pathlib import Path
 
 from .errors import ImageBuildError
 
-CONTRACT = "image-build-post-install-progress-native-deployment-v2"
+CONTRACT = "image-build-post-install-progress-native-deployment-v3"
 TRANSPORT_AUTH = "image-build-post-install-progress-linux-credentials-v1"
+PROFILE_CONTRACT = "image-build-post-install-progress-observer-profile-v1"
+GRAPHICAL_PROFILE = "graphical-first-wave-v1"
+CERTIFY_MANAGE_PROFILE = "certify-manage-gate-c-v1"
+DEFAULT_PROFILE = GRAPHICAL_PROFILE
 POLICY_SCHEMA = "zog-host-welcome-image-progress-observer-v1"
 POLICY_PATH = "/etc/zog/host-welcome-image-progress-observer.json"
 SOCKET_PATH = "/run/host-welcome/image-progress.sock"
@@ -30,6 +34,22 @@ APPLICATIONS = (
     "i3",
     "xorg-server",
 )
+CERTIFY_MANAGE_APPLICATIONS = ("certify-manage",)
+CERTIFY_MANAGE_SERVICE_TEMPLATE = (
+    "zog-host-welcome-image-progress-certify-manage.service.in"
+)
+PROFILES = {
+    GRAPHICAL_PROFILE: {
+        "applications": APPLICATIONS,
+        "service_template": SERVICE_UNIT + ".in",
+        "purpose": "graphical-first-wave",
+    },
+    CERTIFY_MANAGE_PROFILE: {
+        "applications": CERTIFY_MANAGE_APPLICATIONS,
+        "service_template": CERTIFY_MANAGE_SERVICE_TEMPLATE,
+        "purpose": "gate-c-non-graphical-certify-manage",
+    },
+}
 
 MODULE_BLOBS = {
     "zog.image_build.post_install_progress_broker":
@@ -92,6 +112,26 @@ def _absolute_path(value, label):
     return value
 
 
+def observer_profile(value=DEFAULT_PROFILE):
+    """Return one reviewed fixed broker allowlist profile.
+
+    Profiles are deliberately disjoint.  In particular, the Gate C Certbot
+    profile does not widen the graphical first-wave service and cannot be
+    combined with it by callers.
+    """
+    if not isinstance(value, str) or value not in PROFILES:
+        raise ImageBuildError("unsupported image progress observer profile")
+    profile = PROFILES[value]
+    return {
+        "schema": 1,
+        "contract": PROFILE_CONTRACT,
+        "profile": value,
+        "purpose": profile["purpose"],
+        "applications": list(profile["applications"]),
+        "service_template": profile["service_template"],
+    }
+
+
 def policy(*, consumer_uid, producer_uid):
     """Return the exact consumer-visible root policy body."""
     consumer_uid = _numeric_uid(consumer_uid, "host-welcome consumer UID")
@@ -124,16 +164,17 @@ def validate_policy(value):
     return dict(value)
 
 
-def broker_argv(*, state_dir, consumer_uid):
-    """Return the immutable broker argv suffix for root-controlled systemd staging."""
+def broker_argv(*, state_dir, consumer_uid, profile=DEFAULT_PROFILE):
+    """Return the immutable broker argv suffix for one reviewed observer profile."""
     state_dir = _absolute_path(state_dir, "image-build state directory")
     consumer_uid = _numeric_uid(consumer_uid, "host-welcome consumer UID")
+    selected = observer_profile(profile)
     result = [
         "-m", "zog.image_build.post_install_progress_broker",
         "--state-dir", state_dir,
         "--authorized-uid", str(consumer_uid),
     ]
-    for application in APPLICATIONS:
+    for application in selected["applications"]:
         result.extend(("--application", application))
     result.extend((
         "--source-repository", SOURCE_REPOSITORY,
@@ -166,26 +207,31 @@ def reviewed_source_inventory(source_root):
     return observed
 
 
-def deployment_contract(*, state_dir, consumer_uid, producer_uid):
+def deployment_contract(*, state_dir, consumer_uid, producer_uid,
+                        profile=DEFAULT_PROFILE):
     """Return producer-owned immutable facts for a host-install staging manifest."""
     validate_policy(policy(consumer_uid=consumer_uid, producer_uid=producer_uid))
+    selected = observer_profile(profile)
     return {
         "schema": 1,
         "contract": CONTRACT,
+        "observer_profile": selected,
         "policy_path": POLICY_PATH,
         "socket_path": SOCKET_PATH,
         "socket_unit": SOCKET_UNIT,
         "service_unit": SERVICE_UNIT,
+        "service_template": selected["service_template"],
         "source_repository": SOURCE_REPOSITORY,
         "source_revision": SOURCE_REVISION,
         "transport_auth": TRANSPORT_AUTH,
-        "applications": list(APPLICATIONS),
+        "applications": list(selected["applications"]),
         "state_dir": _absolute_path(state_dir, "image-build state directory"),
         "consumer_uid": consumer_uid,
         "producer_uid": producer_uid,
         "broker_argv": list(broker_argv(
             state_dir=state_dir,
             consumer_uid=consumer_uid,
+            profile=profile,
         )),
         "read_only": True,
         "mutation_authorized": False,

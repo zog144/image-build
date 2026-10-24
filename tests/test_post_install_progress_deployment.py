@@ -6,7 +6,14 @@ import pytest
 from zog.image_build.errors import ImageBuildError
 from zog.image_build.post_install_progress_deployment import (
     APPLICATIONS,
+    CERTIFY_MANAGE_APPLICATIONS,
+    CERTIFY_MANAGE_PROFILE,
+    CERTIFY_MANAGE_SERVICE_TEMPLATE,
+    DEFAULT_PROFILE,
+    GRAPHICAL_PROFILE,
     MODULE_BLOBS,
+    PROFILE_CONTRACT,
+    PROFILES,
     POLICY_PATH,
     POLICY_SCHEMA,
     SERVICE_UNIT,
@@ -18,6 +25,7 @@ from zog.image_build.post_install_progress_deployment import (
     SOURCE_REVISION,
     broker_argv,
     deployment_contract,
+    observer_profile,
     policy,
     reviewed_source_inventory,
     validate_policy,
@@ -35,12 +43,48 @@ def test_native_observer_contract_matches_reviewed_host_welcome_v1():
     assert SOURCE_REPOSITORY == "zog144/image-build"
     assert SOURCE_REVISION == "7b653e8be3f89730a52688d71df28513456f9cf3"
     assert TRANSPORT_AUTH == "image-build-post-install-progress-linux-credentials-v1"
+    assert DEFAULT_PROFILE == GRAPHICAL_PROFILE
     assert APPLICATIONS == (
         "agreety", "firefox-esr", "greetd", "i3", "xorg-server",
     )
+    assert CERTIFY_MANAGE_APPLICATIONS == ("certify-manage",)
+    assert set(PROFILES) == {GRAPHICAL_PROFILE, CERTIFY_MANAGE_PROFILE}
+    assert "certify-manage" not in APPLICATIONS
+    assert not (set(APPLICATIONS) & set(CERTIFY_MANAGE_APPLICATIONS))
     assert "turbovnc" not in APPLICATIONS
     assert "chromium" not in APPLICATIONS
     assert "weston" not in APPLICATIONS
+
+
+def test_named_profiles_are_exact_disjoint_and_fail_closed():
+    graphical = observer_profile(GRAPHICAL_PROFILE)
+    assert graphical == {
+        "schema": 1,
+        "contract": PROFILE_CONTRACT,
+        "profile": GRAPHICAL_PROFILE,
+        "purpose": "graphical-first-wave",
+        "applications": list(APPLICATIONS),
+        "service_template": SERVICE_UNIT + ".in",
+    }
+
+    certify = observer_profile(CERTIFY_MANAGE_PROFILE)
+    assert certify == {
+        "schema": 1,
+        "contract": PROFILE_CONTRACT,
+        "profile": CERTIFY_MANAGE_PROFILE,
+        "purpose": "gate-c-non-graphical-certify-manage",
+        "applications": ["certify-manage"],
+        "service_template": CERTIFY_MANAGE_SERVICE_TEMPLATE,
+    }
+    assert set(graphical["applications"]).isdisjoint(certify["applications"])
+    with pytest.raises(ImageBuildError, match="unsupported"):
+        observer_profile("graphical-plus-certbot")
+    with pytest.raises(ImageBuildError, match="unsupported"):
+        broker_argv(
+            state_dir="/var/lib/zog/image-build-state",
+            consumer_uid=1501,
+            profile="certify-manage,firefox-esr",
+        )
 
 
 def test_policy_is_exact_fixed_and_requires_distinct_nonroot_uids():
@@ -69,7 +113,11 @@ def test_policy_is_exact_fixed_and_requires_distinct_nonroot_uids():
 
 
 def test_broker_argv_fixes_source_allowlist_and_exposes_no_mutation_selector():
-    argv = broker_argv(state_dir="/var/lib/zog/image-build-state", consumer_uid=1501)
+    argv = broker_argv(
+        state_dir="/var/lib/zog/image-build-state",
+        consumer_uid=1501,
+        profile=GRAPHICAL_PROFILE,
+    )
     assert argv[:2] == ("-m", "zog.image_build.post_install_progress_broker")
     assert argv[-4:] == (
         "--source-repository", SOURCE_REPOSITORY,
@@ -86,6 +134,24 @@ def test_broker_argv_fixes_source_allowlist_and_exposes_no_mutation_selector():
         assert forbidden not in joined
     with pytest.raises(ImageBuildError):
         broker_argv(state_dir="../state", consumer_uid=1501)
+
+
+def test_certify_manage_broker_profile_is_single_application_and_read_only():
+    argv = broker_argv(
+        state_dir="/var/lib/zog/image-build-state",
+        consumer_uid=1501,
+        profile=CERTIFY_MANAGE_PROFILE,
+    )
+    assert argv.count("--application") == 1
+    assert "certify-manage" in argv
+    for application in APPLICATIONS:
+        assert application not in argv
+    joined = " ".join(argv)
+    for forbidden in (
+        "--operation", "--pipeline", "--resume", "--cancel", "--publish",
+        "--install", "--start", "--socket", "--project",
+    ):
+        assert forbidden not in joined
 
 
 def test_current_tree_matches_all_reviewed_security_critical_source_blobs(tmp_path):
@@ -111,6 +177,7 @@ def test_current_tree_matches_all_reviewed_security_critical_source_blobs(tmp_pa
 def test_reference_systemd_units_are_dedicated_bounded_and_read_only():
     socket_text = (EXAMPLES / (SOCKET_UNIT + ".in")).read_text()
     service_text = (EXAMPLES / (SERVICE_UNIT + ".in")).read_text()
+    certify_text = (EXAMPLES / CERTIFY_MANAGE_SERVICE_TEMPLATE).read_text()
 
     assert "ListenStream=" + SOCKET_PATH in socket_text
     assert "SocketUser=@WELCOME_UID@" in socket_text
@@ -144,17 +211,57 @@ def test_reference_systemd_units_are_dedicated_bounded_and_read_only():
     assert "/run/zog/root-control.sock" not in service_text
     assert "station" not in service_text.lower()
 
+    certify_expected = (
+        "-m zog.image_build.post_install_progress_broker "
+        "--state-dir @IMAGE_BUILD_STATE@ "
+        "--authorized-uid @WELCOME_UID@ "
+        "--application certify-manage "
+        "--source-repository zog144/image-build "
+        "--source-revision " + SOURCE_REVISION
+    )
+    assert certify_expected in certify_text
+    assert "--application firefox-esr" not in certify_text
+    assert "--application greetd" not in certify_text
+    assert "RestrictAddressFamilies=AF_UNIX" in certify_text
+    assert "ReadOnlyPaths=@IMAGE_BUILD_STATE@" in certify_text
+    assert "ProtectSystem=strict" in certify_text
+    assert "NoNewPrivileges=yes" in certify_text
+    assert "CapabilityBoundingSet=" in certify_text
+
 
 def test_deployment_contract_is_manifest_only_and_never_activation_authority():
     value = deployment_contract(
         state_dir="/var/lib/zog/image-build-state",
         consumer_uid=1501,
         producer_uid=1502,
+        profile=GRAPHICAL_PROFILE,
     )
-    assert value["contract"] == "image-build-post-install-progress-native-deployment-v2"
+    assert value["contract"] == "image-build-post-install-progress-native-deployment-v3"
     assert value["transport_auth"] == TRANSPORT_AUTH
+    assert value["observer_profile"]["profile"] == GRAPHICAL_PROFILE
+    assert value["service_template"] == SERVICE_UNIT + ".in"
     assert value["applications"] == list(APPLICATIONS)
     assert value["read_only"] is True
     assert value["mutation_authorized"] is False
     assert value["production_activation_authorized"] is False
     assert value["consumer_uid"] != value["producer_uid"]
+
+
+def test_certify_manage_deployment_contract_does_not_widen_graphical_profile():
+    value = deployment_contract(
+        state_dir="/var/lib/zog/image-build-state",
+        consumer_uid=1501,
+        producer_uid=1502,
+        profile=CERTIFY_MANAGE_PROFILE,
+    )
+    assert value["contract"] == "image-build-post-install-progress-native-deployment-v3"
+    assert value["observer_profile"] == observer_profile(CERTIFY_MANAGE_PROFILE)
+    assert value["service_template"] == CERTIFY_MANAGE_SERVICE_TEMPLATE
+    assert value["applications"] == ["certify-manage"]
+    assert value["broker_argv"].count("--application") == 1
+    assert "certify-manage" in value["broker_argv"]
+    for application in APPLICATIONS:
+        assert application not in value["broker_argv"]
+    assert value["read_only"] is True
+    assert value["mutation_authorized"] is False
+    assert value["production_activation_authorized"] is False
