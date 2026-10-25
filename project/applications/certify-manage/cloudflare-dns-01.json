@@ -192,9 +192,9 @@
         },
         "notices": [
           "share/licenses/certify-manage/source/LICENSE",
-          "share/licenses/certify-manage/source/THIRD-PARTY-NOTICES.md",
           "share/licenses/certify-manage/source/LICENSES/BSD-3-Clause.txt",
-          "share/licenses/certify-manage/source/LICENSES/GPL-3.0-only.txt"
+          "share/licenses/certify-manage/source/LICENSES/GPL-3.0-only.txt",
+          "share/licenses/certify-manage/source/THIRD-PARTY-NOTICES.md"
         ]
       },
       {
