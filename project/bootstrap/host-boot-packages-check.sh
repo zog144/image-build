@@ -1,4 +1,8 @@
 set -eu
+/usr/bin/login --version
+/usr/sbin/agetty --version
+test "$(stat -c '%a' /state)" = 0
+test "$(stat -c '%a' /applications)" = 0
 rc=0
 /usr/sbin/nologin -c 'exit 0' || rc=$?
 test "$rc" -eq 1

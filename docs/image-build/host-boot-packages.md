@@ -3,8 +3,16 @@
 `project/bootstrap/host-boot-packages.py` builds additions on an accepted systemd
 core generation. It does not mutate that generation or activate host services.
 
-- util-linux 2.42.2: a separate nologin-only stage adds `/usr/sbin/nologin` while
-  retaining the existing native util-linux output. Its refusal exit code is tested.
+- util-linux 2.42.2: two additive stages preserve the accepted native util-linux
+  output. `login` adds only `/usr/bin/login` for Boot A and proves its version;
+  `nologin` adds only `/usr/sbin/nologin` and tests its refusal exit code. Shadow
+  is not the Boot A login provider and remains deferred to Resident B account-policy
+  review.
+- resident-root-layout: a source/provenance-tracked first-party stage adds only empty
+  `/state` and `/applications`, both mode 0000. These are underlying reusable
+  HOST mountpoints; host-install later mounts installation-specific writable
+  partitions over them. The generic application-runtime `/applications` scaffold
+  remains a separate contract and is not changed.
 - D-Bus 1.16.2: the reference daemon is the selected system-bus provider, with
   libsystemd integration and system service files. No X11, security-module or
   documentation generator dependencies. Meson default available tests run;
@@ -20,6 +28,14 @@ core generation. It does not mutate that generation or activate host services.
   and read-only checking of a disposable regular-file filesystem. Existing
   util-linux libblkid/libuuid/fsck remain the providers; no block device is touched.
   LFS reports possible environment-sensitive failures; none are waived here.
+
+For Boot A source selection, systemd final is now required to build EFI support and
+systemd-boot and to publish exact `getty@.service`, `serial-getty@.service` and
+`systemd-bootx64.efi` outputs. The host bootstrap profile is a
+`boot-a-source-candidate`: Shadow, box-control and root-control are explicitly
+Resident-B deferred and do not block the first UEFI→PID1 experiment. Exact native
+generation, EFI bytes and foreign Amazon Linux kernel/initramfs/modules evidence are
+still required before host-install may bind a generation.
 
 The exact release archives and inspected licensing evidence are SHA256-pinned.
 No upstream source patch is applied. License status is declared, not release-reviewed.

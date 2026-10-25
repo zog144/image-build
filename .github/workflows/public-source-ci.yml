@@ -66,6 +66,7 @@ jobs:
             tests/test_verification_environment.py \
             tests/test_licensing.py \
             tests/test_host_fixture.py \
+            tests/test_resident_boot_source.py \
             tests/test_worker_identity.py \
             tests/test_toolchain_contract.py
 

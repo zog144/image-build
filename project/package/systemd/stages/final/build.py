@@ -18,7 +18,7 @@
                 '-Dmachined=false -Dportabled=false -Dnspawn=disabled -Dsysext=false '
                 '-Dmountfsd=false -Dnsresourced=false -Dvmspawn=disabled -Dsysinstall=false '
                 '-Dstoragetm=false -Drepart=disabled -Dsysupdate=disabled -Dimds=disabled '
-                '-Dbpf-framework=disabled -Dbootloader=disabled -Dukify=disabled -Dman=disabled '
+                '-Dbpf-framework=disabled -Defi=true -Dbootloader=enabled -Dukify=disabled -Dman=disabled '
                 '-Dhtml=disabled -Dtranslations=false']],
  'build': [['/bin/bash',
             '-eu',

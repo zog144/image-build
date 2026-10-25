@@ -1,15 +1,33 @@
-# Planning metadata only. Not a package recipe or dependency-resolver input.
+# Reviewed host source-selection metadata. Not a native boot acceptance record.
 {'schema': 1,
  'profile': 'foreign-kernel-host-v1',
  'architecture': 'x86_64',
- 'status': 'planning-not-installable',
- 'dependency_closure': 'not-reviewed',
+ 'status': 'boot-a-source-candidate',
+ 'dependency_closure': 'boot-a-reviewed-resident-b-incomplete',
+ 'boot_a': {
+  'status': 'source-corrections-prepared-native-generation-required',
+  'projects': ['bash', 'util-linux', 'systemd', 'e2fsprogs', 'kmod',
+               'resident-root-layout'],
+  'providers': {
+   '/usr/bin/login': 'util-linux-login additive stage',
+   '/usr/sbin/agetty': 'accepted util-linux native-environment',
+   '/usr/lib/systemd/boot/efi/systemd-bootx64.efi': 'systemd final with EFI/bootloader enabled',
+   '/state': 'resident-root-layout final',
+   '/applications': 'resident-root-layout final'},
+  'foreign_boot': 'Amazon Linux 2023 kernel/initramfs/modules; exact retained evidence still required'},
+ 'resident_b': {
+  'status': 'deferred-after-boot-a',
+  'deferred_projects': ['shadow', 'box-control', 'root-control'],
+  'disposition': {
+   'shadow': 'not a Boot A login provider; retain catalogue-only until Resident B account-policy scope is reviewed',
+   'box-control': 'Resident B executable recipe not yet accepted',
+   'root-control': 'Resident B executable recipe not yet accepted'}},
  'items': [
   {'project': 'glibc', 'role': 'C runtime and dynamic loader', 'group': 'base'},
   {'project': 'bash', 'role': 'shell for host initialization', 'group': 'base'},
   {'project': 'coreutils', 'role': 'base file and process utilities', 'group': 'base'},
   {'project': 'util-linux', 'role': 'mounting and block-device utilities; review disabled features', 'group': 'base'},
-  {'project': 'shadow', 'role': 'accounts and emergency login policy; review required subset', 'group': 'base'},
+  {'project': 'shadow', 'role': 'Resident B account policy only; util-linux provides Boot A login', 'group': 'resident-b-deferred'},
   {'project': 'systemd', 'role': 'PID 1, journald, udev and proposed networkd/resolved services', 'group': 'host'},
   {'project': 'openssl', 'role': 'TLS library for rebuilt Python', 'group': 'next-compilation'},
   {'project': 'sqlite', 'role': 'SQL library for rebuilt Python', 'group': 'next-compilation'},
@@ -20,7 +38,9 @@
   {'project': 'dbus', 'role': 'candidate system bus provider; confirm service requirements', 'group': 'selection-review'},
   {'project': 'host-identify', 'role': 'host Ed25519 identity primitives; fresh state at first boot', 'group': 'zog'},
   {'project': 'host-discover', 'role': 'enrollment, beacon and control transport', 'group': 'zog'},
-  {'project': 'box-control', 'role': 'trusted local lifecycle and root-control installation contract', 'group': 'zog'},
+  {'project': 'box-control', 'role': 'Resident B trusted local lifecycle controller; recipe deferred', 'group': 'resident-b-deferred'},
+  {'project': 'root-control', 'role': 'Resident B privileged mechanism daemon; recipe deferred', 'group': 'resident-b-deferred'},
+  {'project': 'resident-root-layout', 'role': 'Boot A fail-closed /state and /applications mountpoints', 'group': 'host'},
   {'project': 'linux', 'role': 'current API headers only; first kernel/initramfs/modules remain foreign', 'group': 'foreign-boot'},
  ],
  'recipe_review_candidates': ['meson', 'ninja', 'gperf', 'libcap', 'libseccomp',

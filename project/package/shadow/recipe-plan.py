@@ -1,7 +1,7 @@
 # Data only; read with ast.literal_eval, never import.
 {'schema': 1,
- 'status': 'not-authored',
- 'stages': ['native'],
+ 'status': 'resident-b-deferred',
+ 'stages': ['future-resident-b'],
  'build_dependencies': None,
  'runtime_dependencies': None,
  'test_dependencies': None,
@@ -12,5 +12,6 @@
  'install': None,
  'outputs': None,
  'reference': 'https://www.linuxfromscratch.org/lfs/view/13.1-systemd/appendices/dependencies.html',
- 'notes': 'Unknown values are None, never empty dependency claims. Per-stage recipes and '
-          'verified source hashes must be authored before execution.'}
+ 'notes': 'Not a Boot A login provider. The additive util-linux login stage owns /usr/bin/login. '
+          'Shadow remains catalogue-only and must receive an exact Resident B account-policy scope, '
+          'reviewed source recipe and output manifest before execution.'}

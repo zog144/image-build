@@ -12,8 +12,11 @@ RECIPE_FILES = ('package.py', 'sources.py', 'build.py', 'dependencies.py', 'prod
 
 def inspect(profile, catalogue):
     profile = literal(profile); catalogue = Path(catalogue)
-    if profile['schema'] != 1 or profile['status'] != 'planning-not-installable':
-        raise ImageBuildError('unsupported planning profile')
+    if (
+        profile['schema'] != 1
+        or profile['status'] not in {'planning-not-installable', 'boot-a-source-candidate'}
+    ):
+        raise ImageBuildError('unsupported host source profile')
     items = []
     for item in profile['items']:
         name = item['project']
@@ -34,9 +37,30 @@ def inspect(profile, catalogue):
                       'license_metadata_present':(directory/'license.py').is_file(),
                       'stages':stages, 'host_acceptance':'not-assessed',
                       'recipe_gap':not any(s['recipe_files_present'] for s in stages)})
+    by_name = {item['project']: item for item in items}
+    boot = profile.get('boot_a')
+    if boot is not None:
+        projects = boot.get('projects')
+        if (
+            not isinstance(projects, list)
+            or projects != list(dict.fromkeys(projects))
+            or any(name not in by_name for name in projects)
+        ):
+            raise ImageBuildError('invalid Boot A project selection')
+        recipe_gaps = [
+            name for name in projects
+            if not by_name[name]['catalogue_present'] or by_name[name]['recipe_gap']
+        ]
+        boot_report = {**boot, 'recipe_gaps': recipe_gaps,
+                       'source_recipe_complete': not recipe_gaps}
+    else:
+        boot_report = None
     return {'schema':1, 'profile':profile['profile'], 'profile_identity':identity(profile),
-            'installable':False, 'dependency_closure':'not-reviewed',
+            'status':profile['status'], 'installable':False,
+            'source_candidate':bool(boot_report and boot_report['source_recipe_complete']),
+            'dependency_closure':profile.get('dependency_closure', 'not-reviewed'),
             'live_inventory':'not-performed', 'items':items,
+            'boot_a':boot_report, 'resident_b':profile.get('resident_b'),
             'recipe_review_candidates':profile['recipe_review_candidates'],
             'candidate_note':profile['candidate_note'], 'acceptance':profile['acceptance'],
             'excluded_from_first_host':profile['excluded_from_first_host']}
