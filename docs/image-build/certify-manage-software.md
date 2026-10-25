@@ -95,6 +95,20 @@ pycparser, and the certifi CA bundle. The reviewed source identities are
 `600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29`;
 license evidence remains subject to the repository-wide redistribution review.
 
+## Maintained application definitions
+
+A concrete Cloudflare DNS-01 definition is checked in at
+`project/applications/certify-manage/cloudflare-dns-01.json`. It binds the full
+`cloudflare-dns-01` runtime closure, exact source hashes, notice-copy plan and the
+accepted rootfs compatibility descriptor. The definition requires the
+`dns-cloudflare` Certbot plugin and keeps credentials/mutable ACME state outside
+the artifact.
+
+The definition is intentionally marked `publication_authorized: false` until the
+retained pydantic-core Rust per-component grant/notice and selected native-output
+review is complete. This is a buildable source definition, not a claim that the
+DNS-capable immutable runtime has already passed native acceptance.
+
 ## Producer flow
 
 A reviewed caller supplies a JSON lock using

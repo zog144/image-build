@@ -1,0 +1,814 @@
+{
+  "schema": 1,
+  "contract": "image-build-certify-manage-application-definition-v1",
+  "application": "certify-manage",
+  "profile": "cloudflare-dns-01",
+  "purpose": "Certbot 5.8.0 with Cloudflare DNS-01 authentication support",
+  "publication_authorized": false,
+  "status": "source-locked-native-and-rights-acceptance-required",
+  "runtime_lock": {
+    "contract": "image-build-certify-manage-runtime-lock-v1",
+    "profile": "cloudflare-dns-01",
+    "certify_manage_revision": "8d073ff449557fc82c12eea93e240cdeec1b0fcc",
+    "compatibility": {
+      "schema": 1,
+      "mount_contract": "applications-v1",
+      "architecture": "x86_64",
+      "python": {
+        "implementation": "cpython",
+        "version": "3.15.0rc2",
+        "soabi": "cpython-315-x86_64-linux-gnu"
+      },
+      "libraries": [
+        "ld-linux-x86-64.so.2",
+        "libBrokenLocale.so.1",
+        "libacl.so.1",
+        "libanl.so.1",
+        "libasan.so.8",
+        "libatomic.so.1",
+        "libattr.so.1",
+        "libbfd-2.47.20260726.so",
+        "libblkid.so.1",
+        "libbz2.so.1.0",
+        "libc.so.6",
+        "libc_malloc_debug.so.0",
+        "libcc1.so.0",
+        "libcom_err.so.2",
+        "libcrypt.so.2",
+        "libcrypto.so.4",
+        "libctf-nobfd.so.0",
+        "libctf.so.0",
+        "libcurl.so.4",
+        "libdbus-1.so.3",
+        "libdl.so.2",
+        "libe2p.so.2",
+        "libexpat.so.1",
+        "libext2fs.so.2",
+        "libfdisk.so.1",
+        "libffi.so.8",
+        "libfl.so.2",
+        "libformw.so.6",
+        "libgcc_s.so.1",
+        "libgdbm.so.6",
+        "libgdbm_compat.so.4",
+        "libgmp.so.10",
+        "libgmpxx.so.4",
+        "libgomp.so.1",
+        "libgprofng.so.0",
+        "libhistory.so.8",
+        "libhwasan.so.0",
+        "libitm.so.1",
+        "libkmod.so.2",
+        "liblsan.so.0",
+        "liblz4.so.1",
+        "liblzma.so.5",
+        "libm.so.6",
+        "libmagic.so.1",
+        "libmemusage.so",
+        "libmenuw.so.6",
+        "libmount.so.1",
+        "libmpc.so.3",
+        "libmpdec++.so.4",
+        "libmpdec.so.4",
+        "libmpfr.so.6",
+        "libmvec.so.1",
+        "libncurses++w.so.6",
+        "libncursesw.so.6",
+        "libnsl.so.1",
+        "libnss_compat.so.2",
+        "libnss_db.so.2",
+        "libnss_dns.so.2",
+        "libnss_files.so.2",
+        "libnss_hesiod.so.2",
+        "libnss_myhostname.so.2",
+        "libopcodes-2.47.20260726.so",
+        "libpanelw.so.6",
+        "libpcprofile.so",
+        "libpcre2-16.so.0",
+        "libpcre2-32.so.0",
+        "libpcre2-8.so.0",
+        "libpcre2-posix.so.3",
+        "libpkgconf.so.8",
+        "libpthread.so.0",
+        "libpython3.15.so.1.0",
+        "libpython3.so",
+        "libquadmath.so.0",
+        "libreadline.so.8",
+        "libresolv.so.2",
+        "librt.so.1",
+        "librustc_driver-53d1948661cfca30.so",
+        "libseccomp.so.2",
+        "libsframe.so.3",
+        "libsmartcols.so.1",
+        "libsqlite3.so.0",
+        "libss.so.2",
+        "libssl.so.4",
+        "libssp.so.0",
+        "libstdc++.so.6",
+        "libsystemd.so.0",
+        "libthread_db.so.1",
+        "libtsan.so.2",
+        "libubsan.so.1",
+        "libudev.so.1",
+        "libutil.so.1",
+        "libuuid.so.1",
+        "libz.so.1",
+        "libzstd.so.1"
+      ]
+    },
+    "packages": [
+      {
+        "name": "acme",
+        "version": "5.8.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/3a/b8/4ca6f1b0e04472d21b248d32a6abc5e24058dac68b513a8ab7526837b100/acme-5.8.0.tar.gz",
+          "sha256": "44c4edb53acdd3fa8402cb29c78a6d1bd2005d777a4d2fcd12663bbc3c147b34"
+        },
+        "notices": [
+          "share/licenses/acme/source/LICENSE.txt"
+        ]
+      },
+      {
+        "name": "annotated-types",
+        "version": "0.8.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/5f/56/a8120250d128bed162cd73c76d45f6ef9991f3e068f62a8ee060afa3104a/annotated_types-0.8.0.tar.gz",
+          "sha256": "13b2beaad985e05e2d6407ee4c4f35590b11f8d693a258a561055cac8f64cab7"
+        },
+        "notices": [
+          "share/licenses/annotated-types/source/LICENSE"
+        ]
+      },
+      {
+        "name": "anyio",
+        "version": "4.14.2",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/61/cc/a381afa6efea9f496eff839d4a6a1aed3bfafc7b3ab4b0d1b243a12573dd/anyio-4.14.2.tar.gz",
+          "sha256": "cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f"
+        },
+        "notices": [
+          "share/licenses/anyio/source/LICENSE"
+        ]
+      },
+      {
+        "name": "certbot",
+        "version": "5.8.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/31/29/fbf5127d2b8d178d7add2b9145560436a69b437045c6197a4b6edbfcbb3c/certbot-5.8.0.tar.gz",
+          "sha256": "a4a2c7b0459bb626b3791ef07b6df26bbb222d2324783ba3e60f76c0933eec87"
+        },
+        "notices": [
+          "share/licenses/certbot/source/LICENSE.txt"
+        ]
+      },
+      {
+        "name": "certbot-dns-cloudflare",
+        "version": "5.8.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/21/38/ad863b378fe3f27445c8b6a31fe67710720cf1aff493e17d8c1e0483fed1/certbot_dns_cloudflare-5.8.0.tar.gz",
+          "sha256": "540870f24a7aa05d9057bfa70cb684094b4106838747e15990f498ef16b7d212"
+        },
+        "notices": [
+          "share/licenses/certbot-dns-cloudflare/source/LICENSE.txt"
+        ]
+      },
+      {
+        "name": "certifi",
+        "version": "2026.7.22",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/a3/c2/24167ea9858356b47a87a50d39908bfdb72ceeefe0041586e704e5376b3a/certifi-2026.7.22.tar.gz",
+          "sha256": "741e2c3b351ddf169a738da9f2c048608ff7f2c5cc02f1ebc6b118bb090d5d55"
+        },
+        "notices": [
+          "share/licenses/certifi/source/LICENSE"
+        ]
+      },
+      {
+        "name": "certify-manage",
+        "version": "0.1.0",
+        "source": {
+          "url": "https://codeload.github.com/zog144/certify-manage/tar.gz/8d073ff449557fc82c12eea93e240cdeec1b0fcc",
+          "sha256": "fffa4ee5baa26baa2518aad813e60a7c4d0e540d235d8f82fb2d372222050407"
+        },
+        "notices": [
+          "share/licenses/certify-manage/source/LICENSE",
+          "share/licenses/certify-manage/source/THIRD-PARTY-NOTICES.md",
+          "share/licenses/certify-manage/source/LICENSES/BSD-3-Clause.txt",
+          "share/licenses/certify-manage/source/LICENSES/GPL-3.0-only.txt"
+        ]
+      },
+      {
+        "name": "cffi",
+        "version": "2.1.1",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz",
+          "sha256": "dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be"
+        },
+        "notices": [
+          "share/licenses/cffi/source/AUTHORS",
+          "share/licenses/cffi/source/LICENSE"
+        ]
+      },
+      {
+        "name": "charset-normalizer",
+        "version": "3.4.9",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/bd/2a/23f34ec9d04624958e137efdc394888716353190e75f25dd22c7a2c7a8aa/charset_normalizer-3.4.9.tar.gz",
+          "sha256": "673611bbd43f0810bec0b0f028ddeaaa501190339cac411f347ac76917c3ae7b"
+        },
+        "notices": [
+          "share/licenses/charset-normalizer/source/LICENSE",
+          "share/licenses/charset-normalizer/source/data/NOTICE.md"
+        ]
+      },
+      {
+        "name": "cloudflare",
+        "version": "5.6.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/c8/4d/7b2fc58321193c562fd9a268fca060f024d8da9e730cb5ea8c96412ac041/cloudflare-5.6.0.tar.gz",
+          "sha256": "b8c81586aecd0ce48f0daaa859cce554f7b975b01d312b60d1a91ad0ea4b67ff"
+        },
+        "notices": [
+          "share/licenses/cloudflare/source/LICENSE"
+        ]
+      },
+      {
+        "name": "configargparse",
+        "version": "1.7.5",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/3f/0b/30328302903c55218ffc5199646d0e9d28348ff26c02ba77b2ffc58d294a/configargparse-1.7.5.tar.gz",
+          "sha256": "e3f9a7bb6be34d66b2e3c4a2f58e3045f8dfae47b0dc039f87bcfaa0f193fb0f"
+        },
+        "notices": [
+          "share/licenses/configargparse/source/LICENSE"
+        ]
+      },
+      {
+        "name": "configobj",
+        "version": "5.0.9",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/f5/c4/c7f9e41bc2e5f8eeae4a08a01c91b2aea3dfab40a3e14b25e87e7db8d501/configobj-5.0.9.tar.gz",
+          "sha256": "03c881bbf23aa07bccf1b837005975993c4ab4427ba57f959afdd9d1a2386848"
+        },
+        "notices": [
+          "share/licenses/configobj/source/LICENSE"
+        ]
+      },
+      {
+        "name": "cryptography",
+        "version": "50.0.2",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/9d/af/182eb91b0df3fe75c4d9f26fe70684569566745f6ba7e5c9c73a862c5252/cryptography-50.0.2.tar.gz",
+          "sha256": "7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5"
+        },
+        "notices": [
+          "share/licenses/cryptography/source/LICENSE",
+          "share/licenses/cryptography/source/LICENSE.APACHE",
+          "share/licenses/cryptography/source/LICENSE.BSD"
+        ]
+      },
+      {
+        "name": "distro",
+        "version": "1.9.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527f8a2e8885fc8015d3e6f5775df186e443e0964a11c3/distro-1.9.0.tar.gz",
+          "sha256": "2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed"
+        },
+        "notices": [
+          "share/licenses/distro/source/LICENSE"
+        ]
+      },
+      {
+        "name": "h11",
+        "version": "0.16.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz",
+          "sha256": "4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1"
+        },
+        "notices": [
+          "share/licenses/h11/source/LICENSE.txt"
+        ]
+      },
+      {
+        "name": "httpcore",
+        "version": "1.0.9",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/06/94/82699a10bca87a5556c9c59b5963f2d039dbd239f25bc2a63907a05a14cb/httpcore-1.0.9.tar.gz",
+          "sha256": "6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8"
+        },
+        "notices": [
+          "share/licenses/httpcore/source/LICENSE.md"
+        ]
+      },
+      {
+        "name": "httpx",
+        "version": "0.28.1",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz",
+          "sha256": "75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc"
+        },
+        "notices": [
+          "share/licenses/httpx/source/LICENSE.md"
+        ]
+      },
+      {
+        "name": "idna",
+        "version": "3.18",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/cd/63/9496c57188a2ee585e0f1db071d75089a11e98aa86eb99d9d7618fc1edce/idna-3.18.tar.gz",
+          "sha256": "ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848"
+        },
+        "notices": [
+          "share/licenses/idna/source/LICENSE.md"
+        ]
+      },
+      {
+        "name": "josepy",
+        "version": "2.2.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/7f/ad/6f520aee9cc9618d33430380741e9ef859b2c560b1e7915e755c084f6bc0/josepy-2.2.0.tar.gz",
+          "sha256": "74c033151337c854f83efe5305a291686cef723b4b970c43cfe7270cf4a677a9"
+        },
+        "notices": [
+          "share/licenses/josepy/source/LICENSE.txt"
+        ]
+      },
+      {
+        "name": "parsedatetime",
+        "version": "2.6",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/a8/20/cb587f6672dbe585d101f590c3871d16e7aec5a576a1694997a3777312ac/parsedatetime-2.6.tar.gz",
+          "sha256": "4cb368fbb18a0b7231f4d76119165451c8d2e35951455dfee97c62a87b04d455"
+        },
+        "notices": [
+          "share/licenses/parsedatetime/source/AUTHORS.txt",
+          "share/licenses/parsedatetime/source/LICENSE.txt"
+        ]
+      },
+      {
+        "name": "pycparser",
+        "version": "3.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/1b/7d/92392ff7815c21062bea51aa7b87d45576f649f16458d78b7cf94b9ab2e6/pycparser-3.0.tar.gz",
+          "sha256": "600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"
+        },
+        "notices": [
+          "share/licenses/pycparser/source/LICENSE"
+        ]
+      },
+      {
+        "name": "pydantic",
+        "version": "2.13.4",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/18/a5/b60d21ac674192f8ab0ba4e9fd860690f9b4a6e51ca5df118733b487d8d6/pydantic-2.13.4.tar.gz",
+          "sha256": "c40756b57adaa8b1efeeced5c196f3f3b7c435f90e84ea7f443901bec8099ef6"
+        },
+        "notices": [
+          "share/licenses/pydantic/source/LICENSE"
+        ]
+      },
+      {
+        "name": "pydantic-core",
+        "version": "2.46.4",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/9d/56/921726b776ace8d8f5db44c4ef961006580d91dc52b803c489fafd1aa249/pydantic_core-2.46.4.tar.gz",
+          "sha256": "62f875393d7f270851f20523dd2e29f082bcc82292d66db2b64ea71f64b6e1c1"
+        },
+        "notices": [
+          "share/licenses/pydantic-core/source/LICENSE"
+        ]
+      },
+      {
+        "name": "pyopenssl",
+        "version": "26.4.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/3f/e8/7325d258199b159eb2c03fe32107533e2832e70e63f4fb88a6aa00023201/pyopenssl-26.4.0.tar.gz",
+          "sha256": "28dfcce0162b9211413e26dfbfdf1d24317fbeba18fc93c12400a1856b2a0bc7"
+        },
+        "notices": [
+          "share/licenses/pyopenssl/source/LICENSE"
+        ]
+      },
+      {
+        "name": "pyrfc3339",
+        "version": "2.1.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/b4/7f/3c194647ecb80ada6937c38a162ab3edba85a8b6a58fa2919405f4de2509/pyrfc3339-2.1.0.tar.gz",
+          "sha256": "c569a9714faf115cdb20b51e830e798c1f4de8dabb07f6ff25d221b5d09d8d7f"
+        },
+        "notices": [
+          "share/licenses/pyrfc3339/source/LICENSE.txt",
+          "share/licenses/pyrfc3339/source/docs/source/license.rst"
+        ]
+      },
+      {
+        "name": "requests",
+        "version": "2.34.2",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz",
+          "sha256": "f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed"
+        },
+        "notices": [
+          "share/licenses/requests/source/LICENSE",
+          "share/licenses/requests/source/NOTICE"
+        ]
+      },
+      {
+        "name": "sniffio",
+        "version": "1.3.1",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz",
+          "sha256": "f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"
+        },
+        "notices": [
+          "share/licenses/sniffio/source/LICENSE",
+          "share/licenses/sniffio/source/LICENSE.APACHE2",
+          "share/licenses/sniffio/source/LICENSE.MIT"
+        ]
+      },
+      {
+        "name": "typing-extensions",
+        "version": "4.16.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/f6/cc/6253133b5bb138fc3306cebfbda2c520f545d36b5be2c7255cc528bb45d6/typing_extensions-4.16.0.tar.gz",
+          "sha256": "dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5"
+        },
+        "notices": [
+          "share/licenses/typing-extensions/source/LICENSE"
+        ]
+      },
+      {
+        "name": "typing-inspection",
+        "version": "0.4.2",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/55/e3/70399cb7dd41c10ac53367ae42139cf4b1ca5f36bb3dc6c9d33acdb43655/typing_inspection-0.4.2.tar.gz",
+          "sha256": "ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464"
+        },
+        "notices": [
+          "share/licenses/typing-inspection/source/LICENSE"
+        ]
+      },
+      {
+        "name": "urllib3",
+        "version": "2.7.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz",
+          "sha256": "231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c"
+        },
+        "notices": [
+          "share/licenses/urllib3/source/LICENSE.txt"
+        ]
+      }
+    ]
+  },
+  "notice_copy_plan": [
+    {
+      "package": "acme",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "2cc5de715ae5a976f086fba4930880c9e421914173fc85111bff514d4757123f",
+      "destination": "share/licenses/acme/source/LICENSE.txt"
+    },
+    {
+      "package": "annotated-types",
+      "source_path": "LICENSE",
+      "source_sha256": "fe1049884b1a0d9342901e88e07f32925d24b3121d9972b6a6805fb9824b095d",
+      "destination": "share/licenses/annotated-types/source/LICENSE"
+    },
+    {
+      "package": "anyio",
+      "source_path": "LICENSE",
+      "source_sha256": "5361ac9dc58f2ef5fd2e9b09c68297c17f04950909bbc8023bdb82eacf22c2b0",
+      "destination": "share/licenses/anyio/source/LICENSE"
+    },
+    {
+      "package": "certbot-dns-cloudflare",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "2cc5de715ae5a976f086fba4930880c9e421914173fc85111bff514d4757123f",
+      "destination": "share/licenses/certbot-dns-cloudflare/source/LICENSE.txt"
+    },
+    {
+      "package": "certbot",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "09469ed16fa61a319a788800b9ecdfd0a1d6ab8e10e3e17e2c75cd57b1173f71",
+      "destination": "share/licenses/certbot/source/LICENSE.txt"
+    },
+    {
+      "package": "certifi",
+      "source_path": "LICENSE",
+      "source_sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7",
+      "destination": "share/licenses/certifi/source/LICENSE"
+    },
+    {
+      "package": "certify-manage",
+      "source_path": "LICENSE",
+      "source_sha256": "dcbce7a2b21e6667a4345daa65cccd3a6baa0f3a5e1068c4256bedc1b38dc6ec",
+      "destination": "share/licenses/certify-manage/source/LICENSE"
+    },
+    {
+      "package": "certify-manage",
+      "source_path": "LICENSES/BSD-3-Clause.txt",
+      "source_sha256": "12b85fc1f9cc9f1cade627244cd8e2aab2c61a9da3f2547b8326aa3388d7b6f0",
+      "destination": "share/licenses/certify-manage/source/LICENSES/BSD-3-Clause.txt"
+    },
+    {
+      "package": "certify-manage",
+      "source_path": "LICENSES/GPL-3.0-only.txt",
+      "source_sha256": "fb981668c18a279e285fc4d83fba1e836cc84dd4daa73c9697d3cfd2d8aca6e0",
+      "destination": "share/licenses/certify-manage/source/LICENSES/GPL-3.0-only.txt"
+    },
+    {
+      "package": "certify-manage",
+      "source_path": "THIRD-PARTY-NOTICES.md",
+      "source_sha256": "027cf7850db5bec40b3ddae40c09fa5e35a5bab92d8de5c262c1ba8d6586a464",
+      "destination": "share/licenses/certify-manage/source/THIRD-PARTY-NOTICES.md"
+    },
+    {
+      "package": "cffi",
+      "source_path": "AUTHORS",
+      "source_sha256": "2a67a60bbfb33759d67d645ff131b8e6d6bc4cafc232d751fcac3eda4d314cc8",
+      "destination": "share/licenses/cffi/source/AUTHORS"
+    },
+    {
+      "package": "cffi",
+      "source_path": "LICENSE",
+      "source_sha256": "5ba24ddc57067f9249add644c3afc41a5d6dc37e23433ef759d95df370b0af63",
+      "destination": "share/licenses/cffi/source/LICENSE"
+    },
+    {
+      "package": "charset-normalizer",
+      "source_path": "data/NOTICE.md",
+      "source_sha256": "0cb3efcfd8f7a02a337e98dc3de4b0b57424d7208a332b26e7deb8cb94c13922",
+      "destination": "share/licenses/charset-normalizer/source/data/NOTICE.md"
+    },
+    {
+      "package": "charset-normalizer",
+      "source_path": "LICENSE",
+      "source_sha256": "6d0d41bfe170ac6c7dc248c9a63e254d0fb45a60d50a8257d0af92c6e249b887",
+      "destination": "share/licenses/charset-normalizer/source/LICENSE"
+    },
+    {
+      "package": "cloudflare",
+      "source_path": "LICENSE",
+      "source_sha256": "8659207f29b327845dd32bcc5bcbde42f7b9ed221d8596c38c13a9ac00cdb07e",
+      "destination": "share/licenses/cloudflare/source/LICENSE"
+    },
+    {
+      "package": "configargparse",
+      "source_path": "LICENSE",
+      "source_sha256": "4a01a0948e46d7a94f44fda042d3e02e5319c2aa351357cd13492ca827e01d07",
+      "destination": "share/licenses/configargparse/source/LICENSE"
+    },
+    {
+      "package": "configobj",
+      "source_path": "LICENSE",
+      "source_sha256": "fd227649f1956788444397bf0899e977140a5bc662d86826657bc2aad833fe2a",
+      "destination": "share/licenses/configobj/source/LICENSE"
+    },
+    {
+      "package": "cryptography",
+      "source_path": "LICENSE",
+      "source_sha256": "3e0c7c091a948b82533ba98fd7cbb40432d6f1a9acbf85f5922d2f99a93ae6bb",
+      "destination": "share/licenses/cryptography/source/LICENSE"
+    },
+    {
+      "package": "cryptography",
+      "source_path": "LICENSE.APACHE",
+      "source_sha256": "aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe",
+      "destination": "share/licenses/cryptography/source/LICENSE.APACHE"
+    },
+    {
+      "package": "cryptography",
+      "source_path": "LICENSE.BSD",
+      "source_sha256": "602c4c7482de6479dd2e9793cda275e5e63d773dacd1eca689232ab7008fb4fb",
+      "destination": "share/licenses/cryptography/source/LICENSE.BSD"
+    },
+    {
+      "package": "distro",
+      "source_path": "LICENSE",
+      "source_sha256": "cb5e8e7e5f4a3988e1063c142c60dc2df75605f4c46515e776e3aca6df976e14",
+      "destination": "share/licenses/distro/source/LICENSE"
+    },
+    {
+      "package": "h11",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "37db5bb85926db28a427a25867f10b1232003aea1be69ccb851138adb8e6f361",
+      "destination": "share/licenses/h11/source/LICENSE.txt"
+    },
+    {
+      "package": "httpcore",
+      "source_path": "LICENSE.md",
+      "source_sha256": "fdcb59154c74cbaba16a11242f7740bea9f23d6feb5547917d8c5f94a80392a5",
+      "destination": "share/licenses/httpcore/source/LICENSE.md"
+    },
+    {
+      "package": "httpx",
+      "source_path": "LICENSE.md",
+      "source_sha256": "4ec59d544f12b5f539a3a716fd321ac58ccd8030b465221f2c880200cdf28d8d",
+      "destination": "share/licenses/httpx/source/LICENSE.md"
+    },
+    {
+      "package": "idna",
+      "source_path": "LICENSE.md",
+      "source_sha256": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04",
+      "destination": "share/licenses/idna/source/LICENSE.md"
+    },
+    {
+      "package": "josepy",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "2cc5de715ae5a976f086fba4930880c9e421914173fc85111bff514d4757123f",
+      "destination": "share/licenses/josepy/source/LICENSE.txt"
+    },
+    {
+      "package": "parsedatetime",
+      "source_path": "AUTHORS.txt",
+      "source_sha256": "619fd45ac47a720837c26fbda90d901d0106b139dc19e13dc685814e4c6a2c5c",
+      "destination": "share/licenses/parsedatetime/source/AUTHORS.txt"
+    },
+    {
+      "package": "parsedatetime",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "239475e79019a57f1ce58f8a81b9e2ae484c73fd2dc48beca8ade8c3ca0404a9",
+      "destination": "share/licenses/parsedatetime/source/LICENSE.txt"
+    },
+    {
+      "package": "pycparser",
+      "source_path": "LICENSE",
+      "source_sha256": "0c846399369ea76ddd7b5c44fe6d16497415fcf015f5cbb508c24bf98b81c5b1",
+      "destination": "share/licenses/pycparser/source/LICENSE"
+    },
+    {
+      "package": "pydantic-core",
+      "source_path": "LICENSE",
+      "source_sha256": "2afdd30d54b4d62b6f488a6bcc1546e84ec5061f13f4209c03d012348783795a",
+      "destination": "share/licenses/pydantic-core/source/LICENSE"
+    },
+    {
+      "package": "pydantic",
+      "source_path": "LICENSE",
+      "source_sha256": "a9e186f3ca16b5eef84318e7a701721351a00cb7b8ae3a4394b67b49e3529ef3",
+      "destination": "share/licenses/pydantic/source/LICENSE"
+    },
+    {
+      "package": "pyopenssl",
+      "source_path": "LICENSE",
+      "source_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "destination": "share/licenses/pyopenssl/source/LICENSE"
+    },
+    {
+      "package": "pyrfc3339",
+      "source_path": "docs/source/license.rst",
+      "source_sha256": "fda59a4e080c7f31f6eb7fa57eba631885a95f327cec6c12c164440d4ab3324b",
+      "destination": "share/licenses/pyrfc3339/source/docs/source/license.rst"
+    },
+    {
+      "package": "pyrfc3339",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "a93cb5adb420eda8a21f8f007cb5f309864660cb6b2160cc509e9416a613078d",
+      "destination": "share/licenses/pyrfc3339/source/LICENSE.txt"
+    },
+    {
+      "package": "requests",
+      "source_path": "LICENSE",
+      "source_sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+      "destination": "share/licenses/requests/source/LICENSE"
+    },
+    {
+      "package": "requests",
+      "source_path": "NOTICE",
+      "source_sha256": "f5110972dedad2b4e9d314518daf3b7d72d6e02e499acd802181de6f74571dcc",
+      "destination": "share/licenses/requests/source/NOTICE"
+    },
+    {
+      "package": "sniffio",
+      "source_path": "LICENSE",
+      "source_sha256": "652c878488d1456361e08c3f8607fd7ba59892a14103d15cce4ff93c85b5cc8b",
+      "destination": "share/licenses/sniffio/source/LICENSE"
+    },
+    {
+      "package": "sniffio",
+      "source_path": "LICENSE.APACHE2",
+      "source_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "destination": "share/licenses/sniffio/source/LICENSE.APACHE2"
+    },
+    {
+      "package": "sniffio",
+      "source_path": "LICENSE.MIT",
+      "source_sha256": "3e6dae555eb92787fc82d1d48355677f454c7f65aeb38d3f9e72bf9a3daf034b",
+      "destination": "share/licenses/sniffio/source/LICENSE.MIT"
+    },
+    {
+      "package": "typing-extensions",
+      "source_path": "LICENSE",
+      "source_sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+      "destination": "share/licenses/typing-extensions/source/LICENSE"
+    },
+    {
+      "package": "typing-inspection",
+      "source_path": "LICENSE",
+      "source_sha256": "804b59b25f2c31bd278f9202a19ae49a3945aa2664387e2d0a128c7cacc61ec3",
+      "destination": "share/licenses/typing-inspection/source/LICENSE"
+    },
+    {
+      "package": "urllib3",
+      "source_path": "LICENSE.txt",
+      "source_sha256": "130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686",
+      "destination": "share/licenses/urllib3/source/LICENSE.txt"
+    }
+  ],
+  "build_inputs": {
+    "cloudflare_profile_delta": [
+      {
+        "name": "hatch-fancy-pypi-readme",
+        "version": "25.1.0",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/f3/0f/aed57c301f339936eb91cb4d8c1e5088a101081854bd3ec18a889df32365/hatch_fancy_pypi_readme-25.1.0.tar.gz",
+          "sha256": "9c58ed3dff90d51f43414ce37009ad1d5b0f08ffc9fc216998a06380f01c0045"
+        },
+        "notices": [
+          {
+            "source_path": "AUTHORS.md",
+            "source_sha256": "8149eb06682e6d50c8ea79d15bdfe1b4fed44169c76ad5c43483ea3260d6afb7"
+          },
+          {
+            "source_path": "LICENSE.txt",
+            "source_sha256": "e69ea57f96e599e617f61af3e85bf326b87e833994709fb5e5908a81197730a2"
+          }
+        ]
+      },
+      {
+        "name": "hatchling",
+        "version": "1.26.3",
+        "source": {
+          "url": "https://files.pythonhosted.org/packages/e1/47/7ec270a9567262ae3cb32dd420d2b53bf7aee769aca1f240eae0426b5bbc/hatchling-1.26.3.tar.gz",
+          "sha256": "b672a9c36a601a06c4e88a1abb1330639ee8e721e0535a37536e546a667efc7a"
+        },
+        "notices": [
+          {
+            "source_path": "LICENSE.txt",
+            "source_sha256": "7f143a8127ad4873862d70854b5bd2abd0085aa73e64fd2b08704a3b9f5c07fc"
+          }
+        ]
+      }
+    ],
+    "reused_reviewed_tools": [
+      {
+        "name": "setuptools",
+        "version": "82.0.0"
+      },
+      {
+        "name": "wheel",
+        "version": "0.48.0"
+      },
+      {
+        "name": "maturin",
+        "version": "1.15.0"
+      },
+      {
+        "name": "setuptools-scm",
+        "version": "10.3.4"
+      },
+      {
+        "name": "hatchling",
+        "version": "1.32.4"
+      }
+    ]
+  },
+  "required_capabilities": {
+    "certbot_plugin": "dns-cloudflare",
+    "python_modules": [
+      "certbot_dns_cloudflare",
+      "cloudflare",
+      "pydantic",
+      "pydantic_core"
+    ],
+    "credential_material_in_artifact": false,
+    "dns_credentials": "controller-owned protected runtime input only"
+  },
+  "acceptance": {
+    "required": [
+      "offline source-only wheel build for every locked runtime distribution",
+      "producer verify_staging against the exact cloudflare-dns-01 runtime lock",
+      "certbot --version reports 5.8.0",
+      "certbot plugins --text contains dns-cloudflare",
+      "certbot certonly --help exposes the dns-cloudflare authenticator",
+      "certbot_dns_cloudflare and cloudflare import through the immutable launcher",
+      "pydantic_core native extension ABI/linkage is verified against the selected rootfs",
+      "published artifact/view/consumer binding is reopened independently",
+      "no Cloudflare token, policy, ACME state, certificate or key is present in the immutable artifact"
+    ],
+    "retained_blockers": [
+      {
+        "component": "pydantic-core",
+        "reason": "retained DNS candidate records 103 Cargo registry archive identities but requires per-component grant/notice and selected native-output review before complete-lock approval",
+        "cargo_lock_sha256": "c3c27fc600d7dafd149229c6501271dbc5f6b4f7b1bfa116b32e77217c2b5038"
+      }
+    ]
+  },
+  "provenance_summary": {
+    "core_profile": "same reviewed core source identities used by the accepted HTTP-01 runtime",
+    "dns_delta": "exact Cloudflare DNS candidate source hashes retained from the prior source review",
+    "accepted_http_artifact": "sha256:6975d95a45bb0a9ae6aa7220c4ba41e4f5701c92f47130d0f73aa90ad1496b6d",
+    "accepted_http_view": "sha256:2cf48c9818adf3891b0ee2a348b335b3cf4ffe758cbda88f116866c3adc0e40f",
+    "note": "The accepted HTTP-01 artifact remains immutable historical evidence and is not modified by this definition."
+  }
+}
