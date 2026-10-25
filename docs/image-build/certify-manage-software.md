@@ -104,10 +104,16 @@ accepted rootfs compatibility descriptor. The definition requires the
 `dns-cloudflare` Certbot plugin and keeps credentials/mutable ACME state outside
 the artifact.
 
-The definition is intentionally marked `publication_authorized: false` until the
+The definition explicitly separates private build/acceptance authority from public
+binary redistribution. Private source-bound compilation, internal immutable
+application-store publication and native acceptance are authorized. Public
+redistribution of the compiled application/rootfs remains unauthorized until the
 retained pydantic-core Rust per-component grant/notice and selected native-output
-review is complete. This is a buildable source definition, not a claim that the
-DNS-capable immutable runtime has already passed native acceptance.
+review is complete. Production activation remains a separate gate.
+
+This means the source-only public release can carry the definition while Work builds
+and tests the DNS-capable runtime privately. The rights review is not a compilation
+blocker and is not a prerequisite for private native acceptance.
 
 ## Producer flow
 

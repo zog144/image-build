@@ -23,7 +23,13 @@ def test_cloudflare_application_definition_is_complete_and_valid():
     assert value["contract"] == "image-build-certify-manage-application-definition-v1"
     assert value["application"] == "certify-manage"
     assert value["profile"] == "cloudflare-dns-01"
-    assert value["publication_authorized"] is False
+    assert value["authorization"] == {
+        "private_build": True,
+        "private_immutable_application_publication": True,
+        "native_acceptance": True,
+        "public_binary_redistribution": False,
+        "production_activation": False,
+    }
 
     lock = validate_lock(value["runtime_lock"])
     assert lock["profile"] == "cloudflare-dns-01"
@@ -100,3 +106,5 @@ def test_pydantic_core_rights_gate_remains_explicit():
     assert blockers[0]["cargo_lock_sha256"] == (
         "c3c27fc600d7dafd149229c6501271dbc5f6b4f7b1bfa116b32e77217c2b5038"
     )
+    assert "private source-bound compilation" in blockers[0]["does_not_block"]
+    assert "public binary/application-artifact redistribution" in blockers[0]["blocks"]

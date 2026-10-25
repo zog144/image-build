@@ -4,8 +4,7 @@
   "application": "certify-manage",
   "profile": "cloudflare-dns-01",
   "purpose": "Certbot 5.8.0 with Cloudflare DNS-01 authentication support",
-  "publication_authorized": false,
-  "status": "source-locked-native-and-rights-acceptance-required",
+  "status": "private-build-authorized-public-binary-redistribution-review-pending",
   "runtime_lock": {
     "contract": "image-build-certify-manage-runtime-lock-v1",
     "profile": "cloudflare-dns-01",
@@ -800,7 +799,16 @@
       {
         "component": "pydantic-core",
         "reason": "retained DNS candidate records 103 Cargo registry archive identities but requires per-component grant/notice and selected native-output review before complete-lock approval",
-        "cargo_lock_sha256": "c3c27fc600d7dafd149229c6501271dbc5f6b4f7b1bfa116b32e77217c2b5038"
+        "cargo_lock_sha256": "c3c27fc600d7dafd149229c6501271dbc5f6b4f7b1bfa116b32e77217c2b5038",
+        "blocks": [
+          "public binary/application-artifact redistribution",
+          "public rootfs/image redistribution containing the compiled pydantic-core payload"
+        ],
+        "does_not_block": [
+          "private source-bound compilation",
+          "private immutable application-store publication",
+          "private native ABI/plugin acceptance"
+        ]
       }
     ]
   },
@@ -810,5 +818,12 @@
     "accepted_http_artifact": "sha256:6975d95a45bb0a9ae6aa7220c4ba41e4f5701c92f47130d0f73aa90ad1496b6d",
     "accepted_http_view": "sha256:2cf48c9818adf3891b0ee2a348b335b3cf4ffe758cbda88f116866c3adc0e40f",
     "note": "The accepted HTTP-01 artifact remains immutable historical evidence and is not modified by this definition."
+  },
+  "authorization": {
+    "private_build": true,
+    "private_immutable_application_publication": true,
+    "native_acceptance": true,
+    "public_binary_redistribution": false,
+    "production_activation": false
   }
 }
