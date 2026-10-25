@@ -54,6 +54,7 @@ jobs:
             tests/test_application_data_targets.py \
             tests/test_accepted_image_derivation.py \
             tests/test_certify_manage_software.py \
+            tests/test_certify_manage_application_definition.py \
             tests/test_pins.py \
             tests/test_monthly_pin_restoration.py \
             tests/test_public_candidate_preflight.py \
