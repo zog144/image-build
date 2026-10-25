@@ -3,14 +3,15 @@
 `project/bootstrap/host-boot-packages.py` builds additions on an accepted systemd
 core generation. It does not mutate that generation or activate host services.
 
-- util-linux 2.42.2: two additive stages preserve the accepted native util-linux
-  output. `login` adds only `/usr/bin/login` for Boot A and proves its version;
-  `nologin` adds only `/usr/sbin/nologin` and tests its refusal exit code. Shadow
-  is not the Boot A login provider and remains deferred to Resident B account-policy
-  review.
-- resident-root-layout: a source/provenance-tracked first-party stage adds only empty
-  `/state` and `/applications`, both mode 0000. These are underlying reusable
-  HOST mountpoints; host-install later mounts installation-specific writable
+- util-linux 2.42.2: the existing additive host stage preserves the accepted native
+  util-linux output and now adds only `/usr/bin/login` plus `/usr/sbin/nologin`
+  from the same exact pinned source. Login version and nologin refusal behavior are
+  tested. Shadow is not the Boot A login provider and remains deferred to Resident B
+  account-policy review.
+- systemd final additionally materializes empty `/state` and `/applications`,
+  both mode 0000, as Zog resident-HOST integration output while it is already being
+  rebuilt for systemd-boot. These underlying mountpoints contain no installation
+  identity or writable state; host-install later mounts installation-specific
   partitions over them. The generic application-runtime `/applications` scaffold
   remains a separate contract and is not changed.
 - D-Bus 1.16.2: the reference daemon is the selected system-bus provider, with

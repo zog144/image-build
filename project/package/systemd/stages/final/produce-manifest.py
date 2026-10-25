@@ -1,6 +1,8 @@
 # Data only; parsed with ast.literal_eval.
-{'trees': ['usr', 'etc', 'var'],
- 'required': ['usr/lib/systemd/systemd',
+{'trees': ['usr', 'etc', 'var', 'state', 'applications'],
+ 'required': ['state',
+              'applications',
+              'usr/lib/systemd/systemd',
               'usr/lib/systemd/systemd-journald',
               'usr/lib/systemd/systemd-udevd',
               'usr/lib/systemd/systemd-networkd',

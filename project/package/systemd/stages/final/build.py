@@ -50,6 +50,8 @@
               '-c',
               'cd upstream/systemd-261.2\n'
               'DESTDIR="$DESTDIR" SYSTEMD_OFFLINE=1 meson install -C build --no-rebuild\n'
+              '# Zog resident HOST mountpoints are empty fail-closed integration layout.\n'
+              'install -d -m 0000 "$DESTDIR/state" "$DESTDIR/applications"\n'
               'install -d "$DESTDIR/usr/share/licenses/systemd"\n'
               'cp -a LICENSE.GPL2 LICENSE.LGPL2.1 LICENSES '
               '"$DESTDIR/usr/share/licenses/systemd/"']]}

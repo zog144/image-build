@@ -1,5 +1,0 @@
-Copyright 2026 Alex Black
-SPDX-License-Identifier: BSD-3-Clause OR GPL-3.0-only
-image-build resident root layout v1
-/state 0000 root:root
-/applications 0000 root:root

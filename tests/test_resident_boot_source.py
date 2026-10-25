@@ -20,10 +20,9 @@ def test_boot_a_profile_is_source_candidate_with_resident_b_deferred():
         "systemd",
         "e2fsprogs",
         "kmod",
-        "resident-root-layout",
     ]
     assert profile["boot_a"]["providers"]["/usr/bin/login"] == (
-        "util-linux-login additive stage"
+        "util-linux host-additions stage"
     )
     assert profile["resident_b"]["deferred_projects"] == [
         "shadow",
@@ -66,8 +65,8 @@ def test_systemd_source_requires_efi_loader_and_getty_units():
 
 
 def test_boot_a_login_is_additive_util_linux_stage_not_shadow():
-    package = load_package(CATALOGUE / "util-linux/stages/login")
-    assert package.outputs == ("usr/bin/login",)
+    package = load_package(CATALOGUE / "util-linux/stages/nologin")
+    assert package.outputs == ("usr/bin/login", "usr/sbin/nologin")
     assert package.sources[0]["sha256"] == (
         "03a05d3adf9602ef128f2da05b84b3205ce60c351e5737c0370f74000679ce8a"
     )
@@ -76,53 +75,38 @@ def test_boot_a_login_is_additive_util_linux_stage_not_shadow():
         for phase in ("configure", "build", "test", "install")
         for argv in package.steps[phase]
     )
-    assert "--disable-all-programs --enable-login" in commands
+    assert "--disable-all-programs --enable-login --enable-nologin" in commands
     assert "--disable-login" not in commands
     assert "./login --version" in commands
     assert 'install -Dm755 login "$DESTDIR/usr/bin/login"' in commands
 
     shadow = literal(CATALOGUE / "shadow/recipe-plan.py")
     assert shadow["status"] == "resident-b-deferred"
-    assert "not a Boot A login provider" in shadow["notes"]
+    assert "Not a Boot A login provider" in shadow["notes"]
 
 
-def test_resident_root_layout_is_provenance_tracked_package():
-    stage = CATALOGUE / "resident-root-layout/stages/final"
-    package = load_package(stage)
-    assert package.outputs == ("applications", "state")
-    assert package.output_trees == ("state", "applications")
-    assert package.build_dependencies == ()
-    assert package.runtime_dependencies == ()
-
-    fixture = stage / "fixtures/layout-v1.txt"
-    assert hashlib.sha256(fixture.read_bytes()).hexdigest() == (
-        "623e1054fbcc5738fc8ee2f557cb76b410b2b455a66ccb1e8cdf2aa84d51ebe9"
-    )
+def test_resident_root_layout_is_bound_to_required_systemd_rebuild():
+    package = load_package(CATALOGUE / "systemd/stages/final")
     commands = "\n".join(
         " ".join(argv)
-        for phase in ("build", "test", "install")
+        for phase in ("configure", "build", "test", "install")
         for argv in package.steps[phase]
     )
     assert 'install -d -m 0000 "$DESTDIR/state" "$DESTDIR/applications"' in commands
+    assert {"state", "applications"} <= set(package.output_trees)
+    assert {"state", "applications"} <= set(package.outputs)
 
 
 def test_host_boot_plan_selects_only_targeted_boot_a_additions():
     plan = literal(ROOT / "project/bootstrap/host-boot-packages.py")
     stages = {item["id"]: item for item in plan["stages"]}
-    assert stages["util-linux-login"] == {
-        "id": "util-linux-login",
+    assert stages["util-linux-nologin"] == {
+        "id": "util-linux-nologin",
         "project": "util-linux",
-        "stage": "login",
-        "recipe": "util-linux/stages/login",
+        "stage": "nologin",
+        "recipe": "util-linux/stages/nologin",
     }
-    assert stages["resident-root-layout-final"] == {
-        "id": "resident-root-layout-final",
-        "project": "resident-root-layout",
-        "stage": "final",
-        "recipe": "resident-root-layout/stages/final",
-    }
-    assert "util-linux-login" in plan["targets"]
-    assert "resident-root-layout-final" in plan["targets"]
+    assert "util-linux-nologin" in plan["targets"]
 
     check = (ROOT / "project/bootstrap/host-boot-packages-check.sh").read_text()
     assert "/usr/bin/login --version" in check
