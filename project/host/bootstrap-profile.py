@@ -43,7 +43,7 @@
   {'project': 'linux', 'role': 'current API headers only; first kernel/initramfs/modules remain foreign', 'group': 'foreign-boot'},
  ],
  'recipe_review_candidates': ['meson', 'ninja', 'gperf', 'libcap', 'libseccomp',
-                              'jinja2', 'packaging', 'pyelftools'],
+                              'jinja2', 'packaging'],
  'candidate_note': 'Review selected upstream build options before adding dependency edges; this list is not a required closure.',
  'acceptance': ['self-hosted compiler acceptance', 'PID 1 and controller service startup',
                 'TLS certificate verification', 'Python SSL and SQLite modules',

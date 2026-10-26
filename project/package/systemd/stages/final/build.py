@@ -1,5 +1,19 @@
 # Data only; parsed with ast.literal_eval.
-{'configure': [['/bin/bash',
+{'prepare': [['/bin/bash',
+              '-eu',
+              '-o',
+              'pipefail',
+              '-c',
+              "python3 - <<'PYCHECK'\n"
+              'import elftools\n'
+              "assert elftools.__version__ == '0.33', elftools.__version__\n"
+              'from elftools.elf.elffile import ELFFile\n'
+              'import sys\n'
+              'with open(sys.executable, "rb") as stream:\n'
+              ' assert ELFFile(stream).num_sections() > 0\n'
+              "print('ZOG_SYSTEMD_PYELFTOOLS_INPUT_PASS')\n"
+              'PYCHECK']],
+ 'configure': [['/bin/bash',
                 '-eu',
                 '-o',
                 'pipefail',

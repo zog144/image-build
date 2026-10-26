@@ -239,6 +239,7 @@ class Provenance:
             raise ImageBuildError('package sources differ from materialized monthly selection')
         project_pin = original['packages'][entry['project']]
         pin_policy = entry.get('pin_policy', 'monthly-recipe')
+        source_pin = self.pin
         if pin_policy == 'monthly-recipe':
             if project_pin['recipes'].get(entry['recipe']) != entry['sources']:
                 raise ImageBuildError('package sources differ from original monthly recipe selection')
@@ -250,6 +251,31 @@ class Provenance:
                 or entry['recipe'] in project_pin.get('recipes', {})
             ):
                 raise ImageBuildError('late-reviewed recipe differs from original monthly catalogue source')
+        elif pin_policy == 'supplemental-build-source':
+            from .pins import supplemental_build_source
+            supplemental_path = builder.package_dir/package.name/'supplemental-pin.py'
+            repository_path = entry.get('supplemental_pin', {}).get('repository_path')
+            supplemental = supplemental_build_source(
+                supplemental_path,
+                list(package.sources),
+                self.pin['month'],
+                repository_path,
+            )
+            if (
+                entry.get('supplemental_pin', {}).get('identity') != identity(supplemental)
+                or not isinstance(repository_path, str)
+                or not repository_path.startswith('project/package/')
+            ):
+                raise ImageBuildError('supplemental build source pin binding differs')
+            pin_artifact = self._file(
+                'supplemental-build-source-pin.py',
+                supplemental_path,
+            )
+            source_pin = {
+                **self.pin,
+                'path': repository_path,
+                'digest': pin_artifact['digest'],
+            }
         else:
             raise ImageBuildError('unsupported package source pin policy')
         archives = [self._file(source['destination'], self.state/'image-build/sources'/source['sha256'],
@@ -262,14 +288,14 @@ class Provenance:
         self._verify_staged_patches(package_dir, patches)
         if package.source_provenance is None:
             gaps = ['Upstream commit revisions are not captured by this adapter; archive bytes are pinned.']
-            sources = [self._record('source-selection', dict(package=package.name,pin=self.pin,
+            sources = [self._record('source-selection', dict(package=package.name,pin=source_pin,
                 upstream=[dict(repository='not-captured',revision=None)],archives=archives), gaps)]
         else:
             sources = []
             for spec, archive in zip(package.sources, archives):
                 upstream, gaps = upstream_for(package.source_provenance, spec)
                 sources.append(self._record('source-selection', dict(package=package.name,
-                    pin=self.pin, upstream=upstream, archives=[archive]), gaps))
+                    pin=source_pin, upstream=upstream, archives=[archive]), gaps))
         # Capture a complete package recipe plus builder implementation bytes. The
         # manifest is a retained artifact; constituent file bytes are retained too.
         recipe_files = []

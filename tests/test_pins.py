@@ -128,3 +128,60 @@ def test_catalogue_source_policy_rejects_unpinned_source_identity(tmp_path):
             destination,
             pin_date='2026-10-01',
         )
+
+
+def test_supplemental_build_source_pin_is_hash_bound_without_rewriting_monthly_pin(tmp_path):
+    project = Path(__file__).resolve().parents[1]/'project'
+    monthly = load(project/'pins/2026-10-01/commit-pin.py')
+    destination = tmp_path/'recipes'
+    destination.mkdir()
+    record = snapshot(
+        project/'package',
+        [{
+            'id':'pyelftools-build',
+            'project':'build-environment',
+            'recipe':'build-environment/stages/pyelftools',
+            'pin_policy':'supplemental-build-source',
+        }],
+        destination,
+        pin_date='2026-10-01',
+    )
+    selected = record['packages']['pyelftools-build']
+    assert record['monthly_identity'] == identity(monthly)
+    assert selected['pin_policy'] == 'supplemental-build-source'
+    assert selected['supplemental_pin']['repository_path'] == (
+        'project/package/build-environment/stages/pyelftools/supplemental-pin.py'
+    )
+    supplemental = ast.literal_eval(
+        (destination/'pyelftools-build/supplemental-pin.py').read_text()
+    )
+    assert selected['supplemental_pin']['identity'] == identity(supplemental)
+    assert supplemental['scope'] == 'build-only'
+    assert supplemental['sources'] == selected['sources']
+
+
+def test_supplemental_build_source_policy_rejects_source_drift(tmp_path):
+    project = Path(__file__).resolve().parents[1]/'project'
+    catalogue = tmp_path/'package'
+    import shutil
+    shutil.copytree(project/'package/build-environment', catalogue/'build-environment')
+    source = ast.literal_eval(
+        (catalogue/'build-environment/stages/pyelftools/sources.py').read_text()
+    )
+    source[0]['sha256'] = '0'*64
+    (catalogue/'build-environment/stages/pyelftools/sources.py').write_text(repr(source))
+    (tmp_path/'pins').symlink_to(project/'pins', target_is_directory=True)
+    destination = tmp_path/'recipes'
+    destination.mkdir()
+    with pytest.raises(ImageBuildError, match='supplemental build source pin'):
+        snapshot(
+            catalogue,
+            [{
+                'id':'pyelftools-build',
+                'project':'build-environment',
+                'recipe':'build-environment/stages/pyelftools',
+                'pin_policy':'supplemental-build-source',
+            }],
+            destination,
+            pin_date='2026-10-01',
+        )

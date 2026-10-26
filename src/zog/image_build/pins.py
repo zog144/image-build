@@ -6,6 +6,25 @@ import pprint
 from .errors import ImageBuildError
 from .metadata import identity, literal
 
+SUPPLEMENTAL_BUILD_SOURCE_CONTRACT = "image-build-supplemental-build-source-pin-v1"
+
+
+def supplemental_build_source(path, sources, month, repository_path):
+    record = literal(path)
+    required = {"schema", "contract", "month", "scope", "repository_path", "sources"}
+    if (
+        not isinstance(record, dict)
+        or set(record) != required
+        or record.get("schema") != 1
+        or record.get("contract") != SUPPLEMENTAL_BUILD_SOURCE_CONTRACT
+        or record.get("month") != month
+        or record.get("scope") != "build-only"
+        or record.get("repository_path") != repository_path
+        or record.get("sources") != sources
+    ):
+        raise ImageBuildError("invalid supplemental build source pin")
+    return record
+
 
 def load(path):
     record = literal(path)
@@ -46,6 +65,7 @@ def snapshot(catalogue, entries, destination, pin_date=None):
         key = entry['recipe']
         pin_policy = entry.get('pin_policy', 'monthly-recipe')
         sources = project.get('recipes', {}).get(key)
+        supplemental = None
         if sources is None and pin_policy == 'catalogue-source':
             selected_sources = literal(Path(catalogue)/key/'sources.py')
             source = project.get('source')
@@ -58,6 +78,15 @@ def snapshot(catalogue, entries, destination, pin_date=None):
                     f'{key}: catalogue-source recipe differs from reviewed monthly package source'
                 )
             sources = selected_sources
+        elif sources is None and pin_policy == 'supplemental-build-source':
+            sources = literal(Path(catalogue)/key/'sources.py')
+            repository_path = 'project/package/' + key + '/supplemental-pin.py'
+            supplemental = supplemental_build_source(
+                Path(catalogue)/key/'supplemental-pin.py',
+                sources,
+                selected,
+                repository_path,
+            )
         elif sources is None or pin_policy != 'monthly-recipe':
             raise ImageBuildError(f'{key}: missing reviewed monthly source pin')
         packages[entry['id']] = {
@@ -65,6 +94,15 @@ def snapshot(catalogue, entries, destination, pin_date=None):
             'project': entry['project'],
             'recipe': key,
             **({'pin_policy': pin_policy} if pin_policy != 'monthly-recipe' else {}),
+            **(
+                {
+                    'supplemental_pin': {
+                        'repository_path': supplemental['repository_path'],
+                        'identity': identity(supplemental),
+                    }
+                }
+                if supplemental is not None else {}
+            ),
         }
     record = {'schema': 1, 'date': selected, 'monthly_identity': identity(monthly), 'packages': packages}
     path = Path(destination)/'commit-pin.py'

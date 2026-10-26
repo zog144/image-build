@@ -21,7 +21,7 @@ def test_targeted_plan_materializes_shadow_from_unchanged_catalogue_pin(tmp_path
     )
     packages = load_packages(tmp_path / "recipes")
     assert plan["overlay_targets"] == ["systemd-final", "shadow-login"]
-    assert {"systemd-final", "shadow-login"} <= set(packages)
+    assert {"pyelftools-build", "systemd-final", "shadow-login"} <= set(packages)
     selected = ast.literal_eval((tmp_path / "recipes/commit-pin.py").read_text())
     shadow = selected["packages"]["shadow-login"]
     monthly = ast.literal_eval(
@@ -31,6 +31,16 @@ def test_targeted_plan_materializes_shadow_from_unchanged_catalogue_pin(tmp_path
     assert {k:shadow["sources"][0][k] for k in ("url","sha256")} == (
         monthly["packages"]["shadow"]["source"]
     )
+    pyelf = selected["packages"]["pyelftools-build"]
+    assert pyelf["pin_policy"] == "supplemental-build-source"
+    assert pyelf["supplemental_pin"]["repository_path"].endswith(
+        "build-environment/stages/pyelftools/supplemental-pin.py"
+    )
+    targeted = boot._targeted_build_definitions(packages)
+    assert targeted["systemd-final"].build_dependencies == ("pyelftools-build",)
+    assert targeted["systemd-final"].runtime_dependencies == ()
+    assert targeted["shadow-login"].build_dependencies == ()
+    assert packages["pyelftools-build"].integration["scope"] == "build-only"
     login = packages["shadow-login"]
     commands = "\n".join(
         " ".join(argv)

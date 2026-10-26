@@ -46,6 +46,31 @@ ALLOWED_MODE_REPLACEMENTS = {
     "applications": (0o755, 0o000),
 }
 OVERLAY_TARGETS = ("systemd-final", "shadow-login")
+BUILD_ONLY_DEPENDENCIES = {
+    "systemd-final": ("pyelftools-build",),
+    "shadow-login": (),
+}
+
+
+def _targeted_build_definitions(definitions):
+    """Preserve only reviewed build-only inputs required by targeted outputs."""
+    result = dict(definitions)
+    for name in OVERLAY_TARGETS:
+        if name not in definitions:
+            raise ImageBuildError("targeted Boot A definition missing: " + name)
+        package = definitions[name]
+        allowed = BUILD_ONLY_DEPENDENCIES[name]
+        if any(dependency not in definitions for dependency in allowed):
+            raise ImageBuildError("targeted Boot A build-only dependency missing")
+        if any(dependency not in package.build_dependencies for dependency in allowed):
+            raise ImageBuildError("targeted Boot A package lost required build-only dependency")
+        result[name] = replace(
+            package,
+            build_dependencies=allowed,
+            runtime_dependencies=(),
+            test_dependencies=(),
+        )
+    return result
 
 
 def _sha256(path):
@@ -339,14 +364,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
         # recipes remain source-review evidence, but their already-installed bytes
         # are not rebuilt or overlaid into that parent. Only the two requested
         # package outputs execute in this targeted operation.
-        build_definitions = dict(definitions)
-        for name in OVERLAY_TARGETS:
-            build_definitions[name] = replace(
-                definitions[name],
-                build_dependencies=(),
-                runtime_dependencies=(),
-                test_dependencies=(),
-            )
+        build_definitions = _targeted_build_definitions(definitions)
         with builder.locked():
             built = builder._build_set(
                 build_definitions, plan["targets"], parent, package_attempt

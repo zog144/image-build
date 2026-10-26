@@ -50,7 +50,7 @@ def test_restored_october_pin_has_exact_reviewed_bytes_and_current_selection():
 def test_every_current_stage_recipe_is_monthly_pinned_or_exact_catalogue_source():
     pin = load(PIN)
     source_files = sorted((PROJECT / "package").glob("*/stages/**/sources.py"))
-    assert len(source_files) == 140
+    assert len(source_files) == 141
     observed = set()
     late = set()
     for path in source_files:
@@ -62,11 +62,19 @@ def test_every_current_stage_recipe_is_monthly_pinned_or_exact_catalogue_source(
             assert recipe_pin == sources, key
             observed.add(key)
             continue
-        assert key == "shadow/stages/login"
-        assert len(sources) == 1
-        assert {k:sources[0][k] for k in ("url","sha256")} == pin["packages"][project]["source"]
         integration = literal(path.with_name("integration.py"))
-        assert integration["source_pin_policy"] == "catalogue-source"
+        if key == "shadow/stages/login":
+            assert len(sources) == 1
+            assert {k:sources[0][k] for k in ("url","sha256")} == pin["packages"][project]["source"]
+            assert integration["source_pin_policy"] == "catalogue-source"
+        elif key == "build-environment/stages/pyelftools":
+            supplemental = literal(path.with_name("supplemental-pin.py"))
+            assert supplemental["contract"] == "image-build-supplemental-build-source-pin-v1"
+            assert supplemental["scope"] == "build-only"
+            assert supplemental["sources"] == sources
+            assert integration["source_pin_policy"] == "supplemental-build-source"
+        else:
+            raise AssertionError("unreviewed late-stage source: " + key)
         late.add(key)
     pinned = {
         key
@@ -74,7 +82,7 @@ def test_every_current_stage_recipe_is_monthly_pinned_or_exact_catalogue_source(
         for key in row.get("recipes", {})
     }
     assert pinned == observed
-    assert late == {"shadow/stages/login"}
+    assert late == {"shadow/stages/login", "build-environment/stages/pyelftools"}
 
 
 def test_catalogue_only_graphical_sources_are_pinned_without_executable_recipes():

@@ -10,8 +10,30 @@ PROJECT = Path(__file__).parents[1] / 'project'
 def test_systemd_stage_and_required_features(tmp_path):
     plan = stage_recipes(PROJECT/'bootstrap/systemd-core.py', PROJECT/'package', tmp_path/'recipes')
     packages = load_packages(tmp_path/'recipes')
-    assert order(packages, plan['targets']) == ('systemd-test-environment', 'tzdata-final', 'systemd-final')
+    assert order(packages, plan['targets']) == (
+        'pyelftools-build', 'systemd-test-environment', 'tzdata-final', 'systemd-final'
+    )
     package = packages['systemd-final']
+    assert package.build_dependencies == (
+        'tzdata-final', 'systemd-test-environment', 'pyelftools-build'
+    )
+    pyelftools = packages['pyelftools-build']
+    assert pyelftools.runtime_dependencies == ()
+    assert pyelftools.integration['scope'] == 'build-only'
+    assert pyelftools.outputs == (
+        'usr/lib/python3.15/site-packages/elftools/__init__.py',
+        'usr/lib/python3.15/site-packages/elftools/construct/LICENSE',
+        'usr/lib/python3.15/site-packages/elftools/elf/elffile.py',
+        'usr/share/licenses/build-pyelftools/CONSTRUCT-LICENSE',
+        'usr/share/licenses/build-pyelftools/LICENSE',
+    )
+    pyelf_build = pyelftools.steps['build'][0][-1]
+    assert "ZOG_PYELFTOOLS_BUILD_INPUT_PASS" in pyelf_build
+    assert "ELFFile" in pyelf_build and "0.33" in pyelf_build
+    prepare = package.steps['prepare'][0][-1]
+    assert "import elftools" in prepare
+    assert "ZOG_SYSTEMD_PYELFTOOLS_INPUT_PASS" in prepare
+    assert "0.33" in prepare
     command = package.steps['configure'][0][-1]
     for option in ('--wrap-mode=nodownload', '--auto-features=disabled', '-Dtests=true',
                    '-Dnetworkd=true', '-Dresolve=true', '-Dtimesyncd=true',
@@ -60,7 +82,9 @@ def test_static_fixture_is_build_only_and_hash_bound(tmp_path):
     packages = load_packages(tmp_path/'recipes')
     fixture = packages['systemd-test-environment']
     assert 'test_fixtures' not in packages['systemd-final'].integration
-    assert 'systemd-test-environment' not in order(packages, ['systemd-final'], runtime_only=True)
+    runtime = order(packages, ['systemd-final'], runtime_only=True)
+    assert 'systemd-test-environment' not in runtime
+    assert 'pyelftools-build' not in runtime
     stage(fixture, tmp_path/'source', tmp_path/'cache')
     prepare_readability(fixture, tmp_path/'source')
     for source in fixture.sources:
