@@ -73,6 +73,11 @@ jobs:
             tests/test_worker_identity.py \
             tests/test_toolchain_contract.py
 
+      - name: Validate exact pyelftools source and supplementary notice acquisition
+        run: |
+          python -m pytest -q -p no:cacheprovider \
+            tests/test_pyelftools_supplementary_notice.py
+
       - name: Validate remote GitHub build producer contracts
         run: |
           python -m pytest -q -p no:cacheprovider \

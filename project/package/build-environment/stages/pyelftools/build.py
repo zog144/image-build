@@ -23,7 +23,9 @@
            '-c',
            'cd upstream/pyelftools-0.33\n'
            'test -f LICENSE\n'
-           'test -f elftools/construct/LICENSE\n'
+           'test ! -e elftools/construct/LICENSE\n'
+           'test -f "$IMAGE_BUILD_SOURCE/supplementary/pyelftools-construct/LICENSE"\n'
+           "test \"$(sha256sum \"$IMAGE_BUILD_SOURCE/supplementary/pyelftools-construct/LICENSE\" | awk '{print $1}')\" = 'f8d0c347a0dcc6ebe1671640dfae8d2411b6ded892e06a6764f8208b218b2af4'\n"
            "PYTHONPATH=. python3 -c \"from elftools.elf.elffile import ELFFile; import elftools; assert elftools.__version__ == '0.33'\""]],
  'install': [['/bin/bash',
               '-eu',
@@ -37,5 +39,5 @@
               'find "$dest/elftools" -type d -name __pycache__ -prune -exec rm -rf {} +\n'
               'install -d "$DESTDIR/usr/share/licenses/build-pyelftools"\n'
               'install -m644 LICENSE "$DESTDIR/usr/share/licenses/build-pyelftools/LICENSE"\n'
-              'install -m644 elftools/construct/LICENSE '
+              'install -m644 "$IMAGE_BUILD_SOURCE/supplementary/pyelftools-construct/LICENSE" '
               '"$DESTDIR/usr/share/licenses/build-pyelftools/CONSTRUCT-LICENSE"']]}

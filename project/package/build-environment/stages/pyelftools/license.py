@@ -10,9 +10,6 @@
  'evidence': [
   {'path': 'pyelftools-0.33/LICENSE',
    'sha256': 'ae18bf4cb82f92af7547259177bc28bc48e4fc732518bcedfe690226288d3445',
-   'source_sha256': '660d82dcbeb8e83d1702bd97f223f761625da06111c0cc988eac6b8ab0c1b61f'},
-  {'path': 'pyelftools-0.33/elftools/construct/LICENSE',
-   'sha256': 'f8d0c347a0dcc6ebe1671640dfae8d2411b6ded892e06a6764f8208b218b2af4',
    'source_sha256': '660d82dcbeb8e83d1702bd97f223f761625da06111c0cc988eac6b8ab0c1b61f'}],
  'components': [
   {'scope': 'pyelftools core excluding bundled elftools/construct',
@@ -22,6 +19,20 @@
   {'scope': 'elftools/construct bundled library',
    'expression': 'MIT',
    'status': 'reviewed',
-   'notes': 'Bundled construct notice is retained and installed with the build-only package.'}],
+   'notes': 'The sdist omits the Construct notice. The exact same-revision upstream notice is independently acquired and retained.'}],
  'patches': [],
- 'notes': ['Build-only input for systemd-boot; not admitted to the Boot A runtime overlay.']}
+ 'notes': ['Build-only input for systemd-boot; not admitted to the Boot A runtime overlay.',
+           'The pyelftools 0.33 sdist contains no elftools/construct/LICENSE; do not classify the independently retrieved notice as archive evidence.'],
+ 'supplementary_notices': [
+  {'contract': 'image-build-supplementary-notice-v1',
+   'id': 'pyelftools-construct-license',
+   'source': {'url': 'https://raw.githubusercontent.com/eliben/pyelftools/52ce435186022bd6b32012a998931fe86c985ec8/elftools/construct/LICENSE',
+              'sha256': 'f8d0c347a0dcc6ebe1671640dfae8d2411b6ded892e06a6764f8208b218b2af4',
+              'destination': 'supplementary/pyelftools-construct/LICENSE',
+              'archive': False},
+   'upstream': {'repository': 'https://github.com/eliben/pyelftools',
+                'revision': '52ce435186022bd6b32012a998931fe86c985ec8',
+                'path': 'elftools/construct/LICENSE'},
+   'path': 'LICENSE',
+   'scope': 'pyelftools 0.33 bundled elftools/construct library',
+   'notes': 'Independently retrieved from the exact v0.33 tag commit because the pinned PyPI sdist omits this notice.'}]}

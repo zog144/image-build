@@ -63,6 +63,38 @@ def test_systemd_notice_scope_and_exact_source_binding():
     assert not license['patches']
 
 
+def test_pyelftools_notice_is_supplementary_and_build_install_uses_it(tmp_path):
+    stage_recipes(PROJECT/'bootstrap/systemd-core.py', PROJECT/'package', tmp_path/'recipes')
+    package = load_packages(tmp_path/'recipes')['pyelftools-build']
+    archive, notice = package.sources
+    assert archive['sha256'] == '660d82dcbeb8e83d1702bd97f223f761625da06111c0cc988eac6b8ab0c1b61f'
+    assert notice == {
+        'url': 'https://raw.githubusercontent.com/eliben/pyelftools/52ce435186022bd6b32012a998931fe86c985ec8/elftools/construct/LICENSE',
+        'sha256': 'f8d0c347a0dcc6ebe1671640dfae8d2411b6ded892e06a6764f8208b218b2af4',
+        'destination': 'supplementary/pyelftools-construct/LICENSE',
+        'archive': False,
+    }
+    assert [item['path'] for item in package.licensing['evidence']] == [
+        'pyelftools-0.33/LICENSE'
+    ]
+    supplemental = package.licensing['supplementary_notices']
+    assert len(supplemental) == 1
+    assert supplemental[0]['source'] == notice
+    assert supplemental[0]['upstream'] == {
+        'repository': 'https://github.com/eliben/pyelftools',
+        'revision': '52ce435186022bd6b32012a998931fe86c985ec8',
+        'path': 'elftools/construct/LICENSE',
+    }
+    commands = '\n'.join(
+        ' '.join(argv)
+        for phase in ('test', 'install')
+        for argv in package.steps[phase]
+    )
+    assert 'test ! -e elftools/construct/LICENSE' in commands
+    assert '$IMAGE_BUILD_SOURCE/supplementary/pyelftools-construct/LICENSE' in commands
+    assert 'install -m644 elftools/construct/LICENSE' not in commands
+
+
 def test_installed_check_is_offline():
     check = (PROJECT/'bootstrap/systemd-core-check.sh').read_text()
     assert 'pkg-config --exists libsystemd libudev' in check
