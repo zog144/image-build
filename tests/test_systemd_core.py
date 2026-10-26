@@ -22,7 +22,6 @@ def test_systemd_stage_and_required_features(tmp_path):
     assert pyelftools.integration['scope'] == 'build-only'
     assert pyelftools.outputs == (
         'usr/lib/python3.15/site-packages/elftools/__init__.py',
-        'usr/lib/python3.15/site-packages/elftools/construct/LICENSE',
         'usr/lib/python3.15/site-packages/elftools/elf/elffile.py',
         'usr/share/licenses/build-pyelftools/CONSTRUCT-LICENSE',
         'usr/share/licenses/build-pyelftools/LICENSE',

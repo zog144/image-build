@@ -3,7 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from zog.image_build.filesystem import digest
+from zog.image_build.filesystem import digest, inventory
 from zog.image_build.licensing import prepare_finalization, prepare_readability, preserve
 from zog.image_build.metadata import load_packages
 from zog.image_build.sources import stage
@@ -87,3 +87,36 @@ def test_exact_pyelftools_sdist_and_supplementary_notice_acquire_install_and_pre
     canonical = output / notice["installed_path"]
     assert digest(canonical) == CONSTRUCT_SHA
     assert canonical.read_bytes() == installed.read_bytes()
+
+    # Reproduce the engine's produce-manifest acceptance boundary exactly:
+    # canonical zog-packages licensing outputs are excluded, while the package's
+    # own build-pyelftools notice copies remain ordinary package outputs.
+    outputs = inventory(output)
+    license_parent = str(Path(result["receipt"]).parent)
+    license_paths = {
+        record["path"]
+        for record in outputs
+        if record["path"].startswith(license_parent + "/")
+    }
+    actual = tuple(
+        record["path"]
+        for record in outputs
+        if record["kind"] != "directory" and record["path"] not in license_paths
+    )
+    missing = sorted(set(package.outputs) - set(actual))
+    unexpected = sorted(
+        path
+        for path in actual
+        if not any(
+            path == tree or path.startswith(tree + "/")
+            for tree in package.output_trees
+        )
+    )
+    assert missing == []
+    assert unexpected == []
+
+    assert "usr/lib/python3.15/site-packages/elftools/construct/LICENSE" not in package.outputs
+    assert "usr/share/licenses/build-pyelftools/CONSTRUCT-LICENSE" in package.outputs
+    assert "usr/share/licenses/build-pyelftools/LICENSE" in package.outputs
+    assert "usr/lib/python3.15/site-packages/elftools/construct/LICENSE" not in actual
+    assert "usr/share/licenses/build-pyelftools/CONSTRUCT-LICENSE" in actual
