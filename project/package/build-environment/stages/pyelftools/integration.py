@@ -1,6 +1,7 @@
 # Data only; parsed with ast.literal_eval.
-{'project': 'pyelftools',
- 'stage_id': 'boot-a-systemd-build-input',
+{'project': 'build-environment',
+ 'stage_id': 'pyelftools',
+ 'upstream_project': 'pyelftools',
  'scope': 'build-only',
  'consumer': 'systemd-final',
  'version': '0.33',

@@ -153,7 +153,7 @@ def test_supplemental_build_source_pin_is_hash_bound_without_rewriting_monthly_p
         'project/package/build-environment/stages/pyelftools/supplemental-pin.py'
     )
     supplemental = ast.literal_eval(
-        (destination/'pyelftools-build/supplemental-pin.py').read_text()
+        (project/'package/build-environment/stages/pyelftools/supplemental-pin.py').read_text()
     )
     assert selected['supplemental_pin']['identity'] == identity(supplemental)
     assert supplemental['scope'] == 'build-only'

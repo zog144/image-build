@@ -1,12 +1,12 @@
 # Data only; parsed with ast.literal_eval.
 {'schema': 1,
- 'package': 'pyelftools',
- 'version': '0.33',
+ 'package': 'build-environment',
+ 'version': 'pyelftools-0.33-build-input',
  'source': {'url': 'https://files.pythonhosted.org/packages/a3/11/767522582afab1b884d277de0e6e011640cb9d7292a38694b4b1a1df1ae8/pyelftools-0.33.tar.gz',
             'sha256': '660d82dcbeb8e83d1702bd97f223f761625da06111c0cc988eac6b8ab0c1b61f'},
  'status': 'reviewed',
  'expression': 'Unlicense AND MIT',
- 'scope': 'pyelftools 0.33 source archive; core public-domain terms plus bundled construct MIT terms.',
+ 'scope': 'Build-environment pyelftools 0.33 input; core public-domain terms plus bundled construct MIT terms.',
  'evidence': [
   {'path': 'pyelftools-0.33/LICENSE',
    'sha256': 'ae18bf4cb82f92af7547259177bc28bc48e4fc732518bcedfe690226288d3445',
