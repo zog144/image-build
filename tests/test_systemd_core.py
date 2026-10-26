@@ -33,14 +33,44 @@ def test_systemd_stage_and_required_features(tmp_path):
     assert "import elftools" in prepare
     assert "ZOG_SYSTEMD_PYELFTOOLS_INPUT_PASS" in prepare
     assert "0.33" in prepare
+    sbat = package.integration['sbat']
+    assert sbat == {
+        'contract': 'image-build-systemd-sbat-v1',
+        'distro': 'zog',
+        'generation': 1,
+        'summary': 'Zog Project',
+        'pkgname': 'systemd',
+        'version': '261.2',
+        'url': 'https://github.com/zog144/image-build',
+        'generation_policy': (
+            'Generation 1 is the first Zog SBAT generation. Increment only for an '
+            'explicit reviewed Zog SBAT revocation or compatibility boundary; ordinary '
+            'image-build source revisions do not change it.'
+        ),
+    }
     command = package.steps['configure'][0][-1]
     for option in ('--wrap-mode=nodownload', '--auto-features=disabled', '-Dtests=true',
                    '-Dnetworkd=true', '-Dresolve=true', '-Dtimesyncd=true',
                    '-Dlibmount=enabled', '-Dkmod=enabled', '-Dacl=enabled',
                    '-Dseccomp=enabled', '-Dlibcrypt=enabled', '-Dpcre2=enabled', '-Dopenssl=enabled'):
         assert option in command
+    for option in (
+        '-Dsbat-distro=zog',
+        '-Dsbat-distro-generation=1',
+        "-Dsbat-distro-summary='Zog Project'",
+        '-Dsbat-distro-pkgname=systemd',
+        '-Dsbat-distro-version=261.2',
+        '-Dsbat-distro-url=https://github.com/zog144/image-build',
+    ):
+        assert option in command
+    assert '-Dsbat-distro=auto' not in command
+    assert '-Dsbat-distro-summary=auto' not in command
+    assert '-Dsbat-distro-url=auto' not in command
     test = package.steps['test'][0][-1]
     assert 'meson test' in test and '--no-rebuild' in test and '--print-errorlogs' in test
+    assert 'objcopy --dump-section .sbat=' in test
+    assert 'systemd-boot.zog,1,Zog Project,systemd,261.2,https://github.com/zog144/image-build' in test
+    assert 'ZOG_SYSTEMD_SBAT_SECTION_PASS' in test
     assert '--exclude' not in test and '|| true' not in test
     install = package.steps['install'][0][-1]
     assert 'DESTDIR="$DESTDIR" SYSTEMD_OFFLINE=1 meson install' in install

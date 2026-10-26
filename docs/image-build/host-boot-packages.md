@@ -36,7 +36,14 @@ core generation. It does not mutate that generation or activate host services.
 
 For Boot A source selection, systemd final is now required to build EFI support and
 systemd-boot and to publish exact `getty@.service`, `serial-getty@.service` and
-`systemd-bootx64.efi` outputs. The targeted build plan
+`systemd-bootx64.efi` outputs. Its SBAT distribution metadata is explicit and
+host-independent: distro `zog`, generation `1`, summary `Zog Project`, package
+`systemd`, package version `261.2`, and URL
+`https://github.com/zog144/image-build`. Generation 1 is the first Zog SBAT
+revocation generation and is not incremented for ordinary image-build source
+revisions; a future increment requires an explicit reviewed revocation/compatibility
+decision. The systemd package version remains the exact upstream source version;
+recipe/build provenance carries the downstream image-build identity separately. The targeted build plan
 `project/bootstrap/boot-a-targeted.py` selects systemd-final plus the non-PAM
 Shadow login provider. `resident_boot_targeted` then overlays only those verified
 runtime outputs onto the exact retained parent, freezes all collisions/additions,

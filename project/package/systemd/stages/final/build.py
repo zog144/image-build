@@ -32,8 +32,12 @@
                 '-Dmachined=false -Dportabled=false -Dnspawn=disabled -Dsysext=false '
                 '-Dmountfsd=false -Dnsresourced=false -Dvmspawn=disabled -Dsysinstall=false '
                 '-Dstoragetm=false -Drepart=disabled -Dsysupdate=disabled -Dimds=disabled '
-                '-Dbpf-framework=disabled -Defi=true -Dbootloader=enabled -Dukify=disabled -Dman=disabled '
-                '-Dhtml=disabled -Dtranslations=false']],
+                '-Dbpf-framework=disabled -Defi=true -Dbootloader=enabled -Dukify=disabled '
+                '-Dsbat-distro=zog -Dsbat-distro-generation=1 '
+                "-Dsbat-distro-summary='Zog Project' -Dsbat-distro-pkgname=systemd "
+                '-Dsbat-distro-version=261.2 '
+                '-Dsbat-distro-url=https://github.com/zog144/image-build '
+                '-Dman=disabled -Dhtml=disabled -Dtranslations=false']],
  'build': [['/bin/bash',
             '-eu',
             '-o',
@@ -56,7 +60,21 @@
            'export LANG=C.UTF-8 LC_ALL=C.UTF-8\n'
            '# Fiber guard probe covers 64 MiB; compilation retains its larger limit.\n'
            'ulimit -S -s 8192\n'
-           'meson test -C build --no-rebuild --print-errorlogs -j4']],
+           'meson test -C build --no-rebuild --print-errorlogs -j4\n'
+           '# Verify the emitted EFI SBAT row, not merely Meson option presence.\n'
+           'sbat=$(mktemp)\n'
+           "trap 'rm -f \"$sbat\"' EXIT\n"
+           'objcopy --dump-section .sbat="$sbat" build/src/boot/efi/systemd-bootx64.efi\n'
+           "python3 - \"$sbat\" <<'PYSBAT'\n"
+           'from pathlib import Path\n'
+           'import sys\n'
+           'data = Path(sys.argv[1]).read_bytes().rstrip(b"\\0").decode("utf-8")\n'
+           'lines = data.splitlines()\n'
+           "expected = 'systemd-boot.zog,1,Zog Project,systemd,261.2,https://github.com/zog144/image-build'\n"
+           'assert expected in lines, lines\n'
+           "assert not any('.auto,' in line for line in lines), lines\n"
+           "print('ZOG_SYSTEMD_SBAT_SECTION_PASS')\n"
+           'PYSBAT']],
  'install': [['/bin/bash',
               '-eu',
               '-o',
