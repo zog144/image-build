@@ -127,7 +127,8 @@ def test_overlay_plan_rejects_unreviewed_directory_mode_change(tmp_path, monkeyp
     (systemd / "state").mkdir(mode=0o700)
     (systemd / "state").chmod(0o000)
     shadow = tmp_path / "shadow"
-    (shadow / "usr/bin").mkdir(parents=True)
+    (shadow / "usr").mkdir(mode=0o700)
+    (shadow / "usr/bin").mkdir()
     (shadow / "usr/bin/login").write_bytes(b"login")
 
     overlays = {
