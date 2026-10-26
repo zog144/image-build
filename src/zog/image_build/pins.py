@@ -64,7 +64,7 @@ def snapshot(catalogue, entries, destination, pin_date=None):
             'sources': sources,
             'project': entry['project'],
             'recipe': key,
-            'pin_policy': pin_policy,
+            **({'pin_policy': pin_policy} if pin_policy != 'monthly-recipe' else {}),
         }
     record = {'schema': 1, 'date': selected, 'monthly_identity': identity(monthly), 'packages': packages}
     path = Path(destination)/'commit-pin.py'

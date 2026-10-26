@@ -54,7 +54,7 @@ def normalize_entries(entries, *, allow_extra=False):
         if (
             not isinstance(entry, dict)
             or not required <= set(entry)
-            or set(entry) - allowed
+            or (not allow_extra and set(entry) - allowed)
         ):
             raise ImageBuildError(
                 "recipe snapshot entry requires id, project and recipe with optional pin_policy"

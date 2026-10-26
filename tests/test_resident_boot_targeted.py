@@ -121,7 +121,7 @@ def test_overlay_plan_rejects_unreviewed_directory_mode_change(tmp_path, monkeyp
     monkeypatch.setattr(boot, "_parent_binding", lambda _parent: {"fixture": True})
 
     systemd = tmp_path / "systemd"
-    (systemd / "usr").mkdir(mode=0o700)
+    (systemd / "usr").mkdir(parents=True, mode=0o700)
     (systemd / "applications").mkdir(mode=0o700)
     (systemd / "applications").chmod(0o000)
     (systemd / "state").mkdir(mode=0o700)

@@ -168,7 +168,9 @@ def _replace_entry(source_root, root, entry):
                 raise ImageBuildError("overlay directory target differs: " + name)
         else:
             target.mkdir(parents=True)
-        target.chmod(entry["mode"])
+        # Keep mode-0000 fail-closed mountpoints traversable until all staging
+        # durability barriers have completed. Their final mode is set below.
+        target.chmod(0o700 if entry["mode"] == 0 else entry["mode"])
         return
     if target.exists() or target.is_symlink():
         if target.is_dir() and not target.is_symlink():
@@ -194,6 +196,19 @@ def compose(parent, overlays, plan, destination):
         for entry in overlays[name]["outputs"]:
             _replace_entry(root, destination, entry)
     sync_tree(destination)
+    # Apply fail-closed mountpoint modes only after staging has been synced. Open
+    # each directory first so the chmod itself can be fsynced without reopening a
+    # mode-0000 path, then sync its parent directory.
+    for name in ("state", "applications"):
+        target = destination / name
+        descriptor = os.open(target, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fchmod(descriptor, 0)
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+        from .filesystem import sync_directory
+        sync_directory(target.parent)
     actual = inventory(destination)
     if actual != plan["expected_outputs"]:
         raise ImageBuildError("targeted Boot A composition differs from frozen overlay plan")
@@ -320,8 +335,22 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
 
         package_attempt = state / "image-build/attempts" / (work.name + "-packages")
         ensure_directory(package_attempt)
+        # The exact retained parent is the build environment. Materialized support
+        # recipes remain source-review evidence, but their already-installed bytes
+        # are not rebuilt or overlaid into that parent. Only the two requested
+        # package outputs execute in this targeted operation.
+        build_definitions = dict(definitions)
+        for name in OVERLAY_TARGETS:
+            build_definitions[name] = replace(
+                definitions[name],
+                build_dependencies=(),
+                runtime_dependencies=(),
+                test_dependencies=(),
+            )
         with builder.locked():
-            built = builder._build_set(definitions, plan["targets"], parent, package_attempt)
+            built = builder._build_set(
+                build_definitions, plan["targets"], parent, package_attempt
+            )
         overlays = {name: built[name] for name in OVERLAY_TARGETS}
         for name, record in overlays.items():
             provenance.verify_output(record["provenance"], name, record)
@@ -463,6 +492,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             if "application_data_targets" in inputs:
                 details["application_data_targets"] = inputs["application_data_targets"]
             accepted = builder._publish(root, inputs, "image", details)
+            validate_manifest(accepted.manifest["inputs"], accepted.manifest)
             bundle = verify_generation(provenance, accepted)
         from zog.build_record.model import canonical
         canonical_path = work / "canonical-generation.json"

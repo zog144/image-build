@@ -57,8 +57,6 @@ def read_selection(directory):
             validate_manifest as validate_application_data_targets,
         )
         validate_application_data_targets(manifest['inputs'], manifest)
-        from .resident_boot_targeted import validate_manifest as validate_resident_boot_targeted
-        validate_resident_boot_targeted(manifest['inputs'], manifest)
         if inventory(directory / "root") != manifest["outputs"]:
             raise ImageBuildError(f"generation outputs changed: {directory}")
         return ImageSelection(directory.name, directory / "root", manifest, True)
