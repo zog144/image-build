@@ -1,2 +1,2 @@
 # Data only; parsed with ast.literal_eval.
-{'trees': ['usr'], 'required': ['usr/bin/login', 'usr/sbin/nologin']}
+{'trees': ['usr'], 'required': ['usr/sbin/nologin']}

@@ -235,8 +235,23 @@ class Provenance:
         if selected.get('monthly_identity') != identity(original) or selected.get('date') != self.pin['month']:
             raise ImageBuildError('materialized monthly pins differ from original provenance pin')
         entry = selected['packages'][package.name]
-        if entry['sources'] != list(package.sources) or original['packages'][entry['project']]['recipes'][entry['recipe']] != entry['sources']:
-            raise ImageBuildError('package sources differ from original monthly selection')
+        if entry['sources'] != list(package.sources):
+            raise ImageBuildError('package sources differ from materialized monthly selection')
+        project_pin = original['packages'][entry['project']]
+        pin_policy = entry.get('pin_policy', 'monthly-recipe')
+        if pin_policy == 'monthly-recipe':
+            if project_pin['recipes'].get(entry['recipe']) != entry['sources']:
+                raise ImageBuildError('package sources differ from original monthly recipe selection')
+        elif pin_policy == 'catalogue-source':
+            if (
+                len(entry['sources']) != 1
+                or {k:entry['sources'][0].get(k) for k in ('url','sha256')}
+                   != project_pin.get('source')
+                or entry['recipe'] in project_pin.get('recipes', {})
+            ):
+                raise ImageBuildError('late-reviewed recipe differs from original monthly catalogue source')
+        else:
+            raise ImageBuildError('unsupported package source pin policy')
         archives = [self._file(source['destination'], self.state/'image-build/sources'/source['sha256'],
                     'sha256:'+source['sha256']) for source in package.sources]
         from .source_provenance import upstream_for, patch_sources

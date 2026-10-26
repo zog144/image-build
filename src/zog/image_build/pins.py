@@ -44,10 +44,28 @@ def snapshot(catalogue, entries, destination, pin_date=None):
     for entry in entries:
         project = monthly['packages'].get(entry['project'], {})
         key = entry['recipe']
+        pin_policy = entry.get('pin_policy', 'monthly-recipe')
         sources = project.get('recipes', {}).get(key)
-        if sources is None:
+        if sources is None and pin_policy == 'catalogue-source':
+            selected_sources = literal(Path(catalogue)/key/'sources.py')
+            source = project.get('source')
+            if (
+                not isinstance(source, dict)
+                or len(selected_sources) != 1
+                or {k:selected_sources[0].get(k) for k in ('url','sha256')} != source
+            ):
+                raise ImageBuildError(
+                    f'{key}: catalogue-source recipe differs from reviewed monthly package source'
+                )
+            sources = selected_sources
+        elif sources is None or pin_policy != 'monthly-recipe':
             raise ImageBuildError(f'{key}: missing reviewed monthly source pin')
-        packages[entry['id']] = {'sources': sources, 'project': entry['project'], 'recipe': key}
+        packages[entry['id']] = {
+            'sources': sources,
+            'project': entry['project'],
+            'recipe': key,
+            'pin_policy': pin_policy,
+        }
     record = {'schema': 1, 'date': selected, 'monthly_identity': identity(monthly), 'packages': packages}
     path = Path(destination)/'commit-pin.py'
     if path.exists():

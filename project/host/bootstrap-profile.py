@@ -6,9 +6,9 @@
  'dependency_closure': 'boot-a-reviewed-resident-b-incomplete',
  'boot_a': {
   'status': 'source-corrections-prepared-native-generation-required',
-  'projects': ['bash', 'util-linux', 'systemd', 'e2fsprogs', 'kmod'],
+  'projects': ['bash', 'util-linux', 'shadow', 'systemd', 'e2fsprogs', 'kmod'],
   'providers': {
-   '/usr/bin/login': 'util-linux host-additions stage',
+   '/usr/bin/login': 'Shadow 4.20.2 login-only stage without PAM',
    '/usr/sbin/agetty': 'accepted util-linux native-environment',
    '/usr/lib/systemd/boot/efi/systemd-bootx64.efi': 'systemd final with EFI/bootloader enabled',
    '/state': 'systemd final Zog resident-layout integration',
@@ -16,9 +16,9 @@
   'foreign_boot': 'Amazon Linux 2023 kernel/initramfs/modules; exact retained evidence still required'},
  'resident_b': {
   'status': 'deferred-after-boot-a',
-  'deferred_projects': ['shadow', 'box-control', 'root-control'],
+  'deferred_projects': ['shadow-account-policy', 'box-control', 'root-control'],
   'disposition': {
-   'shadow': 'not a Boot A login provider; retain catalogue-only until Resident B account-policy scope is reviewed',
+   'shadow-account-policy': 'only login is admitted for Boot A; remaining Shadow account-management scope is deferred',
    'box-control': 'Resident B executable recipe not yet accepted',
    'root-control': 'Resident B executable recipe not yet accepted'}},
  'items': [
@@ -26,7 +26,7 @@
   {'project': 'bash', 'role': 'shell for host initialization', 'group': 'base'},
   {'project': 'coreutils', 'role': 'base file and process utilities', 'group': 'base'},
   {'project': 'util-linux', 'role': 'mounting and block-device utilities; review disabled features', 'group': 'base'},
-  {'project': 'shadow', 'role': 'Resident B account policy only; util-linux provides Boot A login', 'group': 'resident-b-deferred'},
+  {'project': 'shadow', 'role': 'Boot A non-PAM login provider only; remaining account-management scope deferred', 'group': 'base'},
   {'project': 'systemd', 'role': 'PID 1, journald, udev and proposed networkd/resolved services', 'group': 'host'},
   {'project': 'openssl', 'role': 'TLS library for rebuilt Python', 'group': 'next-compilation'},
   {'project': 'sqlite', 'role': 'SQL library for rebuilt Python', 'group': 'next-compilation'},

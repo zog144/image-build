@@ -1,0 +1,23 @@
+# Data only; targeted Boot A overlay plan, parsed with ast.literal_eval.
+{'schema': 1,
+ 'architecture': 'x86_64',
+ 'stages': [
+  {'id': 'systemd-test-environment',
+   'project': 'build-environment',
+   'stage': 'systemd-test',
+   'recipe': 'build-environment/stages/systemd-test'},
+  {'id': 'tzdata-final',
+   'project': 'tzdata',
+   'stage': 'final',
+   'recipe': 'tzdata/stages/final'},
+  {'id': 'systemd-final',
+   'project': 'systemd',
+   'stage': 'final',
+   'recipe': 'systemd/stages/final'},
+  {'id': 'shadow-login',
+   'project': 'shadow',
+   'stage': 'login',
+   'recipe': 'shadow/stages/login',
+   'pin_policy': 'catalogue-source'}],
+ 'targets': ['systemd-final', 'shadow-login'],
+ 'overlay_targets': ['systemd-final', 'shadow-login']}

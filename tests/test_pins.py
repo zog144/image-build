@@ -80,3 +80,51 @@ def test_materialized_recipe_snapshot_keeps_distinct_monthly_identity(tmp_path):
         destination,
         pin_date='2026-10-01',
     ) == record
+
+
+def test_late_reviewed_stage_can_reuse_exact_catalogue_source_without_rewriting_monthly_pin(tmp_path):
+    project = Path(__file__).resolve().parents[1]/'project'
+    monthly = load(project/'pins/2026-10-01/commit-pin.py')
+    destination = tmp_path/'recipes'
+    destination.mkdir()
+    record = snapshot(
+        project/'package',
+        [{
+            'id':'shadow-login',
+            'project':'shadow',
+            'recipe':'shadow/stages/login',
+            'pin_policy':'catalogue-source',
+        }],
+        destination,
+        pin_date='2026-10-01',
+    )
+    selected = record['packages']['shadow-login']
+    assert record['monthly_identity'] == identity(monthly)
+    assert selected['pin_policy'] == 'catalogue-source'
+    assert {k:selected['sources'][0][k] for k in ('url','sha256')} == monthly['packages']['shadow']['source']
+
+
+def test_catalogue_source_policy_rejects_unpinned_source_identity(tmp_path):
+    project = Path(__file__).resolve().parents[1]/'project'
+    catalogue = tmp_path/'package'
+    import shutil
+    shutil.copytree(project/'package/shadow', catalogue/'shadow')
+    source = ast.literal_eval((catalogue/'shadow/stages/login/sources.py').read_text())
+    source[0]['sha256'] = '0'*64
+    (catalogue/'shadow/stages/login/sources.py').write_text(repr(source))
+    # snapshot expects pins next to the supplied catalogue.
+    (tmp_path/'pins').symlink_to(project/'pins', target_is_directory=True)
+    destination = tmp_path/'recipes'
+    destination.mkdir()
+    with pytest.raises(ImageBuildError, match='catalogue-source recipe differs'):
+        snapshot(
+            catalogue,
+            [{
+                'id':'shadow-login',
+                'project':'shadow',
+                'recipe':'shadow/stages/login',
+                'pin_policy':'catalogue-source',
+            }],
+            destination,
+            pin_date='2026-10-01',
+        )

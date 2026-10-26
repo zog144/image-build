@@ -2,7 +2,7 @@
 {'schema': 1,
  'name': 'shadow',
  'display_name': 'Shadow',
- 'status': 'catalogue-only',
- 'role': 'Native compiler/linker rebuild and test support (additional projects)',
+ 'status': 'reviewed-stage-recipes',
+ 'role': 'Boot A login provider plus deferred Resident B account-management source',
  'reference': 'https://www.linuxfromscratch.org/lfs/view/13.1-systemd/',
- 'recipe_status': 'not-authored'}
+ 'recipe_status': 'boot-a-login-authored-resident-b-account-policy-deferred'}

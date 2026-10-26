@@ -3,11 +3,15 @@
 `project/bootstrap/host-boot-packages.py` builds additions on an accepted systemd
 core generation. It does not mutate that generation or activate host services.
 
-- util-linux 2.42.2: the existing additive host stage preserves the accepted native
-  util-linux output and now adds only `/usr/bin/login` plus `/usr/sbin/nologin`
-  from the same exact pinned source. Login version and nologin refusal behavior are
-  tested. Shadow is not the Boot A login provider and remains deferred to Resident B
-  account-policy review.
+- util-linux 2.42.2: the existing additive host stage remains nologin-only and
+  preserves the accepted native util-linux output. Work preflight proved util-linux
+  login requires PAM headers, conversation support and runtime policy that are absent
+  from the retained root, so Boot A does not broaden into a PAM stack.
+- Shadow 4.20.2: a late-reviewed login-only stage uses the exact unchanged October
+  catalogue source pin and configures `--without-libpam`. It publishes only
+  `/usr/bin/login`; the broader Shadow account-management program/policy set remains
+  deferred to Resident B. The late-stage pin policy permits this only when URL+SHA256
+  exactly equal the original monthly catalogue source.
 - systemd final additionally materializes empty `/state` and `/applications`,
   both mode 0000, as Zog resident-HOST integration output while it is already being
   rebuilt for systemd-boot. These underlying mountpoints contain no installation
@@ -32,7 +36,12 @@ core generation. It does not mutate that generation or activate host services.
 
 For Boot A source selection, systemd final is now required to build EFI support and
 systemd-boot and to publish exact `getty@.service`, `serial-getty@.service` and
-`systemd-bootx64.efi` outputs. The host bootstrap profile is a
+`systemd-bootx64.efi` outputs. The targeted build plan
+`project/bootstrap/boot-a-targeted.py` selects systemd-final plus the non-PAM
+Shadow login provider. `resident_boot_targeted` then overlays only those verified
+runtime outputs onto the exact retained parent, freezes all collisions/additions,
+permits no implicit removals, requires installed verification, and preserves the
+parent's historical provenance gap in the canonical generation graph. The host bootstrap profile is a
 `boot-a-source-candidate`: Shadow, box-control and root-control are explicitly
 Resident-B deferred and do not block the first UEFI→PID1 experiment. Exact native
 generation, EFI bytes and foreign Amazon Linux kernel/initramfs/modules evidence are

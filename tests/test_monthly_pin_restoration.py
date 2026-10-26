@@ -47,22 +47,34 @@ def test_restored_october_pin_has_exact_reviewed_bytes_and_current_selection():
     assert sum(len(row.get("recipes", {})) for row in pin["packages"].values()) == 139
 
 
-def test_every_current_stage_recipe_equals_its_reviewed_monthly_pin():
+def test_every_current_stage_recipe_is_monthly_pinned_or_exact_catalogue_source():
     pin = load(PIN)
     source_files = sorted((PROJECT / "package").glob("*/stages/**/sources.py"))
-    assert len(source_files) == 139
+    assert len(source_files) == 140
     observed = set()
+    late = set()
     for path in source_files:
         key = path.relative_to(PROJECT / "package").as_posix().removesuffix("/sources.py")
         project = key.split("/", 1)[0]
-        assert pin["packages"][project]["recipes"][key] == literal(path), key
-        observed.add(key)
+        sources = literal(path)
+        recipe_pin = pin["packages"][project]["recipes"].get(key)
+        if recipe_pin is not None:
+            assert recipe_pin == sources, key
+            observed.add(key)
+            continue
+        assert key == "shadow/stages/login"
+        assert len(sources) == 1
+        assert {k:sources[0][k] for k in ("url","sha256")} == pin["packages"][project]["source"]
+        integration = literal(path.with_name("integration.py"))
+        assert integration["source_pin_policy"] == "catalogue-source"
+        late.add(key)
     pinned = {
         key
         for row in pin["packages"].values()
         for key in row.get("recipes", {})
     }
     assert pinned == observed
+    assert late == {"shadow/stages/login"}
 
 
 def test_catalogue_only_graphical_sources_are_pinned_without_executable_recipes():

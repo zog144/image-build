@@ -50,14 +50,18 @@ def normalize_entries(entries, *, allow_extra=False):
     ids = []
     for entry in entries:
         required = {"id", "project", "recipe"}
+        allowed = required | {"pin_policy"}
         if (
             not isinstance(entry, dict)
             or not required <= set(entry)
-            or (not allow_extra and set(entry) != required)
+            or set(entry) - allowed
         ):
             raise ImageBuildError(
-                "recipe snapshot entry requires id, project and recipe"
+                "recipe snapshot entry requires id, project and recipe with optional pin_policy"
             )
+        pin_policy = entry.get("pin_policy", "monthly-recipe")
+        if pin_policy not in {"monthly-recipe", "catalogue-source"}:
+            raise ImageBuildError("unsupported recipe source pin policy")
         package_id = entry["id"]
         project = entry["project"]
         recipe = entry["recipe"]
@@ -70,6 +74,7 @@ def normalize_entries(entries, *, allow_extra=False):
                 "id": package_id,
                 "project": project,
                 "recipe": recipe,
+                **({"pin_policy": pin_policy} if pin_policy != "monthly-recipe" else {}),
             }
         )
     names(ids)

@@ -14,3 +14,9 @@ def test_host_boot_plan_materializes_pinned_licensed_packages(tmp_path):
         assert package.licensing['evidence']
         assert package.steps['test']
     assert packages['util-linux-nologin'].outputs == ('usr/sbin/nologin',)
+    commands = '\n'.join(
+        ' '.join(argv)
+        for phase in ('configure','build','test','install')
+        for argv in packages['util-linux-nologin'].steps[phase]
+    )
+    assert '--enable-login' not in commands
