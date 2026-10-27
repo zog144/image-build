@@ -84,6 +84,11 @@ jobs:
           python -m pytest -q -p no:cacheprovider \
             tests/test_systemd_sbat.py
 
+      - name: Validate exact Shadow login target/prerequisite contract
+        run: |
+          python -m pytest -q -p no:cacheprovider \
+            tests/test_shadow_login.py
+
       - name: Validate remote GitHub build producer contracts
         run: |
           python -m pytest -q -p no:cacheprovider \
