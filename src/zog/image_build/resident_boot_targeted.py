@@ -17,6 +17,7 @@ import platform
 import re
 import shutil
 import stat
+from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 
@@ -24,7 +25,13 @@ from . import ImageBuild, read_selection
 from .configuration import configured_runner
 from .developer.seed_build import verify as verify_installed
 from .errors import ImageBuildError
-from .filesystem import discard_staging, ensure_directory, inventory, sync_tree, write_json
+from .filesystem import discard_staging, ensure_directory, inventory, write_json
+from .staging_durability import (
+    copy as copy_staging_tree,
+    inventory as staging_inventory,
+    set_directory_modes,
+    sync as sync_staging_tree,
+)
 from .final_compiler import successful_execution
 from .generation_provenance import prepare, finish, verify as verify_generation
 from .metadata import Package, identity, load_packages
@@ -32,6 +39,7 @@ from .provenance import Provenance
 from .rootfs_compatibility import FIELD as COMPATIBILITY_FIELD, derive as derive_compatibility
 from .stages import stage_recipes
 from . import installed_verification
+from . import engine as engine_module
 
 CONTRACT = "image-build-resident-boot-targeted-derivation-v1"
 FIELD = "resident_boot_targeted_derivation"
@@ -53,6 +61,69 @@ BUILD_ONLY_DEPENDENCIES = {
     "systemd-final": ("systemd-test-environment", "pyelftools-build"),
     "shadow-login": (),
 }
+
+
+@contextmanager
+def _targeted_staging_sync():
+    """Scope restrictive-directory durability to this targeted producer only.
+
+    engine.py/filesystem.py remain byte-identical to the accepted image-progress
+    observer source.  The targeted coordinator is single-threaded under the owner
+    operation lock, so replacing the imported sync callback is bounded to this
+    call and restored even on failure.
+    """
+    original = engine_module.sync_tree
+    engine_module.sync_tree = sync_staging_tree
+    try:
+        yield
+    finally:
+        engine_module.sync_tree = original
+
+
+def _prepare_publication_candidate(builder, root, inputs, kind, details):
+    """Pre-stage a generation candidate using restrictive-directory-safe copy/sync."""
+    root = Path(root)
+    outputs = staging_inventory(root)
+    fingerprint = identity(inputs)
+    store = builder.state / "image-build" / "generations"
+    target = store / fingerprint
+    if target.exists():
+        return
+    publication = store.parent / "publication"
+    ensure_directory(publication)
+    pending = publication / fingerprint
+    manifest = {
+        "schema": engine_module.SCHEMA,
+        "generation": fingerprint,
+        "kind": kind,
+        "inputs": inputs,
+        "outputs": outputs,
+        **details,
+    }
+    if pending.exists() or pending.is_symlink():
+        if pending.is_symlink():
+            raise ImageBuildError("generation publication candidate is a symlink")
+        manifest_path = pending / "manifest.json"
+        root_path = pending / "root"
+        if not manifest_path.is_file() or not root_path.is_dir():
+            discard_staging(pending)
+        else:
+            try:
+                retained_manifest = json.loads(manifest_path.read_text())
+                retained_outputs = staging_inventory(root_path)
+            except (OSError, ValueError, TypeError):
+                discard_staging(pending)
+            else:
+                if retained_manifest != manifest or retained_outputs != outputs:
+                    raise ImageBuildError("retained generation publication candidate differs")
+                sync_staging_tree(pending)
+                return
+    ensure_directory(pending)
+    copy_staging_tree(root, pending / "root", expected=outputs)
+    write_json(pending / "manifest.json", manifest)
+    sync_staging_tree(pending)
+    if staging_inventory(pending / "root") != outputs:
+        raise ImageBuildError("generation publication staging changed")
 
 
 def _targeted_build_definitions(definitions):
@@ -110,7 +181,7 @@ def overlay_plan(parent, overlays):
     overlay_bindings = {}
     for name in OVERLAY_TARGETS:
         record = overlays.get(name)
-        if not isinstance(record, dict) or inventory(record["root"]) != record.get("outputs"):
+        if not isinstance(record, dict) or staging_inventory(record["root"]) != record.get("outputs"):
             raise ImageBuildError("targeted overlay output changed: " + name)
         if not record.get("provenance"):
             raise ImageBuildError("targeted overlay lacks provenance: " + name)
@@ -223,21 +294,12 @@ def compose(parent, overlays, plan, destination):
         root = Path(overlays[name]["root"])
         for entry in overlays[name]["outputs"]:
             _replace_entry(root, destination, entry)
-    sync_tree(destination)
-    # Apply fail-closed mountpoint modes only after staging has been synced. Open
-    # each directory first so the chmod itself can be fsynced without reopening a
-    # mode-0000 path, then sync its parent directory.
-    for name in ("state", "applications"):
-        target = destination / name
-        descriptor = os.open(target, os.O_RDONLY | os.O_DIRECTORY)
-        try:
-            os.fchmod(descriptor, 0)
-            os.fsync(descriptor)
-        finally:
-            os.close(descriptor)
-        from .filesystem import sync_directory
-        sync_directory(target.parent)
-    actual = inventory(destination)
+    # The package output requires final mode 0000.  Keep these two empty
+    # mountpoints owner-traversable while overlay bytes are copied, then apply the
+    # exact final modes and use the caller-owned staging durability barrier.
+    set_directory_modes(destination, {"state": 0, "applications": 0})
+    sync_staging_tree(destination)
+    actual = staging_inventory(destination)
     if actual != plan["expected_outputs"]:
         raise ImageBuildError("targeted Boot A composition differs from frozen overlay plan")
     return actual
@@ -368,7 +430,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
         # are not rebuilt or overlaid into that parent. Only the two requested
         # package outputs execute in this targeted operation.
         build_definitions = _targeted_build_definitions(definitions)
-        with builder.locked():
+        with builder.locked(), _targeted_staging_sync():
             built = builder._build_set(
                 build_definitions, plan["targets"], parent, package_attempt
             )
@@ -391,7 +453,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             if (
                 saved.get("plan_identity") != "sha256:" + identity(composition)
                 or not root.is_dir()
-                or inventory(root) != composition["expected_outputs"]
+                or staging_inventory(root) != composition["expected_outputs"]
             ):
                 raise ImageBuildError("retained targeted Boot A composition changed")
         else:
@@ -403,7 +465,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             })
 
         compatibility = derive_compatibility(
-            {"resident-root": {"root": str(root), "outputs": inventory(root)}},
+            {"resident-root": {"root": str(root), "outputs": staging_inventory(root)}},
             platform.machine(),
         )
         parent_record = _parent_package(parent, provenance)
@@ -512,7 +574,9 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             }
             if "application_data_targets" in inputs:
                 details["application_data_targets"] = inputs["application_data_targets"]
-            accepted = builder._publish(root, inputs, "image", details)
+            _prepare_publication_candidate(builder, root, inputs, "image", details)
+            with _targeted_staging_sync():
+                accepted = builder._publish(root, inputs, "image", details)
             validate_manifest(accepted.manifest["inputs"], accepted.manifest)
             bundle = verify_generation(provenance, accepted)
         from zog.build_record.model import canonical

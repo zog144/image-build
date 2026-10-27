@@ -11,6 +11,7 @@ from .. import ImageBuild, read_selection
 from ..configuration import configured_runner
 from ..errors import ImageBuildError
 from ..filesystem import inventory, sync_tree, write_json, ensure_directory, discard_staging
+from ..staging_durability import copy as copy_staging_tree, inventory as staging_inventory
 from ..metadata import identity
 from ..cleanup import discard_work
 
@@ -50,10 +51,10 @@ def verify(builder, folder, root, commands, binding):
         for name in ('root', 'source', 'output'):
             if (folder / name).exists():
                 discard_staging(folder / name)
-        shutil.copytree(root, folder / 'root', symlinks=True)
+        copy_staging_tree(root, folder / 'root')
         (folder / 'source').mkdir(); (folder / 'output').mkdir()
         sync_tree(folder)
-        value = {'root': inventory(folder / 'root'), 'binding': binding, 'commands': commands}
+        value = {'root': staging_inventory(folder / 'root'), 'binding': binding, 'commands': commands}
         if (isinstance(binding, dict) and
                 binding.get('verification_report_contract') == 'image-build-installed-verification-v1'):
             from .. import verification_observations as vo
@@ -108,7 +109,7 @@ def verify(builder, folder, root, commands, binding):
         builder._release_resources(folder)
         discard_work(folder, ('root', 'source'), {'prepared': saved, 'result': result}, apply=True)
         return result
-    if saved['root'] != inventory(folder / 'root'):
+    if saved['root'] != staging_inventory(folder / 'root'):
         raise ImageBuildError('verification inputs changed')
     for index, command in enumerate(commands):
             write_json(folder / f'command-{index}.view.json', {'schema':1, 'attempt_id':folder.name,

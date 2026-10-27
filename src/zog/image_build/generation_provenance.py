@@ -95,7 +95,7 @@ def prepare(p, attempt, packages, targets, built, owner_inputs, *, composition_m
 
 def finish(p, attempt, binding, root, *, verification=()):
     """Build and verify an actual archive, then fix the assembly result and root."""
-    from .host_export import _payload
+    from .host_export import _payload_staging
     directory = attempt/'assembly'
     if _read(directory/'prepared.json') != binding:
         raise ImageBuildError('assembly prepared pointer differs')
@@ -114,7 +114,7 @@ def finish(p, attempt, binding, root, *, verification=()):
     # xattr/hardlink refusal and before/after/decoded archive inventory checks.
     with tempfile.TemporaryDirectory(prefix='.payload-', dir=directory) as scratch:
         archive = Path(scratch)/'rootfs.tar'
-        payload = _payload(root, archive)
+        payload = _payload_staging(root, archive)
         artifact = p._file('rootfs.tar', archive, 'sha256:'+payload['sha256'])
     validate_reports(p, binding, root, recipe['owner_inputs'], verification)
     content = p._bytes('rootfs-content.json', dict(schema=1, format=FORMAT, entries=payload['entries']))

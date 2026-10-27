@@ -70,6 +70,7 @@ jobs:
             tests/test_systemd_core.py \
             tests/test_resident_boot_source.py \
             tests/test_resident_boot_targeted.py \
+            tests/test_staging_durability.py \
             tests/test_worker_identity.py \
             tests/test_toolchain_contract.py
 

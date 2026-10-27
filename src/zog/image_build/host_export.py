@@ -186,6 +186,35 @@ def _payload(root, destination):
             'bytes': destination.stat().st_size, 'entries': before}
 
 
+def _payload_staging(root, destination):
+    """Export a caller-owned staging root while preserving restrictive modes."""
+    from .staging_durability import accessible, inventory as staging_inventory
+    root = Path(root)
+    before = staging_inventory(root)
+    # Preserve the same ownership/xattr/hardlink policy as records(), but permit
+    # temporary owner traversal only on this caller-owned pre-publication root.
+    with accessible(root):
+        for p in [root, *(root / r['path'] for r in before)]:
+            if os.listxattr(p, follow_symlinks=False):
+                fail('extended attributes unsupported: ' + str(p))
+            info = p.lstat()
+            if stat.S_ISREG(info.st_mode) and info.st_nlink != 1:
+                fail('hard links unsupported: ' + str(p))
+        normalized = []
+        for record in before:
+            value = dict(record)
+            safe_payload_name(value['path'])
+            value.update(uid=0, gid=0)
+            normalized.append(value)
+        _write_tar(root, destination, normalized)
+    if staging_inventory(root) != before:
+        fail('source changed during export')
+    if _tar_records(destination) != normalized:
+        fail('archive contents differ from source')
+    return {'file': destination.name, 'sha256': digest(destination),
+            'bytes': destination.stat().st_size, 'entries': normalized}
+
+
 def export(generation, destination, evidence, *, boot_tree=None, boot_provenance=None):
     selected = read_selection(generation)
     evidence = validate_evidence(evidence)
