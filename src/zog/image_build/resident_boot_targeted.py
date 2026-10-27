@@ -47,7 +47,10 @@ ALLOWED_MODE_REPLACEMENTS = {
 }
 OVERLAY_TARGETS = ("systemd-final", "shadow-login")
 BUILD_ONLY_DEPENDENCIES = {
-    "systemd-final": ("pyelftools-build",),
+    # Both inputs are intentionally disposable build-root material.  The static
+    # os-release fixture is required by upstream systemd tests and must not be
+    # confused with installed-host identity; pyelftools is required by elf2efi.
+    "systemd-final": ("systemd-test-environment", "pyelftools-build"),
     "shadow-login": (),
 }
 

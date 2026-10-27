@@ -86,3 +86,10 @@ def test_exact_systemd_source_uses_explicit_zog_sbat_without_os_release_autodete
     native_test = package.steps["test"][0][-1]
     assert expected_row in native_test
     assert "objcopy --dump-section .sbat=" in native_test
+    assert "build/src/boot/systemd-bootx64.efi" in native_test
+    assert "build/src/boot/efi/systemd-bootx64.efi" not in native_test
+
+    # Bind the tested path to the exact upstream Meson custom-target location:
+    # src/boot/meson.build emits the target in its own build subdirectory.
+    assert "output : name" in text
+    assert "name += name.startswith('systemd-boot') ? '.efi' : '.efi.stub'" in text

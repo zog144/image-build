@@ -64,7 +64,7 @@
            '# Verify the emitted EFI SBAT row, not merely Meson option presence.\n'
            'sbat=$(mktemp)\n'
            "trap 'rm -f \"$sbat\"' EXIT\n"
-           'objcopy --dump-section .sbat="$sbat" build/src/boot/efi/systemd-bootx64.efi\n'
+           'objcopy --dump-section .sbat="$sbat" build/src/boot/systemd-bootx64.efi\n'
            "python3 - \"$sbat\" <<'PYSBAT'\n"
            'from pathlib import Path\n'
            'import sys\n'

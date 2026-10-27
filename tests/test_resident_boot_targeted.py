@@ -37,10 +37,17 @@ def test_targeted_plan_materializes_shadow_from_unchanged_catalogue_pin(tmp_path
         "build-environment/stages/pyelftools/supplemental-pin.py"
     )
     targeted = boot._targeted_build_definitions(packages)
-    assert targeted["systemd-final"].build_dependencies == ("pyelftools-build",)
+    assert targeted["systemd-final"].build_dependencies == (
+        "systemd-test-environment",
+        "pyelftools-build",
+    )
     assert targeted["systemd-final"].runtime_dependencies == ()
     assert targeted["shadow-login"].build_dependencies == ()
     assert packages["pyelftools-build"].integration["scope"] == "build-only"
+    fixture = packages["systemd-test-environment"]
+    assert fixture.integration["purpose"].startswith("Static os-release fixture")
+    assert fixture.runtime_dependencies == ()
+    assert "etc/os-release" in fixture.outputs
     login = packages["shadow-login"]
     commands = "\n".join(
         " ".join(argv)
