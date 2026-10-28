@@ -124,3 +124,67 @@ def test_targeted_sync_scope_restores_engine_callback_on_failure():
             assert engine_module.sync_tree is durability.sync
             raise RuntimeError("scope failure")
     assert engine_module.sync_tree is original
+
+
+def test_installed_verification_preparation_handles_mode_zero_as_non_root(tmp_path):
+    """Exercise seed_build.verify's real installed-verification preparation path."""
+    import json
+    from types import SimpleNamespace
+
+    from zog.image_build.developer.seed_build import verify
+
+    assert os.geteuid() != 0, "regression must execute as a non-root coordinator"
+    root = _restrictive_root(tmp_path)
+    controller = {
+        "execution_user_id": os.geteuid(),
+        "execution_group_id": os.getegid(),
+        "startup_timeout_seconds": 5,
+        "termination_grace_seconds": 2,
+        "resource_limits": {"memory_max": 1048576},
+    }
+    policy = {
+        "controller": controller,
+        "execution_timeout_seconds": 30,
+    }
+
+    class Runner:
+        def __init__(self):
+            self.execute = SimpleNamespace(configuration=lambda: controller)
+
+        def build_request(self, root, source, output, command, environment):
+            return {
+                "environment": environment,
+                "working_directory": "/image-build/source",
+                "timeout_seconds": 30,
+                "read_only_root": True,
+                "network_access": False,
+            }
+
+        def run(self, root, source, output, command, environment, log):
+            raise RuntimeError("stop after installed-verification preparation")
+
+    builder = SimpleNamespace(
+        runner=Runner(),
+        provenance=None,
+        _policy=lambda: policy,
+        _release_resources=lambda _folder: None,
+    )
+    binding = {
+        "verification_report_contract": "image-build-installed-verification-v1",
+        "execution_policy": policy,
+    }
+    folder = tmp_path / "installed-verification"
+
+    with pytest.raises(RuntimeError, match="stop after installed-verification preparation"):
+        verify(builder, folder, root, [["/bin/true"]], binding)
+
+    prepared = json.loads((folder / "prepared.json").read_text())
+    assert prepared["binding"] == binding
+    assert prepared["root"] == inventory(root)
+    assert prepared["verification_observation_contract"] == (
+        "image-build-verification-observation-v2"
+    )
+    assert _mode(folder / "root/state") == 0
+    assert _mode(folder / "root/applications") == 0
+    assert _mode(root / "state") == 0
+    assert _mode(root / "applications") == 0

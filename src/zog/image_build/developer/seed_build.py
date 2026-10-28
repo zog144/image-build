@@ -11,7 +11,11 @@ from .. import ImageBuild, read_selection
 from ..configuration import configured_runner
 from ..errors import ImageBuildError
 from ..filesystem import inventory, sync_tree, write_json, ensure_directory, discard_staging
-from ..staging_durability import copy as copy_staging_tree, inventory as staging_inventory
+from ..staging_durability import (
+    copy as copy_staging_tree,
+    inventory as staging_inventory,
+    sync as sync_staging_tree,
+)
 from ..metadata import identity
 from ..cleanup import discard_work
 
@@ -53,7 +57,11 @@ def verify(builder, folder, root, commands, binding):
                 discard_staging(folder / name)
         copy_staging_tree(root, folder / 'root')
         (folder / 'source').mkdir(); (folder / 'output').mkdir()
-        sync_tree(folder)
+        # The verification folder is caller-owned staging and its copied root may
+        # already contain final mode-0000 resident mountpoints. Durably sync the
+        # preparation without requiring the non-root coordinator to reopen those
+        # directories at their final modes.
+        sync_staging_tree(folder)
         value = {'root': staging_inventory(folder / 'root'), 'binding': binding, 'commands': commands}
         if (isinstance(binding, dict) and
                 binding.get('verification_report_contract') == 'image-build-installed-verification-v1'):
