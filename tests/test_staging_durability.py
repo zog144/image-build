@@ -188,3 +188,87 @@ def test_installed_verification_preparation_handles_mode_zero_as_non_root(tmp_pa
     assert _mode(folder / "root/applications") == 0
     assert _mode(root / "state") == 0
     assert _mode(root / "applications") == 0
+
+
+
+def test_installed_verification_full_completion_handles_mode_zero_as_non_root(
+    tmp_path, monkeypatch
+):
+    """Exercise verify() through durable completion and cleanup as non-root."""
+    import json
+    from types import SimpleNamespace
+
+    import zog.image_build.developer.seed_build as seed_build
+
+    assert os.geteuid() != 0, "regression must execute as a non-root coordinator"
+    root = _restrictive_root(tmp_path)
+    controller = {
+        "execution_user_id": os.geteuid(),
+        "execution_group_id": os.getegid(),
+        "startup_timeout_seconds": 5,
+        "termination_grace_seconds": 2,
+        "resource_limits": {"memory_max": 1048576},
+    }
+    policy = {
+        "controller": controller,
+        "execution_timeout_seconds": 30,
+    }
+
+    class Runner:
+        def __init__(self):
+            self.execute = SimpleNamespace(configuration=lambda: controller)
+            self.calls = 0
+
+        def build_request(self, root, source, output, command, environment):
+            return {
+                "environment": environment,
+                "working_directory": "/image-build/source",
+                "timeout_seconds": 30,
+                "read_only_root": True,
+                "network_access": False,
+            }
+
+        def run(self, root, source, output, command, environment, log):
+            self.calls += 1
+            restricted = Path(output) / "restricted"
+            restricted.mkdir()
+            (restricted / "evidence").write_text("verified\n")
+            restricted.chmod(0)
+
+    runner = Runner()
+    releases = []
+    builder = SimpleNamespace(
+        runner=runner,
+        provenance=None,
+        _policy=lambda: policy,
+        _release_resources=lambda folder: releases.append(Path(folder)),
+    )
+    binding = {
+        "verification_report_contract": "image-build-installed-verification-v1",
+        "execution_policy": policy,
+    }
+    folder = tmp_path / "installed-verification-full"
+
+    def ordinary_sync_is_forbidden(_path):
+        raise AssertionError("verify() used ordinary sync_tree")
+
+    monkeypatch.setattr(seed_build, "sync_tree", ordinary_sync_is_forbidden)
+
+    result = seed_build.verify(builder, folder, root, [["/bin/true"]], binding)
+
+    restricted = next(row for row in result["outputs"] if row["path"] == "restricted")
+    assert restricted == {"path": "restricted", "mode": 0, "kind": "directory"}
+    assert json.loads((folder / "verification.json").read_text()) == result
+    assert _mode(folder / "output/restricted") == 0
+    assert not (folder / "root").exists()
+    assert not (folder / "source").exists()
+    assert json.loads((folder / "workspace-cleanup.json").read_text())["phase"] == "complete"
+    assert _mode(root / "state") == 0
+    assert _mode(root / "applications") == 0
+    assert runner.calls == 1
+    assert releases == [folder]
+
+    reused = seed_build.verify(builder, folder, root, [["/bin/true"]], binding)
+    assert reused == result
+    assert runner.calls == 1
+    assert releases == [folder, folder]

@@ -112,7 +112,7 @@ def verify(builder, folder, root, commands, binding):
         raise ImageBuildError('unsupported legacy verification preparation')
     if complete.exists():
         result = json.loads(complete.read_text())
-        if result['outputs'] != inventory(folder / 'output') or result['policy'] != builder._policy():
+        if result['outputs'] != staging_inventory(folder / 'output') or result['policy'] != builder._policy():
             raise ImageBuildError('verified outputs or execution policy changed')
         builder._release_resources(folder)
         discard_work(folder, ('root', 'source'), {'prepared': saved, 'result': result}, apply=True)
@@ -130,8 +130,11 @@ def verify(builder, folder, root, commands, binding):
                 capture_observation(builder, folder, saved, index, error)
                 raise
             capture_observation(builder, folder, saved, index)
-    sync_tree(folder / 'output')
-    result = {'outputs': inventory(folder / 'output'), 'policy': builder._policy()}
+    # Verification output is caller-owned staging too. A command may leave
+    # restrictive final directory modes, so use the same bounded durability and
+    # inventory contract through completion and later completion reuse.
+    sync_staging_tree(folder / 'output')
+    result = {'outputs': staging_inventory(folder / 'output'), 'policy': builder._policy()}
     write_json(complete, result)
     builder._release_resources(folder)
     discard_work(folder, ('root', 'source'), {'prepared': saved, 'result': result}, apply=True)
