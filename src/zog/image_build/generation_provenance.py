@@ -189,7 +189,7 @@ def resume_prepared(p, attempt, packages, targets, built, owner_inputs, *, stagi
     if (recipe.get('schema') != 1
             or recipe.get('format') != FORMAT
             or recipe.get('owner_inputs') != owner_inputs
-            or recipe.get('package_order') != selected
+            or recipe.get('package_order') != list(selected)
             or recipe.get('packages') != bindings):
         raise ImageBuildError('frozen assembly recipe differs')
     return binding
