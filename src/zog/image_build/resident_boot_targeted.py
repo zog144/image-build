@@ -375,6 +375,98 @@ def validate_manifest(inputs, details):
     return True
 
 
+def _recover_completed_packages(builder, packages, targets, toolchain, attempt):
+    """Load accepted retained package outputs without entering build/resume cleanup.
+
+    Publication recovery is evidence-only. It must not submit commands, release
+    controller resources, or clean retained workspaces. Package inputs are
+    reconstructed exactly as the ordinary builder does, then the retained output
+    inventory and canonical provenance are independently verified.
+    """
+    from .dependency_composition import replacement_plan
+
+    if builder.provenance is None:
+        raise ImageBuildError("publication recovery requires canonical package provenance")
+    built = {}
+    for name in order(packages, targets):
+        package = packages[name]
+        dependencies = order(
+            packages,
+            list(dict.fromkeys(
+                package.build_dependencies
+                + package.runtime_dependencies
+                + package.test_dependencies
+            )),
+            runtime_only=True,
+        )
+        inputs = {
+            "schema": engine_module.SCHEMA,
+            "package": package.fingerprint,
+            "toolchain": toolchain.generation,
+            "dependencies": {n: built[n]["identity"] for n in dependencies},
+            "architecture": platform.machine(),
+        }
+        replacements = {
+            n: builder.dependency_replacements[n]["identity"]
+            for n in dependencies
+            if n in builder.dependency_replacements
+        }
+        if replacements:
+            inputs["dependency_replacements"] = replacements
+        inherited = replacement_plan(toolchain, dependencies)
+        if inherited:
+            if set(inherited["packages"]) & set(builder.dependency_replacements):
+                raise ImageBuildError(
+                    "overlapping inherited and bootstrap dependency replacements"
+                )
+            inputs["inherited_dependency_replacements"] = inherited
+        if package.licensing is not None:
+            inputs["license_identity"] = identity(package.licensing)
+        if dependencies:
+            inputs["composition_policy"] = engine_module.INFO_INDEX_POLICY
+
+        package_dir = Path(attempt) / "packages" / name
+        output = package_dir / "output"
+        result_path = package_dir / "result.json"
+        if not result_path.is_file() or not output.is_dir():
+            raise ImageBuildError(
+                "publication recovery requires accepted package output: " + name
+            )
+        result = json.loads(result_path.read_text())
+        observed = staging_inventory(output)
+        if (
+            result.get("inputs") != inputs
+            or result.get("outputs") != observed
+            or result.get("integration") != package.integration
+            or result.get("identity")
+            != identity({"inputs": inputs, "outputs": observed})
+        ):
+            raise ImageBuildError("recorded package outputs changed: " + name)
+
+        provenance_binding = builder.provenance.finish(
+            package_dir, result=result
+        )
+        if (
+            not provenance_binding.get("result")
+            or not provenance_binding.get("output")
+        ):
+            raise ImageBuildError(
+                "publication recovery requires finalized package provenance: " + name
+            )
+        retained = dict(
+            result,
+            provenance={
+                "output": provenance_binding["output"],
+                "result": provenance_binding["result"],
+            },
+        )
+        builder.provenance.verify_output(
+            retained["provenance"], name, retained
+        )
+        built[name] = {**retained, "root": output}
+    return built
+
+
 def _require_publication_recovery_ready(state, work, packages, targets):
     """Fail before any native submission unless all retained producer gates exist."""
     package_attempt = state / "image-build/attempts" / (work.name + "-packages")
@@ -474,10 +566,20 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             _require_publication_recovery_ready(
                 state, work, build_definitions, plan["targets"]
             )
-        with builder.locked(), _targeted_staging_sync():
-            built = builder._build_set(
-                build_definitions, plan["targets"], parent, package_attempt
-            )
+        if recovery_source_revision is not None:
+            with builder.locked():
+                built = _recover_completed_packages(
+                    builder,
+                    build_definitions,
+                    plan["targets"],
+                    parent,
+                    package_attempt,
+                )
+        else:
+            with builder.locked(), _targeted_staging_sync():
+                built = builder._build_set(
+                    build_definitions, plan["targets"], parent, package_attempt
+                )
         overlays = {name: built[name] for name in OVERLAY_TARGETS}
         for name, record in overlays.items():
             provenance.verify_output(record["provenance"], name, record)

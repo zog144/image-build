@@ -244,3 +244,121 @@ def test_targeted_explicit_argv_cannot_drop_pipefail():
         match="must preserve pipefail",
     ):
         iv.verification_argv(owner)
+
+
+
+def test_publication_recovery_loads_restrictive_completed_packages_without_build_cleanup(
+    tmp_path,
+):
+    import platform
+    from types import SimpleNamespace
+
+    import zog.image_build.engine as engine
+    import zog.image_build.resident_boot_targeted as targeted
+    from zog.image_build.metadata import Package, identity
+
+    dependency = Package(
+        "build-input", (), (), (), {}, {}, (), {"scope": "build-only"}
+    )
+    runtime = Package(
+        "runtime-output",
+        (),
+        ("build-input",),
+        (),
+        {},
+        {},
+        (),
+        {"scope": "runtime"},
+    )
+    packages = {
+        "build-input": dependency,
+        "runtime-output": runtime,
+    }
+    attempt = tmp_path / "attempt"
+    toolchain = SimpleNamespace(
+        generation="e" * 64,
+        manifest={"packages": {}},
+    )
+
+    class FakeProvenance:
+        def __init__(self):
+            self.finished = []
+            self.verified = []
+
+        def finish(self, package_dir, *, result=None):
+            name = Path(package_dir).name
+            self.finished.append(name)
+            return {
+                "output": "sha256:" + ("1" if name == "build-input" else "2") * 64,
+                "result": "sha256:" + ("3" if name == "build-input" else "4") * 64,
+            }
+
+        def verify_output(self, reference, name, result):
+            self.verified.append((name, reference, result["identity"]))
+
+    provenance = FakeProvenance()
+    builder = SimpleNamespace(
+        provenance=provenance,
+        dependency_replacements={},
+    )
+
+    built_identities = {}
+    for name in ("build-input", "runtime-output"):
+        package = packages[name]
+        dependencies = (
+            []
+            if name == "build-input"
+            else ["build-input"]
+        )
+        inputs = {
+            "schema": engine.SCHEMA,
+            "package": package.fingerprint,
+            "toolchain": toolchain.generation,
+            "dependencies": {
+                dep: built_identities[dep] for dep in dependencies
+            },
+            "architecture": platform.machine(),
+        }
+        if dependencies:
+            inputs["composition_policy"] = engine.INFO_INDEX_POLICY
+        directory = attempt / "packages" / name / "output"
+        directory.mkdir(parents=True)
+        (directory / "payload").write_text(name)
+        if name == "runtime-output":
+            (directory / "state").mkdir()
+            (directory / "applications").mkdir()
+            (directory / "state").chmod(0)
+            (directory / "applications").chmod(0)
+        outputs = targeted.staging_inventory(directory)
+        package_dir = directory.parent
+        result = {
+            "identity": identity({"inputs": inputs, "outputs": outputs}),
+            "inputs": inputs,
+            "outputs": outputs,
+            "integration": package.integration,
+        }
+        write_json(package_dir / "result.json", result)
+        built_identities[name] = result["identity"]
+
+    recovered = targeted._recover_completed_packages(
+        builder,
+        packages,
+        ["runtime-output"],
+        toolchain,
+        attempt,
+    )
+
+    assert list(recovered) == ["build-input", "runtime-output"]
+    assert provenance.finished == ["build-input", "runtime-output"]
+    assert [name for name, _, _ in provenance.verified] == [
+        "build-input",
+        "runtime-output",
+    ]
+    assert (
+        (Path(recovered["runtime-output"]["root"]) / "state").stat().st_mode
+        & 0o7777
+    ) == 0
+    assert (
+        (Path(recovered["runtime-output"]["root"]) / "applications").stat().st_mode
+        & 0o7777
+    ) == 0
