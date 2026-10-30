@@ -33,8 +33,13 @@ from .staging_durability import (
     sync as sync_staging_tree,
 )
 from .final_compiler import successful_execution
-from .generation_provenance import prepare, finish, verify as verify_generation
-from .metadata import Package, identity, load_packages
+from .generation_provenance import (
+    PUBLICATION_RECOVERY_CONTRACT,
+    prepare,
+    finish,
+    verify as verify_generation,
+)
+from .metadata import Package, identity, load_packages, order
 from .provenance import Provenance
 from .rootfs_compatibility import FIELD as COMPATIBILITY_FIELD, derive as derive_compatibility
 from .stages import stage_recipes
@@ -345,6 +350,13 @@ def validate_manifest(inputs, details):
     value = inputs.get(FIELD) if isinstance(inputs, dict) else None
     if value is None and (not isinstance(details, dict) or FIELD not in details):
         return False
+    recovery = details.get("publication_recovery") if isinstance(details, dict) else None
+    if recovery is not None and (
+        not isinstance(recovery, dict)
+        or recovery.get("contract") != PUBLICATION_RECOVERY_CONTRACT
+        or recovery.get("producer_source_revision") != inputs.get("source_revision")
+    ):
+        raise ImageBuildError("invalid targeted publication recovery binding")
     if (
         not isinstance(value, dict)
         or details.get(FIELD) != value
@@ -362,14 +374,39 @@ def validate_manifest(inputs, details):
     return True
 
 
+def _require_publication_recovery_ready(state, work, packages, targets):
+    """Fail before any native submission unless all retained producer gates exist."""
+    package_attempt = state / "image-build/attempts" / (work.name + "-packages")
+    for name in order(packages, targets):
+        directory = package_attempt / "packages" / name
+        if not (directory / "result.json").is_file() or not (directory / "output").is_dir():
+            raise ImageBuildError("publication recovery requires accepted package output: " + name)
+    required = [
+        work / "intent.json",
+        work / "composition-plan.json",
+        work / "composition.json",
+        work / "derived-root",
+        state / "image-build/attempts" / (work.name + "-assembly") / "assembly/prepared.json",
+        state / "image-build/attempts" / (work.name + "-installed") / "prepared.json",
+        state / "image-build/attempts" / (work.name + "-installed") / "verification.json",
+        state / "image-build/attempts" / (work.name + "-installed") / "command-0.execution.json",
+    ]
+    if any(not path.exists() for path in required):
+        raise ImageBuildError("publication recovery requires completed retained preparation and verification")
+
+
 def run(project, catalogue, controller, selection, work, source_revision, host_id, project_id,
-        plan_file, check_file, retry_of=None, pin_revision=None):
+        plan_file, check_file, retry_of=None, pin_revision=None, recovery_source_revision=None):
     project, catalogue, controller, selection, work = map(
         lambda value: Path(value).resolve(),
         (project, catalogue, controller, selection, work),
     )
     if re.fullmatch(r"[0-9a-f]{40}", source_revision or "") is None:
         raise ImageBuildError("exact producer source revision required")
+    if recovery_source_revision is not None:
+        if (re.fullmatch(r"[0-9a-f]{40}", recovery_source_revision) is None
+                or recovery_source_revision == source_revision):
+            raise ImageBuildError("exact distinct publication recovery source revision required")
     state = project / "state"
     ensure_directory(work)
     with (work / "operation.lock").open("a+") as stream:
@@ -420,6 +457,8 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
         if intent_path.exists():
             if json.loads(intent_path.read_text()) != intent:
                 raise ImageBuildError("frozen targeted Boot A operation changed")
+        elif recovery_source_revision is not None:
+            raise ImageBuildError("publication recovery cannot create a new producer operation")
         else:
             write_json(intent_path, intent)
 
@@ -430,6 +469,10 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
         # are not rebuilt or overlaid into that parent. Only the two requested
         # package outputs execute in this targeted operation.
         build_definitions = _targeted_build_definitions(definitions)
+        if recovery_source_revision is not None:
+            _require_publication_recovery_ready(
+                state, work, build_definitions, plan["targets"]
+            )
         with builder.locked(), _targeted_staging_sync():
             built = builder._build_set(
                 build_definitions, plan["targets"], parent, package_attempt
@@ -514,12 +557,20 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             "source_revision": source_revision,
             "verification_command": check,
             "verification_report_contract": installed_verification.CONTRACT,
-            "verification_check": "resident-boot-a-targeted",
+            "verification_check": installed_verification.TARGETED_CHECK,
             "execution_policy": builder._policy(),
             "provenance": provenance.configuration(),
             COMPATIBILITY_FIELD: compatibility,
             FIELD: derivation,
         }
+        # Existing ce4b1d75-era targeted operations predate an explicit argv
+        # field. Their retained verification_check has a narrow compatibility
+        # interpretation in installed_verification. New producer operations freeze
+        # the exact argv directly in owner inputs.
+        if recovery_source_revision is None:
+            inputs[installed_verification.ARGV_FIELD] = (
+                installed_verification.verification_argv(inputs)
+            )
         for field in ("application_data_targets",):
             if field in parent.manifest.get("inputs", {}):
                 inputs[field] = parent.manifest["inputs"][field]
@@ -547,17 +598,42 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             builder,
             verification,
             root,
-            [["/bin/bash", "-eu", "-o", "pipefail", "-c", check]],
+            installed_verification.verification_commands(inputs),
             inputs,
         )
         execution = successful_execution(verification)
+        publication_recovery = None
+        if recovery_source_revision is not None:
+            publication_recovery = {
+                "contract": PUBLICATION_RECOVERY_CONTRACT,
+                "reason": "installed-verification-argv-binding",
+                "producer_source_revision": source_revision,
+                "recovery_source_revision": recovery_source_revision,
+                "operation": work.name,
+                "intent_sha256": "sha256:" + _sha256(intent_path),
+                "assembly_prepared_sha256": "sha256:" + _sha256(
+                    assembly_attempt / "assembly/prepared.json"
+                ),
+                "verification_prepared_sha256": "sha256:" + _sha256(
+                    verification / "prepared.json"
+                ),
+                "verification_result_sha256": "sha256:" + _sha256(
+                    verification / "verification.json"
+                ),
+                "execution_invocation_id": execution["invocation_id"],
+            }
 
         with builder.locked():
             report = installed_verification.capture(
                 provenance, binding, root, inputs, verification, execution
             )
             pointer = finish(
-                provenance, assembly_attempt, binding, root, verification=[report]
+                provenance,
+                assembly_attempt,
+                binding,
+                root,
+                verification=[report],
+                recovery=publication_recovery,
             )
             details = {
                 COMPATIBILITY_FIELD: compatibility,
@@ -572,6 +648,8 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
                 "build_record": pointer,
                 "verification_execution": execution,
             }
+            if publication_recovery is not None:
+                details["publication_recovery"] = publication_recovery
             if "application_data_targets" in inputs:
                 details["application_data_targets"] = inputs["application_data_targets"]
             _prepare_publication_candidate(builder, root, inputs, "image", details)
@@ -592,6 +670,8 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             "verification_execution": execution,
             "historical_provenance_complete": False,
         }
+        if publication_recovery is not None:
+            result["publication_recovery"] = publication_recovery
         write_json(work / "result.json", result)
         return result
 
@@ -605,6 +685,7 @@ def main():
         parser.add_argument("--" + name, required=True)
     parser.add_argument("--retry-of")
     parser.add_argument("--pin-revision")
+    parser.add_argument("--recovery-source-revision")
     print(json.dumps(run(**vars(parser.parse_args())), sort_keys=True), flush=True)
 
 

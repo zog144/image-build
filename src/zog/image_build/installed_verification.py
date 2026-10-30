@@ -9,6 +9,37 @@ from .metadata import identity
 
 CONTRACT = 'image-build-installed-verification-v1'
 NAME = 'installed-verification.json'
+ARGV_FIELD = 'verification_argv'
+TARGETED_CHECK = 'resident-boot-a-targeted'
+
+
+def verification_argv(owner_inputs):
+    """Return the exact single installed-check argv frozen by the owner.
+
+    New producers should freeze ARGV_FIELD explicitly. The targeted Boot A
+    compatibility branch exists only for already-retained v1 owner inputs that
+    predate ARGV_FIELD but whose verification_check unambiguously required
+    pipefail. Other legacy callers retain the historical shorter argv.
+    """
+    _require(isinstance(owner_inputs, dict), 'installed verification owner inputs differ')
+    script = owner_inputs.get('verification_command')
+    _require(isinstance(script, str) and bool(script.strip()),
+             'installed verification command was not frozen')
+    legacy = ['/bin/bash', '-eu', '-c', script]
+    pipefail = ['/bin/bash', '-eu', '-o', 'pipefail', '-c', script]
+    explicit = owner_inputs.get(ARGV_FIELD)
+    if explicit is None:
+        return pipefail if owner_inputs.get('verification_check') == TARGETED_CHECK else legacy
+    _require(isinstance(explicit, list) and all(isinstance(item, str) and item for item in explicit),
+             'installed verification argv is invalid')
+    _require(explicit in (legacy, pipefail), 'unsupported installed verification argv')
+    if owner_inputs.get('verification_check') == TARGETED_CHECK:
+        _require(explicit == pipefail, 'targeted installed verification must preserve pipefail')
+    return list(explicit)
+
+
+def verification_commands(owner_inputs):
+    return [verification_argv(owner_inputs)]
 
 
 def _read(path):
@@ -27,11 +58,12 @@ def _subject(p, binding, root, owner_inputs):
              'installed verification report contract was not frozen')
     _require(identity(owner_inputs) == binding['generation'],
              'installed verification owner inputs differ')
+    commands = verification_commands(owner_inputs)
     return dict(schema=1, kind=CONTRACT,
         generation_id=json.dumps([p.host_id, p.project_id, binding['generation']], separators=(',', ':')),
         assembly_attempt=binding['prepared'], check=owner_inputs.get('verification_check', 'installed-trust'),
         root_inventory_digest='sha256:'+identity(inventory(root)),
-        commands_digest='sha256:'+identity([['/bin/bash','-eu','-c',owner_inputs['verification_command']]]),
+        commands_digest='sha256:'+identity(commands),
         policy_digest='sha256:'+identity(owner_inputs['execution_policy']))
 
 
@@ -80,11 +112,11 @@ def _prepared_binding(prepared, expected, owner_inputs):
 def capture(p, binding, root, owner_inputs, verification_attempt, execution):
     """Capture only completed evidence for exactly the candidate that was tested."""
     folder = Path(verification_attempt)
+    commands = verification_commands(owner_inputs)
     subject = _subject(p, binding, root, owner_inputs)
     prepared = _read(folder/'prepared.json')
     completed = _read(folder/'verification.json')
     checkpoint = _read(folder/'command-0.execution.json')
-    commands = [['/bin/bash','-eu','-c',owner_inputs['verification_command']]]
     _prepared_binding(
         prepared,
         dict(root=inventory(root), binding=owner_inputs, commands=commands),

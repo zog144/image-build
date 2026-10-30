@@ -3,8 +3,10 @@
 Only local, repeatable composition is performed here; command recovery remains with
 image-build/box-control. The canonical schema and graph/export logic are build-record's.
 """
+import hashlib
 import json
 from pathlib import Path
+import re
 import tempfile
 
 from .errors import ImageBuildError
@@ -15,6 +17,37 @@ from .provenance import _now
 
 ASSEMBLY_PACKAGE = '@rootfs-assembly'
 FORMAT = 'image-build-rootfs-ustar-all-root-v1'
+PUBLICATION_RECOVERY_CONTRACT = 'image-build-publication-recovery-v1'
+
+
+def _publication_recovery(value):
+    if value is None:
+        return None
+    fields = {
+        'contract', 'reason', 'producer_source_revision', 'recovery_source_revision',
+        'operation', 'intent_sha256', 'assembly_prepared_sha256',
+        'verification_prepared_sha256', 'verification_result_sha256',
+        'execution_invocation_id',
+    }
+    if not isinstance(value, dict) or set(value) != fields:
+        raise ImageBuildError('invalid publication recovery binding')
+    if (value['contract'] != PUBLICATION_RECOVERY_CONTRACT
+            or value['reason'] != 'installed-verification-argv-binding'):
+        raise ImageBuildError('unsupported publication recovery contract')
+    for key in ('producer_source_revision', 'recovery_source_revision'):
+        if re.fullmatch(r'[0-9a-f]{40}', value.get(key, '')) is None:
+            raise ImageBuildError('invalid publication recovery source revision')
+    if value['producer_source_revision'] == value['recovery_source_revision']:
+        raise ImageBuildError('publication recovery must use a distinct corrected source')
+    for key in ('intent_sha256', 'assembly_prepared_sha256',
+                'verification_prepared_sha256', 'verification_result_sha256'):
+        digest = value.get(key)
+        if (not isinstance(digest, str) or re.fullmatch(r'sha256:[0-9a-f]{64}', digest) is None):
+            raise ImageBuildError('invalid publication recovery evidence digest')
+    for key in ('operation', 'execution_invocation_id'):
+        if not isinstance(value.get(key), str) or not value[key]:
+            raise ImageBuildError('invalid publication recovery identity')
+    return dict(value)
 
 
 def _read(path):
@@ -93,7 +126,7 @@ def prepare(p, attempt, packages, targets, built, owner_inputs, *, composition_m
     return expected
 
 
-def finish(p, attempt, binding, root, *, verification=()):
+def finish(p, attempt, binding, root, *, verification=(), recovery=None):
     """Build and verify an actual archive, then fix the assembly result and root."""
     from .host_export import _payload_staging
     directory = attempt/'assembly'
@@ -118,8 +151,12 @@ def finish(p, attempt, binding, root, *, verification=()):
         artifact = p._file('rootfs.tar', archive, 'sha256:'+payload['sha256'])
     validate_reports(p, binding, root, recipe['owner_inputs'], verification)
     content = p._bytes('rootfs-content.json', dict(schema=1, format=FORMAT, entries=payload['entries']))
+    recovery = _publication_recovery(recovery)
+    artifacts = [artifact, content]
+    if recovery is not None:
+        artifacts.append(p._bytes('publication-recovery.json', recovery))
     output = p._record('package-output', dict(package=ASSEMBLY_PACKAGE, attempt=binding['prepared'],
-                                            artifacts=[artifact, content]))
+                                            artifacts=artifacts))
     result = _intent(p, directory/'finalizing.json', 'attempt-result',
         dict(attempt=binding['prepared'], outcome='succeeded', outputs=[output], jobs=[],
              traces=[dict(host_id=p.host_id, build_id=binding['build_id'])],
@@ -171,6 +208,30 @@ def verify(p, selection):
     from .installed_verification import validate as validate_reports
     validate_reports(p, pointer, selection.root, recipe['owner_inputs'],
                      root['data']['verification'], execution=selection.manifest.get('verification_execution'))
+    assembly_output = records.get(pointer['output'], {})
+    if assembly_output.get('kind') != 'package-output':
+        raise ImageBuildError('generation assembly output differs')
+    recovery = selection.manifest.get('publication_recovery')
+    recovery_artifacts = [
+        item for item in assembly_output['data']['artifacts']
+        if item.get('name') == 'publication-recovery.json'
+    ]
+    if recovery is None:
+        if recovery_artifacts:
+            raise ImageBuildError('unexpected publication recovery evidence')
+    else:
+        recovery = _publication_recovery(recovery)
+        if len(recovery_artifacts) != 1:
+            raise ImageBuildError('publication recovery evidence missing')
+        descriptor = recovery_artifacts[0]
+        path = p.root/'artifacts'/descriptor['digest'][7:]
+        if path.is_symlink():
+            raise ImageBuildError('publication recovery evidence must not be a symlink')
+        raw = path.read_bytes()
+        if (len(raw) != descriptor['size']
+                or 'sha256:'+hashlib.sha256(raw).hexdigest() != descriptor['digest']
+                or json.loads(raw) != recovery):
+            raise ImageBuildError('publication recovery evidence differs')
     packages = selection.manifest.get('packages', {})
     ordered = recipe['package_order']
     if set(ordered) != set(packages) or len(ordered) != len(packages):
