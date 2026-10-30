@@ -586,6 +586,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
                     targets,
                     assembled,
                     inputs,
+                    staging_packages=OVERLAY_TARGETS,
                 )
             else:
                 binding = prepare(
