@@ -98,6 +98,9 @@ def _scenario(tmp_path, *, explicit_argv):
         owner,
     )
     execution = successful_execution(check)
+    assert gp.resume_prepared(
+        provenance, attempt, definitions, ["base"], built, owner
+    ) == binding
     return SimpleNamespace(
         provenance=provenance,
         root=root,

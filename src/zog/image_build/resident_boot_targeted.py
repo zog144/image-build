@@ -36,6 +36,7 @@ from .final_compiler import successful_execution
 from .generation_provenance import (
     PUBLICATION_RECOVERY_CONTRACT,
     prepare,
+    resume_prepared,
     finish,
     verify as verify_generation,
 )
@@ -577,21 +578,31 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
 
         assembly_attempt = state / "image-build/attempts" / (work.name + "-assembly")
         with builder.locked():
-            binding = prepare(
-                provenance,
-                assembly_attempt,
-                assembly_defs,
-                targets,
-                assembled,
-                inputs,
-                composition_materials=[parent_manifest, composition_material, gap_material],
-                composition_actions=[
-                    "Treat retained-parent as an exact legacy package inventory with an explicit provenance gap.",
-                    "Overlay only systemd-final and shadow-login exact verified package outputs.",
-                    "Freeze every collision/addition before mutation; permit no implicit removals.",
-                    "Permit only the reviewed /applications 0755 to 0000 directory-mode replacement.",
-                ],
-            )
+            if recovery_source_revision is not None:
+                binding = resume_prepared(
+                    provenance,
+                    assembly_attempt,
+                    assembly_defs,
+                    targets,
+                    assembled,
+                    inputs,
+                )
+            else:
+                binding = prepare(
+                    provenance,
+                    assembly_attempt,
+                    assembly_defs,
+                    targets,
+                    assembled,
+                    inputs,
+                    composition_materials=[parent_manifest, composition_material, gap_material],
+                    composition_actions=[
+                        "Treat retained-parent as an exact legacy package inventory with an explicit provenance gap.",
+                        "Overlay only systemd-final and shadow-login exact verified package outputs.",
+                        "Freeze every collision/addition before mutation; permit no implicit removals.",
+                        "Permit only the reviewed /applications 0755 to 0000 directory-mode replacement.",
+                    ],
+                )
 
         verification = state / "image-build/attempts" / (work.name + "-installed")
         verify_installed(

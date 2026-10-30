@@ -126,6 +126,67 @@ def prepare(p, attempt, packages, targets, built, owner_inputs, *, composition_m
     return expected
 
 
+def resume_prepared(p, attempt, packages, targets, built, owner_inputs):
+    """Validate and reuse an already-frozen canonical assembly preparation.
+
+    Publication recovery must not regenerate the assembly recipe from corrected
+    source bytes: the retained preparation describes the producer that actually
+    composed and verified the candidate. Corrected publication source is bound
+    separately by publication-recovery.json.
+    """
+    selected = order(packages, targets, runtime_only=True)
+    bindings = []
+    from .staging_durability import inventory as staging_inventory
+    for name in selected:
+        result = built[name]
+        reference = result.get('provenance')
+        if reference is None:
+            raise ImageBuildError('generation package has no provenance binding')
+        if staging_inventory(result['root']) != result['outputs']:
+            raise ImageBuildError('generation package output changed')
+        p.verify_output(reference, name, result)
+        bindings.append(reference)
+
+    directory = attempt/'assembly'
+    path = directory/'prepared.json'
+    if not path.is_file():
+        raise ImageBuildError('publication recovery lacks frozen assembly binding')
+    binding = _read(path)
+    expected_keys = {'schema','host_id','project_id','generation','build_id','prepared','inputs'}
+    if (not isinstance(binding, dict) or set(binding) != expected_keys
+            or binding.get('schema') != 1
+            or binding.get('host_id') != p.host_id
+            or binding.get('project_id') != p.project_id
+            or binding.get('generation') != identity(owner_inputs)
+            or binding.get('build_id') != 'attempt:'+attempt.name):
+        raise ImageBuildError('frozen assembly binding changed')
+
+    bundle = p._verify([binding['prepared']])
+    records = bundle['records']
+    start = records.get(binding['prepared'], {})
+    inputs = records.get(binding['inputs'], {})
+    if (start.get('kind') != 'attempt-start'
+            or start['data'].get('inputs') != binding['inputs']
+            or inputs.get('kind') != 'build-inputs'):
+        raise ImageBuildError('frozen assembly preparation differs')
+    data = inputs['data']
+    if (data.get('package') != ASSEMBLY_PACKAGE
+            or data.get('purpose') != 'assembly'
+            or data.get('target') != owner_inputs['architecture']
+            or data.get('dependencies') != bindings
+            or data.get('options', {}).get('owner_generation') != binding['generation']
+            or data.get('options', {}).get('artifact_format') != FORMAT):
+        raise ImageBuildError('frozen assembly inputs differ')
+    recipe = _read(p.root/'artifacts'/data['recipe']['digest'][7:])
+    if (recipe.get('schema') != 1
+            or recipe.get('format') != FORMAT
+            or recipe.get('owner_inputs') != owner_inputs
+            or recipe.get('package_order') != selected
+            or recipe.get('packages') != bindings):
+        raise ImageBuildError('frozen assembly recipe differs')
+    return binding
+
+
 def finish(p, attempt, binding, root, *, verification=(), recovery=None):
     """Build and verify an actual archive, then fix the assembly result and root."""
     from .host_export import _payload_staging
