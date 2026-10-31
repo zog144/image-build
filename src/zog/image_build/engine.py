@@ -292,7 +292,7 @@ class ImageBuild(PipelineMixin):
                 raise ImageBuildError("host bootstrap changed while being imported")
             return selection
 
-    def _build_set(self, packages, targets, toolchain, attempt):
+    def _build_set(self, packages, targets, toolchain, attempt, *, graphical_predecessor=None):
         from .cleanup import package_workspace
         built = {}
         for name in order(packages, targets):
@@ -307,6 +307,8 @@ class ImageBuild(PipelineMixin):
                 "package": package.fingerprint,
                 "toolchain": toolchain.generation,
                 "dependencies": {n: built[n]["identity"] for n in dependencies},
+                **(__import__("zog.image_build.graphical_composition", fromlist=["input_fields"]).input_fields(graphical_predecessor)
+                   if graphical_predecessor is not None else {}),
                 "architecture": platform.machine(),
             }
             replacements = {n: self.dependency_replacements[n]['identity'] for n in dependencies if n in self.dependency_replacements}
@@ -357,6 +359,9 @@ class ImageBuild(PipelineMixin):
                 environment = package_dir / "root"
                 shutil.copytree(toolchain.root, environment, symlinks=True)
                 remove_inherited(environment, toolchain, inherited_replacements)
+                if graphical_predecessor is not None:
+                    merge(graphical_predecessor["selection"].root, environment,
+                          preserve_existing_directories=True, compose_info=True)
                 for dependency in dependencies:
                     if dependency in self.dependency_replacements:
                         from .native import remove_owned
@@ -502,10 +507,13 @@ class ImageBuild(PipelineMixin):
             built[name] = {**result, "root": output}
         return built
 
-    def _compose(self, packages, targets, built, root):
+    def _compose(self, packages, targets, built, root, *, graphical_predecessor=None):
         composition = root.with_suffix(".composition.json")
         selected = order(packages, targets, runtime_only=True)
         binding = {"packages": {name: built[name]["identity"] for name in selected}, "composition_policy": INFO_INDEX_POLICY}
+        if graphical_predecessor is not None:
+            from .graphical_composition import input_fields
+            binding["graphical_predecessor"] = input_fields(graphical_predecessor)
         if composition.exists():
             saved = json.loads(composition.read_text())
             if saved["inputs"] != binding or saved["outputs"] != inventory(root):
@@ -514,6 +522,8 @@ class ImageBuild(PipelineMixin):
         if root.exists():
             discard_staging(root)
         root.mkdir()
+        if graphical_predecessor is not None:
+            merge(graphical_predecessor["selection"].root, root, compose_info=True)
         for name in selected:
             merge(built[name]["root"], root, compose_info=True)
         sync_tree(root)
@@ -650,7 +660,8 @@ class ImageBuild(PipelineMixin):
         except OSError:
             pass
 
-    def _ensure(self, targets, *, toolchain, seed_check=False, native_check=False):
+    def _ensure(self, targets, *, toolchain, seed_check=False, native_check=False,
+                graphical_predecessor=None):
         toolchain = read_selection(Path(toolchain.root).parent)
         if native_check:
             kind = toolchain.manifest["kind"]
@@ -677,6 +688,8 @@ class ImageBuild(PipelineMixin):
             )
         if toolchain.manifest["inputs"].get("architecture") != platform.machine():
             raise ImageBuildError("toolchain architecture differs from this host")
+        from .graphical_composition import validate as validate_graphical, input_fields
+        graphical = validate_graphical(self, toolchain, graphical_predecessor, list(targets))
         packages = load_packages(self.package_dir)
         selected = order(packages, targets)
         inputs = {
@@ -684,6 +697,7 @@ class ImageBuild(PipelineMixin):
             "kind": "native-check" if native_check else ("seed-check" if seed_check else "image"),
             "composition_policy": INFO_INDEX_POLICY,
             "toolchain": toolchain.generation,
+            **input_fields(graphical),
             "targets": list(targets),
             "recipes": {n: packages[n].fingerprint for n in selected},
             "architecture": platform.machine(),
@@ -707,11 +721,27 @@ class ImageBuild(PipelineMixin):
             return result
         attempt = self._candidate("image")
         try:
-            built = self._build_set(packages, targets, toolchain, attempt)
+            built = self._build_set(packages, targets, toolchain, attempt,
+                                    graphical_predecessor=graphical)
+            if graphical is not None:
+                reread = validate_graphical(self, toolchain,
+                                            graphical["generation"], list(targets))
+                if input_fields(reread) != input_fields(graphical):
+                    raise ImageBuildError("graphical predecessor changed during build")
             if self.provenance and self.provenance.generation_contract:
                 from .generation_provenance import prepare, finish
-                assembly = prepare(self.provenance, attempt, packages, targets, built, inputs)
-            records = self._compose(packages, targets, built, attempt / "composed")
+                materials = ()
+                actions = ()
+                if graphical is not None:
+                    materials = (self.provenance._file(
+                        "graphical-predecessor-manifest.json",
+                        Path(graphical["selection"].root).parent / "manifest.json",
+                        graphical["manifest_sha256"]),)
+                    actions = ("merge exact verified graphical predecessor before new runtime outputs; reject collisions",)
+                assembly = prepare(self.provenance, attempt, packages, targets, built, inputs,
+                                   composition_materials=materials, composition_actions=actions)
+            records = self._compose(packages, targets, built, attempt / "composed",
+                                    graphical_predecessor=graphical)
             details = {"packages": records}
             if self.provenance and self.provenance.generation_contract:
                 details['build_record'] = finish(self.provenance, attempt, assembly, attempt / 'composed')

@@ -128,9 +128,15 @@ class PipelineMixin:
             if record['operation'] == 'bootstrap':
                 result = self._bootstrap(selection, record['arguments']['stages'])
             elif record['operation'] in ('image', 'seed-check', 'native-check'):
-                result = self._ensure(record['arguments']['targets'], toolchain=selection,
-                                      seed_check=record['operation'] == 'seed-check',
-                                      native_check=record['operation'] == 'native-check')
+                predecessor_id = record['arguments'].get('graphical_predecessor')
+                if predecessor_id is not None and record['operation'] != 'image':
+                    raise ImageBuildError('graphical composition is image-only')
+                result = self._ensure(
+                    record['arguments']['targets'], toolchain=selection,
+                    seed_check=record['operation'] == 'seed-check',
+                    native_check=record['operation'] == 'native-check',
+                    graphical_predecessor=predecessor_id,
+                )
             else:
                 raise ImageBuildError('unknown pipeline operation')
             snapshot = self._publish_observation_snapshot(result)

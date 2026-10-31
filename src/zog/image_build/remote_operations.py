@@ -762,6 +762,7 @@ class RemoteOperations:
             "targets",
             "stages",
             "recipe_snapshot",
+            "graphical_predecessor",
         }:
             raise ImageBuildError(
                 "unsupported pipeline submission argument"
@@ -817,12 +818,14 @@ class RemoteOperations:
                 {"stages": stages},
                 snapshot,
             )
-        if set(arguments) != {
-            "mode",
-            "selection",
-            "targets",
-            "recipe_snapshot",
-        }:
+        expected = {"mode", "selection", "targets", "recipe_snapshot"}
+        predecessor = arguments.get("graphical_predecessor")
+        if predecessor is not None:
+            if mode != "image" or set(arguments) != expected | {"graphical_predecessor"}:
+                raise ImageBuildError("graphical predecessor requires exact image arguments")
+            from .graphical_composition import validate
+            validate(self.builder, selection, predecessor, list(names(arguments["targets"])))
+        elif set(arguments) != expected:
             raise ImageBuildError(
                 "image/native pipeline requires selection, targets, and recipe_snapshot"
             )
@@ -834,7 +837,7 @@ class RemoteOperations:
         return (
             mode,
             selection,
-            {"targets": targets},
+            {"targets": targets, **({"graphical_predecessor": predecessor} if predecessor is not None else {})},
             snapshot,
         )
 
@@ -1329,6 +1332,12 @@ class RemoteOperations:
                         "targets",
                         "recipe_snapshot",
                     ],
+                    "graphical_predecessor": {
+                        "contract": "image-build-graphical-predecessor-composition-v1",
+                        "optional_image_argument": "graphical_predecessor",
+                        "base_selection_kind": "toolchain",
+                        "stages": ["graphics-xcb-core-image-v1", "graphics-x11-core-image-v1"],
+                    },
                     "bootstrap_arguments": [
                         "mode",
                         "selection",
