@@ -110,3 +110,42 @@ def test_image_mode_type_guard_preserved():
     source = getsource(ImageBuild._ensure)
     assert 'toolchain.manifest["kind"] != "toolchain"' in source
     assert 'ordinary builds require a promoted second-stage toolchain' in source
+
+
+def test_accepts_real_verified_fonts_generation_as_overlay(tmp_path):
+    pytest.importorskip("zog.build_record")
+    from test_graphical_generation_acceptance import _fixture
+    data = _fixture(tmp_path)
+    base = SimpleNamespace(
+        generation=data["context"]["input_generation_id"],
+        manifest={"kind": "toolchain", "stage": 2, "self_hosted": True},
+    )
+    verified = gc.validate(
+        data["builder"], base, data["output"].generation, list(gc.XCB)
+    )
+    assert verified["generation"] == data["output"].generation
+    assert verified["build_record"] == data["pointer"]["record"]
+    assert verified["stage"] == "fonts"
+    assert verified["manifest_sha256"].startswith("sha256:")
+
+
+def test_rejects_broken_canonical_predecessor_provenance(tmp_path):
+    pytest.importorskip("zog.build_record")
+    from test_graphical_generation_acceptance import _fixture
+    from zog.image_build.filesystem import write_json
+    data = _fixture(tmp_path)
+    base = SimpleNamespace(
+        generation=data["context"]["input_generation_id"],
+        manifest={"kind": "toolchain", "stage": 2, "self_hosted": True},
+    )
+    path = (
+        data["state"] / "image-build/generations"
+        / data["output"].generation / "manifest.json"
+    )
+    manifest = json.loads(path.read_text())
+    manifest["verification_execution"]["cleanup_complete"] = False
+    write_json(path, manifest)
+    with pytest.raises(ImageBuildError, match="verification"):
+        gc.validate(
+            data["builder"], base, data["output"].generation, list(gc.XCB)
+        )
