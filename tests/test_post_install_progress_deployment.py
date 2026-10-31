@@ -163,7 +163,7 @@ def test_certify_manage_broker_profile_is_single_application_and_read_only():
 def test_current_tree_matches_all_reviewed_security_critical_source_blobs(tmp_path):
     observed = reviewed_source_inventory(ROOT)
     assert set(observed) == set(MODULE_BLOBS)
-    assert len(observed) == 13
+    assert len(observed) == 14
     for module, row in observed.items():
         assert row["git_blob"] == MODULE_BLOBS[module]
         assert len(row["sha256"]) == 64
