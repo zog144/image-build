@@ -105,6 +105,10 @@ def _context(value):
         "monthly_pin_identity", "request_id", "pipeline_id",
         "predecessor_catalogue_sha256", "input_generation_id",
     }
+    if isinstance(value, dict) and value.get("task") in (
+        "graphics-xcb-core-image-v1", "graphics-x11-core-image-v1"
+    ):
+        fields.add("graphical_predecessor_id")
     if not isinstance(value, dict) or set(value) != fields:
         _fail("trusted attestation context fields differ")
     if value["schema"] != CONTEXT or value["task"] not in TASK_PLANS:
@@ -137,6 +141,12 @@ def _context(value):
         _fail("predecessor catalogue identity is invalid")
     if not _HEX64.fullmatch(value["input_generation_id"]):
         _fail("input generation identity is invalid")
+    if "graphical_predecessor_id" in value and (
+        not isinstance(value["graphical_predecessor_id"], str)
+        or not _HEX64.fullmatch(value["graphical_predecessor_id"])
+        or value["graphical_predecessor_id"] == value["input_generation_id"]
+    ):
+        _fail("graphical predecessor identity differs")
     return json.loads(json.dumps(value, sort_keys=True))
 
 
@@ -437,6 +447,8 @@ def verify(builder, *, repository_root, trusted_context):
             "selection": context["input_generation_id"],
             "targets": targets,
             "recipe_snapshot": snapshot_id,
+            **({"graphical_predecessor": context["graphical_predecessor_id"]}
+               if "graphical_predecessor_id" in context else {}),
         },
         "predecessor": snapshot_operation_id,
     }
@@ -463,7 +475,11 @@ def verify(builder, *, repository_root, trusted_context):
         or pipeline.get("status") != "complete"
         or pipeline.get("released") is not None
         or pipeline.get("error") is not None
-        or pipeline.get("arguments") != {"targets": targets}
+        or pipeline.get("arguments") != {
+            "targets": targets,
+            **({"graphical_predecessor": context["graphical_predecessor_id"]}
+               if "graphical_predecessor_id" in context else {}),
+        }
     ):
         _fail("durable producer pipeline is not a completed image pipeline")
     owner = pipeline.get("owner")
@@ -494,7 +510,7 @@ def verify(builder, *, repository_root, trusted_context):
     )
     if input_directory.is_symlink() or not input_directory.is_dir():
         _fail("selected input generation is unavailable")
-    read_selection(input_directory)
+    base_selection = read_selection(input_directory)
     if Path(pipeline.get("selection", "")) != input_directory.resolve():
         _fail("pipeline selected input generation differs")
 
@@ -534,6 +550,15 @@ def verify(builder, *, repository_root, trusted_context):
         _fail("generation catalogue and manifest differ")
     if manifest.get("kind") != "image":
         _fail("graphical predecessor output kind is not image")
+    expected_graphical_fields = {}
+    if "graphical_predecessor_id" in context:
+        from .graphical_composition import (
+            validate as validate_graphical, input_fields,
+        )
+        expected_graphical_fields = input_fields(validate_graphical(
+            builder, base_selection,
+            context["graphical_predecessor_id"], targets,
+        ))
     generation_inputs = manifest.get("inputs")
     if (
         not isinstance(generation_inputs, dict)
@@ -542,6 +567,9 @@ def verify(builder, *, repository_root, trusted_context):
         != context["input_generation_id"]
         or generation_inputs.get("targets") != targets
         or generation_inputs.get("recipes") != snapshot.manifest["packages"]
+        or any(generation_inputs.get(k) != v for k, v in expected_graphical_fields.items())
+        or ("graphical_predecessor" in generation_inputs)
+           != ("graphical_predecessor_id" in context)
     ):
         _fail("generation input ancestry differs from submitted pipeline")
 
