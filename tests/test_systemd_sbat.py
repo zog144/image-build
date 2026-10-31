@@ -56,15 +56,18 @@ def test_exact_systemd_source_uses_explicit_zog_sbat_without_os_release_autodete
     }
     assert all(value not in {"", "auto"} for value in values.values())
 
-    # The retained Boot A root is intentionally allowed to have no os-release.
-    # Upstream consults it only for empty/auto values, so every autodetected
-    # field must be independently explicit in the reviewed recipe.
-    absent_root = tmp_path / "root-without-os-release"
-    absent_root.mkdir()
-    assert not (absent_root / "etc/os-release").exists()
-    assert not (absent_root / "usr/lib/os-release").exists()
+    # SBAT remains explicit and independent of host/build os-release data.
+    # The resident install now also emits immutable Zog OS-tree metadata because
+    # systemd's initrd SwitchRoot safety check requires an os-release marker.
     for option in ("sbat-distro", "sbat-distro-summary", "sbat-distro-url"):
         assert values[option] not in {"", "auto"}
+    install = package.steps["install"][0][-1]
+    assert 'usr/lib/os-release' in package.outputs
+    assert 'etc/os-release' in package.outputs
+    assert 'NAME="Zog"' in install
+    assert 'ID=zog' in install
+    assert 'PRETTY_NAME="Zog"' in install
+    assert 'ln -s ../usr/lib/os-release "$DESTDIR/etc/os-release"' in install
 
     configure = package.steps["configure"][0][-1]
     meson_line = next(line for line in configure.splitlines() if line.startswith("meson setup "))

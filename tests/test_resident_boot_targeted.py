@@ -42,6 +42,12 @@ def test_targeted_plan_materializes_shadow_from_unchanged_catalogue_pin(tmp_path
         "pyelftools-build",
     )
     assert targeted["systemd-final"].runtime_dependencies == ()
+    assert "usr/lib/os-release" in packages["systemd-final"].outputs
+    assert "etc/os-release" in packages["systemd-final"].outputs
+    installed_check = (PROJECT / "bootstrap/boot-a-targeted-check.sh").read_text()
+    assert "test -f /usr/lib/os-release" in installed_check
+    assert "readlink /etc/os-release" in installed_check
+    assert "grep -Fx 'ID=zog' /usr/lib/os-release" in installed_check
     assert targeted["shadow-login"].build_dependencies == ()
     assert packages["pyelftools-build"].integration["scope"] == "build-only"
     fixture = packages["systemd-test-environment"]

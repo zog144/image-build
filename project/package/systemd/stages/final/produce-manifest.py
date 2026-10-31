@@ -12,5 +12,7 @@
               'usr/lib/systemd/system/getty@.service',
               'usr/lib/systemd/system/serial-getty@.service',
               'usr/lib/systemd/boot/efi/systemd-bootx64.efi',
+              'usr/lib/os-release',
+              'etc/os-release',
               'usr/include/systemd/sd-id128.h',
               'usr/include/libudev.h']}

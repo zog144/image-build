@@ -82,6 +82,12 @@
               '-c',
               'cd upstream/systemd-261.2\n'
               'DESTDIR="$DESTDIR" SYSTEMD_OFFLINE=1 meson install -C build --no-rebuild\n'
+              '# Immutable vendor OS identity is required by systemd initrd switch-root.\n'
+              'test ! -e "$DESTDIR/usr/lib/os-release" && test ! -L "$DESTDIR/usr/lib/os-release"\n'
+              'printf \'%s\\n\' \'NAME="Zog"\' \'ID=zog\' \'PRETTY_NAME="Zog"\' > "$DESTDIR/usr/lib/os-release"\n'
+              'chmod 0644 "$DESTDIR/usr/lib/os-release"\n'
+              'test ! -e "$DESTDIR/etc/os-release" && test ! -L "$DESTDIR/etc/os-release"\n'
+              'ln -s ../usr/lib/os-release "$DESTDIR/etc/os-release"\n'
               '# Zog resident HOST mountpoints are empty fail-closed integration layout.\n'
               'install -d -m 0000 "$DESTDIR/state" "$DESTDIR/applications"\n'
               'install -d "$DESTDIR/usr/share/licenses/systemd"\n'

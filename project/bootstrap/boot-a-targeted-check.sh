@@ -5,6 +5,12 @@ test -x /usr/bin/login
 test -f /usr/lib/systemd/system/getty@.service
 test -f /usr/lib/systemd/system/serial-getty@.service
 test -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi
+test -f /usr/lib/os-release
+test -L /etc/os-release
+test "$(readlink /etc/os-release)" = ../usr/lib/os-release
+grep -Fx 'NAME="Zog"' /usr/lib/os-release
+grep -Fx 'ID=zog' /usr/lib/os-release
+grep -Fx 'PRETTY_NAME="Zog"' /usr/lib/os-release
 test "$(stat -c '%a' /state)" = 0
 test "$(stat -c '%a' /applications)" = 0
 ! readelf -d /usr/bin/login | grep -q 'libpam'
