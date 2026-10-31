@@ -67,6 +67,7 @@ jobs:
             tests/test_graphical_application_catalogue.py \
             tests/test_graphics_recipes.py \
             tests/test_graphics_x11_core.py \
+            tests/test_graphical_generation_acceptance.py \
             tests/test_verification_environment.py \
             tests/test_licensing.py \
             tests/test_host_fixture.py \
