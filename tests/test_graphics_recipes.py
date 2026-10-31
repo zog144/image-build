@@ -91,17 +91,11 @@ def test_xcb_i3_support_phase1_is_consumer_driven_and_ordered(tmp_path):
         assert package["status"] == "catalogue-only"
 
 
-def test_desktop_gl_research_covers_xcb_cursor_dependency_closure():
-    workflow = (
-        ROOT.parent / ".github/workflows/graphics-recipe-research.yml"
-    ).read_text()
-    desktop = workflow.split("  desktop-and-gl:", 1)[1]
-    for name in (
-        "xcb-util-image",
-        "xcb-util-renderutil",
-        "xcb-util-cursor",
-        "xcb-util-xrm",
-    ):
-        assert name in desktop
-    assert desktop.index("xcb-util-image") < desktop.index("xcb-util-cursor")
-    assert desktop.index("xcb-util-renderutil") < desktop.index("xcb-util-cursor")
+def test_xcb_i3_phase1_does_not_silently_expand_to_unreviewed_cursor_stack():
+    plan = literal(ROOT / "bootstrap/graphics-xcb-i3-support.py")
+    assert "xcb-util-image-final" in plan["targets"]
+    assert "xcb-util-xrm-final" in plan["targets"]
+    assert "xcb-util-renderutil-final" not in plan["targets"]
+    assert "xcb-util-cursor-final" not in plan["targets"]
+    assert not (ROOT / "package/xcb-util-renderutil/stages/final").exists()
+    assert not (ROOT / "package/xcb-util-cursor/stages/final").exists()

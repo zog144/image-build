@@ -48,6 +48,36 @@ GRAPHICS_TARGETS = [
     "xcb-util-xrm-final",
 ]
 TEST_PIN_DATE = "2000-01-01"
+CURRENT_PIN_DATE = "2026-10-01"
+FOUNDATION_TASKS = {
+    "graphics-fonts-image-v1": [
+        {"id": "libpng-final", "project": "libpng", "recipe": "libpng/stages/final"},
+        {"id": "freetype-final", "project": "freetype", "recipe": "freetype/stages/final"},
+        {"id": "fontconfig-final", "project": "fontconfig", "recipe": "fontconfig/stages/final"},
+    ],
+    "graphics-xcb-core-image-v1": [
+        {"id": "check-final", "project": "check", "recipe": "check/stages/final"},
+        {"id": "libevdev-final", "project": "libevdev", "recipe": "libevdev/stages/final"},
+        {"id": "python-libevdev-final", "project": "python-libevdev", "recipe": "python-libevdev/stages/final"},
+        {"id": "xorgproto-final", "project": "xorgproto", "recipe": "xorgproto/stages/final"},
+        {"id": "libXau-final", "project": "libXau", "recipe": "libXau/stages/final"},
+        {"id": "libXdmcp-final", "project": "libXdmcp", "recipe": "libXdmcp/stages/final"},
+        {"id": "xcb-proto-final", "project": "xcb-proto", "recipe": "xcb-proto/stages/final"},
+        {"id": "libxcb-final", "project": "libxcb", "recipe": "libxcb/stages/final"},
+    ],
+    "graphics-x11-core-image-v1": [
+        {"id": "xtrans-final", "project": "xtrans", "recipe": "xtrans/stages/final"},
+        {"id": "libX11-final", "project": "libX11", "recipe": "libX11/stages/final"},
+        {"id": "libXext-final", "project": "libXext", "recipe": "libXext/stages/final"},
+        {"id": "libXfixes-final", "project": "libXfixes", "recipe": "libXfixes/stages/final"},
+        {"id": "libXi-final", "project": "libXi", "recipe": "libXi/stages/final"},
+        {"id": "libXtst-final", "project": "libXtst", "recipe": "libXtst/stages/final"},
+        {"id": "libXv-final", "project": "libXv", "recipe": "libXv/stages/final"},
+        {"id": "libxkbfile-final", "project": "libxkbfile", "recipe": "libxkbfile/stages/final"},
+        {"id": "libfontenc-final", "project": "libfontenc", "recipe": "libfontenc/stages/final"},
+        {"id": "libXfont2-final", "project": "libXfont2", "recipe": "libXfont2/stages/final"},
+    ],
+}
 
 
 def ephemeral_catalogue(tmp_path):
@@ -287,6 +317,32 @@ def test_real_graphics_snapshot_prepares_durable_generic_pipeline_without_execut
     assert replay["pipeline_id"] == submitted["pipeline_id"]
     assert replay["recipe_identity"] == snapshot
     assert resume_calls == [submitted["pipeline_id"], submitted["pipeline_id"]]
+
+
+def test_graphics_foundation_tasks_snapshot_real_october_sources_without_execution(tmp_path):
+    builder = ImageBuild(
+        package_dir=REPOSITORY / "project/package",
+        state_dir=tmp_path / "state",
+    )
+    remote = adapter(builder)
+    identities = set()
+    for index, (task, entries) in enumerate(FOUNDATION_TASKS.items()):
+        result = remote.execute(
+            request(
+                f"foundation-snapshot-{index}",
+                "recipes.snapshot",
+                {"entries": list(reversed(entries)), "pin_date": CURRENT_PIN_DATE},
+            )
+        )
+        assert result["status"] == "completed", (task, result)
+        assert result["uncertainty"] is False
+        assert result["artifacts"]["contract"] == "image-build-recipe-snapshot-v1"
+        assert result["artifacts"]["pin_date"] == CURRENT_PIN_DATE
+        assert set(result["artifacts"]["packages"]) == {
+            entry["id"] for entry in entries
+        }
+        identities.add(result["recipe_identity"])
+    assert len(identities) == len(FOUNDATION_TASKS)
 
 
 def test_toolchain_specification_is_source_bound_remote_discovery(tmp_path):
