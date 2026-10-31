@@ -7,9 +7,13 @@ pipeline, generation manifest, build-record closure and installed verification.
 """
 from __future__ import annotations
 
+import argparse
+import ast
 import hashlib
 import json
 import os
+import sys
+from types import SimpleNamespace
 from pathlib import Path
 import re
 import stat
@@ -638,3 +642,106 @@ def attest_native(builder, *, repository_root, trusted_context):
         repository_root=repository_root,
         trusted_context=trusted_context,
     )
+
+
+def _native_cli_pin(
+    repository_root, pin_path, *, source_repository, source_revision,
+    expected_digest
+):
+    repository_root = Path(repository_root).resolve()
+    pin_path = Path(pin_path)
+    if not pin_path.is_absolute():
+        pin_path = repository_root / pin_path
+    try:
+        resolved = pin_path.resolve(strict=True)
+        relative = resolved.relative_to(repository_root).as_posix()
+    except (OSError, ValueError) as error:
+        raise ImageBuildError(
+            "graphical predecessor not accepted: provenance pin is outside source"
+        ) from error
+    if pin_path.is_symlink() or not pin_path.is_file():
+        _fail("provenance pin must be a regular installed source file")
+    raw = pin_path.read_bytes()
+    if len(raw) > 1024 * 1024 or _sha256(raw) != expected_digest:
+        _fail("installed provenance pin bytes differ")
+    try:
+        parsed = ast.literal_eval(raw.decode("utf-8"))
+        month = parsed["date"]
+    except (UnicodeError, ValueError, SyntaxError, KeyError, TypeError) as error:
+        raise ImageBuildError(
+            "graphical predecessor not accepted: invalid installed provenance pin"
+        ) from error
+    if not isinstance(month, str):
+        _fail("installed provenance pin has no canonical month")
+    return {
+        "month": month,
+        "repository": source_repository,
+        "revision": source_revision,
+        "path": relative,
+        "digest": expected_digest,
+    }
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="python -m zog.image_build.graphical_generation_acceptance"
+    )
+    parser.add_argument("--repository-root", required=True)
+    parser.add_argument("--state-dir", required=True)
+    parser.add_argument("--source-repository", required=True)
+    parser.add_argument("--source-revision", required=True)
+    parser.add_argument("--provenance-host-id", required=True)
+    parser.add_argument("--provenance-project-id", required=True)
+    parser.add_argument("--provenance-pin", required=True)
+    parser.add_argument("--expected-pin-digest", required=True)
+    args = parser.parse_args(argv)
+    if not _HEX40.fullmatch(args.source_revision):
+        raise SystemExit("source revision must be an exact 40-hex commit")
+    if not _SHA.fullmatch(args.expected_pin_digest):
+        raise SystemExit("expected pin digest must be SHA-256")
+    raw_context = sys.stdin.buffer.read(65537)
+    if len(raw_context) > 65536:
+        raise SystemExit("trusted graphical attestation context exceeds 64 KiB")
+    try:
+        context = json.loads(
+            raw_context.decode("utf-8"),
+            object_pairs_hook=_pairs,
+            parse_constant=lambda value: (_ for _ in ()).throw(
+                ImageBuildError("non-finite JSON number: " + value)
+            ),
+        )
+    except (UnicodeError, ValueError, TypeError, ImageBuildError) as error:
+        raise SystemExit("invalid trusted graphical attestation context") from error
+    pin = _native_cli_pin(
+        args.repository_root,
+        args.provenance_pin,
+        source_repository=args.source_repository,
+        source_revision=args.source_revision,
+        expected_digest=args.expected_pin_digest,
+    )
+    from .provenance import Provenance
+    provenance = Provenance.open_read_only(
+        args.state_dir,
+        host_id=args.provenance_host_id,
+        project_id=args.provenance_project_id,
+        pin=pin,
+    )
+    reader = SimpleNamespace(
+        state=Path(args.state_dir).resolve(),
+        provenance=provenance,
+    )
+    evidence = attest_native(
+        reader,
+        repository_root=Path(args.repository_root).resolve(),
+        trusted_context=context,
+    )
+    sys.stdout.buffer.write(
+        json.dumps(
+            evidence, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=True, allow_nan=False
+        ).encode("ascii") + b"\n"
+    )
+
+
+if __name__ == "__main__":
+    main()

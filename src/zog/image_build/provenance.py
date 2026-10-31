@@ -62,6 +62,58 @@ class Provenance:
         return result
 
     @classmethod
+    def open_read_only(
+        cls, state_dir, *, host_id, project_id, pin, retry_of=None,
+        generation_contract="rootfs-v1"
+    ):
+        """Open an existing canonical provenance store without creating/repairing it."""
+        self = cls.__new__(cls)
+        self.state = Path(state_dir).resolve()
+        self.root = self.state / "image-build/build-record"
+        self.host_id, self.project_id = host_id, project_id
+        if not all(
+            isinstance(value, str) and value and len(value) <= 256
+            for value in (host_id, project_id)
+        ):
+            raise ImageBuildError("provenance requires explicit host/project identities")
+        if generation_contract not in (None, "rootfs-v1"):
+            raise ImageBuildError("unsupported generation provenance contract")
+        self.generation_contract = generation_contract
+        self.pin = json.loads(json.dumps(pin))
+        self.retry_of = dict(retry_of or {})
+        self.library = _library()
+        self.library.make_record(
+            "source-selection",
+            dict(
+                package="validation",
+                pin=self.pin,
+                upstream=[{"repository": "unknown", "revision": None}],
+                archives=[
+                    dict(
+                        name="validation",
+                        digest=self.pin.get("digest"),
+                        size=0,
+                    )
+                ],
+            ),
+            gaps=["validation only"],
+        )
+        from zog.build_record.model import digest
+        for key, value in self.retry_of.items():
+            if not isinstance(key, str) or not key:
+                raise ImageBuildError("invalid retry package")
+            digest(value)
+        records = self.root / "records"
+        artifacts = self.root / "artifacts"
+        for directory in (self.state, self.root, records, artifacts):
+            if directory.is_symlink() or not directory.is_dir():
+                raise ImageBuildError(
+                    "read-only provenance store is unavailable or unsafe"
+                )
+        self.store = self.library.Store(records)
+        return self
+
+    @classmethod
     def from_configuration(cls, state_dir, config):
         base = {'schema','host_id','project_id','pin','retry_of'}
         if type(config.get('schema')) is not int:

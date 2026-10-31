@@ -412,3 +412,46 @@ def test_native_wrapper_refuses_nonroot_before_read(monkeypatch):
             None, repository_root=Path("/no-read"),
             trusted_context={},
         )
+
+
+def test_read_only_provenance_open_never_creates_missing_store(tmp_path):
+    pin = {
+        "month": "2026-10-01",
+        "repository": "zog144/image-build",
+        "revision": SOURCE,
+        "path": "project/pins/2026-10-01/commit-pin.py",
+        "digest": "sha256:" + "a" * 64,
+    }
+    state = tmp_path / "missing-state"
+    with pytest.raises(Exception, match="read-only provenance store"):
+        Provenance.open_read_only(
+            state, host_id=HOST, project_id=PROJECT, pin=pin
+        )
+    assert not state.exists()
+
+
+def test_read_only_provenance_open_preserves_existing_store(tmp_path):
+    data = _fixture(tmp_path)
+    before = {
+        path: (path.stat().st_mode, path.read_bytes())
+        for path in data["state"].rglob("*")
+        if path.is_file()
+    }
+    pin_path = REPOSITORY / "project/pins/2026-10-01/commit-pin.py"
+    pin = {
+        "month": "2026-10-01",
+        "repository": "zog144/image-build",
+        "revision": SOURCE,
+        "path": "project/pins/2026-10-01/commit-pin.py",
+        "digest": "sha256:" + hashlib.sha256(pin_path.read_bytes()).hexdigest(),
+    }
+    opened = Provenance.open_read_only(
+        data["state"], host_id=HOST, project_id=PROJECT, pin=pin
+    )
+    assert opened.configuration()["pin"] == pin
+    after = {
+        path: (path.stat().st_mode, path.read_bytes())
+        for path in data["state"].rglob("*")
+        if path.is_file()
+    }
+    assert after == before
