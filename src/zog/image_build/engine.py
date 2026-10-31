@@ -294,6 +294,7 @@ class ImageBuild(PipelineMixin):
 
     def _build_set(self, packages, targets, toolchain, attempt, *, graphical_predecessor=None):
         from .cleanup import package_workspace
+        from .graphical_composition import input_fields
         built = {}
         for name in order(packages, targets):
             package = packages[name]
@@ -307,8 +308,7 @@ class ImageBuild(PipelineMixin):
                 "package": package.fingerprint,
                 "toolchain": toolchain.generation,
                 "dependencies": {n: built[n]["identity"] for n in dependencies},
-                **(__import__("zog.image_build.graphical_composition", fromlist=["input_fields"]).input_fields(graphical_predecessor)
-                   if graphical_predecessor is not None else {}),
+                **input_fields(graphical_predecessor),
                 "architecture": platform.machine(),
             }
             replacements = {n: self.dependency_replacements[n]['identity'] for n in dependencies if n in self.dependency_replacements}

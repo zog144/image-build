@@ -69,7 +69,9 @@ MODULE_BLOBS = {
     "zog.image_build.metadata":
         "79238579b11e87070886b2fd0125a186a94fd29e",
     "zog.image_build.engine":
-        "c65a948ae027850247dee6da8999f121ee3397a4",
+        "84169bebaa81599a9297d688b4129043a5019388",
+    "zog.image_build.graphical_composition":
+        "baceddf87fa82ebd89f3995622a1e1cd4bdf23c0",
     "zog.image_build.rootfs_compatibility":
         "3adbef4cdcef29a89bdc309eab30aeb40be167e2",
     "zog.image_build.artifact_observations":
