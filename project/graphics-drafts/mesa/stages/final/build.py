@@ -7,7 +7,7 @@
       "-o",
       "pipefail",
       "-c",
-      "command -v meson; command -v ninja; command -v llvm-config\nllvm-config --version | grep -Fx 21.1.6\nllvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86\npkg-config --exists x11 xext xcb libdrm expat zlib\nmeson setup build-mesa upstream/mesa-25.3.0 --prefix=/usr --libdir=lib --buildtype=release -Dplatforms=x11 -Dgallium-drivers=swrast -Dvulkan-drivers= -Dglx=dri -Ddri3=disabled -Degl=disabled -Dgbm=disabled -Dglvnd=disabled -Dllvm=enabled -Dshared-llvm=enabled -Dopengl=True -Dbuild-tests=False -Dallow-fallback-for= -Dauto_features=disabled"
+      "command -v meson; command -v ninja; command -v llvm-config\nllvm-config --version | grep -Fx 21.1.6\nllvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86\npkg-config --exists x11 xext xcb libdrm expat zlib\nmeson setup build-mesa upstream/mesa-25.3.0 --prefix=/usr --libdir=lib --buildtype=release -Dplatforms=x11 -Dgallium-drivers=swrast -Dvulkan-drivers= -Dglx=dri -Degl=disabled -Dgbm=disabled -Dglvnd=disabled -Dllvm=enabled -Dshared-llvm=enabled -Dopengl=True -Dbuild-tests=False -Dallow-fallback-for= -Dauto_features=disabled"
     ]
   ],
   "build": [

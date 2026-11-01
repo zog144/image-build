@@ -82,11 +82,12 @@ def test_llvm_jit_and_mesa_software_glx_feature_contract():
     assert "llvm-config --version" in mc
     for option in (
         "-Dplatforms=x11", "-Dgallium-drivers=swrast", "-Dglx=dri",
-        "-Dllvm=enabled", "-Dshared-llvm=enabled", "-Ddri3=disabled",
+        "-Dllvm=enabled", "-Dshared-llvm=enabled",
         "-Dvulkan-drivers=", "-Dgbm=disabled", "-Degl=disabled",
         "-Dglvnd=disabled", "-Dauto_features=disabled",
     ):
         assert option in mc
+    assert "-Ddri3=" not in mc  # removed from Mesa 25.3.0 Meson options
     assert "-Dgallium-drivers=auto" not in mc
     assert "radeonsi" not in mc and "iris" not in mc
     assert "/dev/dri" not in mc
