@@ -1,0 +1,25 @@
+name: Verify pinned graphics source archives
+on:
+  push:
+    branches: [regular/mesa-first-workspace-software-gl]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mesa-upstream-archive-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Exact candidate checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Inspect exact archives, options and rights notices (no build)
+        run: python tools/inspect_graphics_archives.py --output "${{ runner.temp }}/mesa-archive-evidence.json"
