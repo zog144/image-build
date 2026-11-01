@@ -45,3 +45,9 @@ high-core-count instance or hardware GPU test.
 The core userspace libdrm 2.4.128 tarball is pinned to upstream release SHA-256 `3bb35db8700c2a0b569f2c6729a53f5495786856b310854c8de57782a22bddac`; the draft disables vendor KMS drivers, tests, udev integration and device access. This does **not** grant `/dev/dri`. Mako 1.4.3 and PyYAML 6.0.3 source sdists are pinned from PyPI and listed in the supplementary review ledger only. Their full build-only installation is still held pending MarkupSafe and PEP-517 backend provenance (Mako), PyYAML's pure-Python/Cython build policy, and exact import checks. All new packages remain outside `project/package/`.
 
 Mesa draft now uses lowercase Meson booleans and disables fallback subproject acquisition. The GLX/driver install manifest and demonstrated LLVM 21.1.6 shared+RTTI ABI are required native evidence, not asserted source successes. `libdrm` runtime ELF dependencies must be observed from actual immutable Mesa output; it must not be included speculatively or omitted after observation.
+
+## Exact archive inspection — source-only evidence
+
+GitHub Actions [41310820294](https://github.com/zog144/image-build/actions/runs/41310820294) verified all six raw source archives against their frozen release SHA-256 values, then hashed selected archive-internal notices or primary source rights headers without compiling or installing software. The SPDX expressions remain subject to component-by-component review. The verified member paths and digests now appear in each graphics draft's `license.py` or supplementary `python-build-inputs.py` record. **Exact bytes hashed does not mean all file rights or distribution grants are approved.**
+
+The supported first-Workspace profile still requires source-level Meson option and GLX dependency closure, exact built filename/ELF verification and a native installed smoke before canonical admission. No `/dev/dri`, large-core performance benchmark or hardware driver is needed.

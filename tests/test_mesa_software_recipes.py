@@ -43,9 +43,9 @@ def test_exact_archive_and_supplementary_pin_agree_without_boot_input_mutation(n
     assert inputs[0]["sha256"] == upstream["sha256"] == HASHES[name]
     assert inputs[0]["url"] == upstream["release_url"]
     assert upstream["version"] == notice["version"] == source_pin["packages"][name]["version"]
-    assert notice["status"] == "notice-evidence-pending"
+    assert notice["status"] == "archive-member-hashes-verified-rights-review-pending"
     assert notice["source"] == {"url": upstream["release_url"], "sha256": HASHES[name]}
-    assert notice["evidence"] == []
+    assert notice["evidence"] and all(len(item["sha256"]) == 64 for item in notice["evidence"])
     assert notice["required_original_notice_paths"]
     assert notice["components"][0]["status"] == "unresolved"
     # A source draft is not discoverable as a compiled/admitted package.
