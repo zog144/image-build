@@ -37,7 +37,8 @@ def test_pure_python_pyyaml_source_transform_is_explicit():
     m=lit(DRAFT/"mako/stages/final/build.py")
     y=lit(DRAFT/"pyyaml/stages/final/build.py")
     for item in (m,y):
-        assert "verify_mesa_toolchain.py --attestation" in item["build"][0][-1]
+        assert "ZOG_GRAPHICS_TOOLCHAIN_VERIFIER" in item["build"][0][-1]
+        assert "--attestation" in item["build"][0][-1]
         assert item["environment"]["PIP_NO_INDEX"]=="1"
         assert item["environment"]["PYTHONNOUSERSITE"]=="1"
     assert "setuptools.build_meta" in m["build"][0][-1]
@@ -51,6 +52,7 @@ def test_pure_python_pyyaml_source_transform_is_explicit():
     assert "none-any.whl" in y["test"][0][-1]
     assert "--phase pyyaml" in y["prepare"][0][-1]
     assert "--phase mesa" in lit(DRAFT/"mesa/stages/final/build.py")["configure"][0][-1]
+    assert "ZOG_GRAPHICS_TOOLCHAIN_VERIFIER" in lit(DRAFT/"mesa/stages/final/build.py")["configure"][0][-1]
 
 def load():
     spec=importlib.util.spec_from_file_location("mesa_gate",ROOT/"tools/verify_mesa_toolchain.py")

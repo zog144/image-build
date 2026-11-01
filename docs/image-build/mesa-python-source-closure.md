@@ -23,7 +23,10 @@ wheel. This is a source transformation to review, **not an unmodified upstream b
 Python module/search paths, `LD_LIBRARY_PATH`, pkgconf provider directories
 and include/library flags. It verifies installed executable bytes and import origins
 against a protected receipt. Crucially, it **does not issue or authenticate** that
-receipt. The root-control/host-install native authority must bind the exact
+receipt. The root-control/host-install native authority must install the exact source-pinned
+verifier itself under an admitted immutable Zog software root, supplying its
+protected path in `ZOG_GRAPHICS_TOOLCHAIN_VERIFIER` and requiring that its path
+and SHA-256 match the protected receipt. The native authority must bind the exact
 software-root generation, signer and original source provenance before it can
 constitute accepted evidence. Python `-I` checks are only as trustworthy as
 that protected authority and its root mount identity.

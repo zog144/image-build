@@ -62,6 +62,17 @@ def check_files(data, phase="mesa"):
             raise IsolationError("Host pkgconfig directory")
     if not inside(data["sysroot"], roots):
         raise IsolationError("Host sysroot")
+    verifier = data.get("verifier", {})
+    self_path = Path(__file__).resolve(strict=True)
+    if verifier.get("path") is None or Path(verifier["path"]).resolve(strict=True) != self_path:
+        raise IsolationError("native verifier source not pinned to installed path")
+    if not inside(self_path, roots):
+        raise IsolationError("native verifier outside approved Zog roots")
+    digest = verifier.get("sha256", "")
+    if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+        raise IsolationError("invalid native verifier hash pin")
+    if hashlib.sha256(self_path.read_bytes()).hexdigest() != digest:
+        raise IsolationError("wrong protected verifier source bytes")
     for name, info in data["tools"].items():
         digest = info["sha256"]
         if len(digest) != 64 or any(x not in "0123456789abcdef" for x in digest):
