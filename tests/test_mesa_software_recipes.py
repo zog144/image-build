@@ -27,7 +27,7 @@ def stage(name, part):
 
 @pytest.mark.parametrize("name", NAMES)
 def test_exact_archive_and_supplementary_pin_agree_without_boot_input_mutation(name):
-    package = PROJECT / "package" / name
+    package = PROJECT / "graphics-drafts" / name
     status = lit(package / "package.py")
     upstream = lit(package / "upstream.py")
     inputs = stage(name, "sources.py")
