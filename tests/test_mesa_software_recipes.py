@@ -96,6 +96,7 @@ def test_llvm_jit_and_mesa_software_glx_feature_contract():
     assert "radeonsi" not in mc and "iris" not in mc
     assert "/dev/dri" not in mc
     assert "libdrm" in mc
+    assert "pkg-config --exists x11 xext x11-xcb xcb xcb-randr xcb-glx xcb-shm xcb-dri3 xcb-present xcb-sync xcb-xfixes xshmfence xxf86vm libdrm expat zlib" in mc
 
 
 def test_demo_does_not_depend_on_host_binaries_or_broad_gpu_suite():
