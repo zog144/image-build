@@ -109,6 +109,10 @@ def roots_from(envelope):
         roots[key] = path.resolve(strict=True)
         require(roots[key] != Path("/"), "unbounded native root: " + key)
     require(len(set(roots.values())) == len(roots), "overlapping identical roots")
+    values = list(roots.values())
+    require(not any(a in b.parents or b in a.parents
+                    for i, a in enumerate(values) for b in values[i + 1:]),
+            "overlapping native capture roots")
     return roots
 
 
@@ -116,6 +120,14 @@ def compiler_flags(argv, roots, directory):
     require(isinstance(argv, list) and all(isinstance(x, str) and x for x in argv),
             "invalid compiler argv")
     require(not any(x.startswith("@") for x in argv), "response file needs independent expansion")
+    # This source verifier cannot inspect compiler driver plugins, alternate
+    # sysroots, injected forced headers or opaque option forwarding. Hold them.
+    forbidden = ("-include", "-imacros", "-isysroot", "--sysroot",
+                 "-sysroot", "-resource-dir", "-fmodule-", "-fplugin",
+                 "-specs", "-B", "-Xclang", "-Xlinker", "-Wl,",
+                 "-plugin", "-load", "-T", "-wrapper")
+    require(not any(x.startswith(forbidden) for x in argv),
+            "unsupported implicit or linker/compiler input")
     prefixes = ("-I", "-L", "-isystem", "-iquote", "-idirafter")
     i = 0
     while i < len(argv):
@@ -214,6 +226,17 @@ def commands_and_objects(sidecars, roots, envelope):
         require(key in mapped and key not in seen, "missing or duplicated source-object mapping")
         seen.add(key)
     require(seen == set(mapped), "unobserved mapped compiler output")
+    # Reported-to-reported agreement alone is insufficient: an omitted .o
+    # could contain unreviewed code and later enter a shared library.
+    physical = set()
+    for file in roots["build"].rglob("*"):
+        if file.is_symlink():
+            require(within_if_exists(file, roots["build"]),
+                    "build object symlink escapes capture")
+        if file.is_file() and file.suffix in (".o", ".obj"):
+            physical.add(str(within(file, roots["build"])))
+    recorded = {pair[1] for pair in mapped}
+    require(physical == recorded, "unreported or missing build object")
     return len(seen)
 
 
@@ -278,6 +301,8 @@ def elf_dynamic(path):
             loads.append((addr, off, size))
         if typ == 2:
             dynamic = (off, size)
+        if typ == 3:
+            raise EvidenceError("PT_INTERP requires independently attested loader provenance")
     require(dynamic is not None and dynamic[1] % 16 == 0, "ELF lacks PT_DYNAMIC")
     entries = []
     for offset in range(dynamic[0], dynamic[0] + dynamic[1], 16):
@@ -287,6 +312,10 @@ def elf_dynamic(path):
         entries.append((tag, val))
     else:
         raise EvidenceError("unterminated ELF dynamic table")
+    # Extra implicit loader inputs are not captured by DT_NEEDED.
+    unsupported = {0x7fffffff, 0x7ffffffd, 0x6ffffefb, 0x6ffffefc}
+    require(not any(t in unsupported for t, _ in entries),
+            "unsupported ELF audit/filter dependency")
     values = {t: v for t, v in entries}
     require(5 in values and 10 in values and values[10] <= len(data),
             "missing ELF dynamic string table")
@@ -301,6 +330,9 @@ def elf_dynamic(path):
         require(end >= start, "ELF dynamic string unterminated")
         return data[start:end].decode("utf-8")
     needed = [string(v) for t, v in entries if t == 1]
+    require(all(n and n not in (".", "..") and
+                "/" not in n and "\\\\" not in n for n in needed),
+            "DT_NEEDED contains a path or invalid library name")
     return {"needed": needed,
             "soname": string(values[14]) if 14 in values else None,
             "rpath": string(values[15]).split(":") if 15 in values else [],
@@ -345,11 +377,28 @@ def elf_and_libraries(sidecars, roots, inventory):
         require(set(row) == {"consumer", "needed", "root", "path", "sha256"},
                 "incomplete library provenance record")
         key = (row["consumer"], row["needed"])
+        require(relative(row["path"]).name == row["needed"],
+                "resolved library filename differs from DT_NEEDED")
         require(key in edges and key not in mapped, "unmatched/duplicate library resolution")
         mapped.add(key)
         require(row["root"] in ("destdir", "software"), "Host library origin")
         file_hash(roots[row["root"]], row["path"], row["sha256"])
         target = actual_file(roots[row["root"]], row["path"])
+        # This is only a conservative modeled lookup, NOT proof of what the
+        # authenticated runtime loader actually chose.
+        consumer = row["consumer"]
+        report = next(e for e in binaries if e["path"] == consumer)
+        root = roots[row["root"]]
+        base = roots["destdir"] / relative(consumer)
+        directories = [roots[k] / part for k in ("software", "destdir")
+                       for part in ("lib", "lib64", "usr/lib", "usr/lib64")]
+        if row["root"] == "destdir":
+            for token in report["rpath"] + report["runpath"]:
+                if token == "$ORIGIN" or token.startswith("$ORIGIN/"):
+                    directories.append(base.parent / token.replace("$ORIGIN", ".", 1))
+        require(any(within_if_exists(target.parent, root) and
+                    target.parent == d.resolve(strict=False) for d in directories),
+                "library provider outside modeled loader search")
         require(elf_dynamic(target)["soname"] == row["needed"],
                 "resolved library SONAME mismatch")
     require(mapped == edges, "DT_NEEDED with no library byte provenance")
