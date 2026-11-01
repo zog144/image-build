@@ -1,0 +1,95 @@
+{
+  "schema": "mesa-software-glx-selected-rights-v1",
+  "status": "independent-rights-and-native-output-NO-GO",
+  "source_revision": "0254e0b3044d361a111c402c408fe33bdffd7d38",
+  "scope": {
+    "enabled": [
+      "LLVM X86 shared RTTI",
+      "Mesa Gallium swrast llvmpipe GLX/X11",
+      "libdrm common userspace",
+      "libxshmfence",
+      "libXxf86vm",
+      "mesa-demos glxgears/glxinfo"
+    ],
+    "excluded": [
+      "Vulkan",
+      "Wayland",
+      "hardware GPU DRM/KMS drivers",
+      "EGL",
+      "GBM",
+      "other mesa-demos"
+    ]
+  },
+  "components": {
+    "llvm": {
+      "verified_notice_members": [
+        "LICENSE.TXT",
+        "include/llvm/Support/LICENSE.TXT",
+        "lib/Support/BLAKE3/LICENSE"
+      ],
+      "outstanding": [
+        "compiled/bundled BLAKE3 linkage",
+        "generated-code license origins",
+        "install-time notices"
+      ]
+    },
+    "mesa": {
+      "verified_notice_members": [
+        "docs/license.rst",
+        "src/mesa/glapi/glapi/gen/license.py",
+        "src/imgui/LICENSE.txt",
+        "src/vulkan/runtime/radix_sort/LICENSE"
+      ],
+      "outstanding": [
+        "selected GLAPI and llvmpipe source copyrights",
+        "prove Vulkan/imgui excluded from built bytes",
+        "generated shader/JIT material"
+      ]
+    },
+    "libdrm": {
+      "verified_notice_members": [
+        "xf86drm.c",
+        "xf86drm.h"
+      ],
+      "outstanding": [
+        "all common library sources",
+        "prove GPU KMS and udev excluded from built bytes"
+      ]
+    },
+    "libxshmfence": {
+      "verified_notice_members": [
+        "COPYING"
+      ],
+      "outstanding": [
+        "selected compiled files and notice delivery"
+      ]
+    },
+    "libXxf86vm": {
+      "verified_notice_members": [
+        "COPYING"
+      ],
+      "outstanding": [
+        "compiled files, xorgproto inherited header rights"
+      ]
+    },
+    "mesa-demos": {
+      "verified_notice_members": [
+        "src/xdemos/glxgears.c",
+        "src/xdemos/glxinfo.c"
+      ],
+      "outstanding": [
+        "exact public-domain versus copyright attribution",
+        "only selected linked source objects"
+      ]
+    }
+  },
+  "required_evidence": [
+    "original archive notice inventory plus SHA-256",
+    "real native source-object/compile_commands manifest",
+    "exact DESTDIR output and dynamic linking inventory",
+    "delivered license/notice text and component-to-output map",
+    "genuinely independent reviewer authorization"
+  ],
+  "rights_approved": false,
+  "canonical_admitted": false
+}
