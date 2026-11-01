@@ -10,6 +10,7 @@ import ast
 import hashlib
 import io
 import json
+import re
 import os
 from pathlib import Path, PurePosixPath
 import tarfile
@@ -76,6 +77,7 @@ def inspect_one(name, entry, output, fetch=True):
         if digest != source["sha256"]:
             raise ValueError("archive SHA-256 differs for " + name)
         record = {"source_sha256": digest, "url": url, "members": {}}
+        option_names = set()
         with tarfile.open(archive, "r:*") as tar:
             for member in tar:
                 path = check_member(member)
@@ -95,6 +97,10 @@ def inspect_one(name, entry, output, fetch=True):
                     "sha256": hashlib.sha256(data).hexdigest(),
                     "size": member.size,
                 }
+                relative = "/".join(PurePosixPath(member.name).parts[1:])
+                if relative in ("meson.options", "meson_options.txt"):
+                    option_names = set(re.findall(
+                        "option\\s*\\(\\s*[\u0027\"]([^\u0027\"]+)", data.decode("utf-8")))
         notices = {
             path: value for path, value in record["members"].items()
             if any(token in path.rsplit("/", 1)[-1].lower()
@@ -113,11 +119,24 @@ def inspect_one(name, entry, output, fetch=True):
                 raise ValueError("libdrm source rights headers are missing")
         elif not notices:
             raise ValueError("no inspectable upstream notice: " + name)
+        if name in ("mesa", "mesa-demos", "libdrm"):
+            draft = ast.literal_eval((ROOT / "project/graphics-drafts" / name /
+                                      "stages/final/build.py").read_text())
+            arguments = draft["configure"][0][-1]
+            required = set(re.findall(r"-D([a-z][a-z0-9_-]*)=", arguments))
+            required.discard("auto_features")
+            missing = sorted(required - option_names)
+            if missing:
+                raise ValueError("unrecognized exact-release Meson option for " +
+                                 name + ": " + ", ".join(missing))
+            record["meson_options"] = sorted(option_names)
+            record["profile_options_checked"] = sorted(required)
         output[name] = record
         print(json.dumps({
             "package": name,
             "source_sha256": digest,
             "selected_notices": notices,
+            "profile_options_checked": record.get("profile_options_checked", []),
             "top_level_options": {
                 p: v for p, v in record["members"].items()
                 if p.endswith("/meson.options") or
