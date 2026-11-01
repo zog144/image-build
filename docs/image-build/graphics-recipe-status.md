@@ -129,7 +129,36 @@ before authoring.  The profile should deliberately decide:
 Required source capabilities still include X11, Xau, Xdmcp, xkbfile, xfont2,
 Pixman, OpenGL/GLX headers, libjpeg-turbo/TurboJPEG and XKB data.
 
-### E. VirtualGL
+### E. Mesa software OpenGL — first Workspace prerequisite (2026-10-31)
+
+The first interactive TurboVNC Workspace requires source-built Mesa
+software OpenGL. Treat it as a required predecessor of **Workspace runtime
+acceptance** rather than as a Basic/rootfs or hardware-GPU prerequisite.
+
+- Review and pin Mesa's exact upstream archive, checksum, file notices and
+  source recipe. Do not invent a version/pin or reuse previously compiled
+  unverified binaries.
+- Source-build the explicit LLVM dependency for the llvmpipe JIT, selecting
+  and testing its x86-64 backend; account for the LLVM build footprint.
+  Close the real Meson build/runtime graph (including Python/Mako/PyYAML,
+  X11/GLX dispatch/loader and libdrm if required by the selected Mesa
+  configuration) without implicit host packages.
+- Select Gallium swrast/llvmpipe and OpenGL/GLX for Xvnc; explicitly disable
+  hardware DRI3 paths, GPU Gallium drivers, Vulkan, Wayland and optional
+  device/privilege surfaces in this baseline. Confirm supported Meson
+  options against the selected upstream source rather than assuming them.
+- Produce an immutable software artifact/view with full runtime ELF and
+  library/driver path closure. Do not silently expand the console-first
+  rootfs or grant `/dev/dri` access.
+- Native gate: desktop plus keyboard/mouse over noVNC; verify a GLX
+  context, `glxinfo -B` identifies llvmpipe, and an actual OpenGL program
+  renders changing frames. Capture evidence that neither host GL libraries
+  nor GPU drivers were inherited. An Xvnc-only 2D smoke is insufficient.
+
+**Status:** newly required planning gate; no Mesa or LLVM recipe, source pin,
+compiled artifact, or native acceptance is claimed in this ledger.
+
+### F. VirtualGL — later GPU acceleration
 
 Pin the exact stable release and build server/client components needed by the Zog
 workspace architecture.  Explicitly review X11/XCB, OpenGL/GLX/EGL, TurboJPEG and
