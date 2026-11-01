@@ -134,14 +134,56 @@ Acceptance:
 
 Host-welcome must not embed another browser engine merely for its welcome screen.
 
-## Follow-on — TurboVNC and VirtualGL
+## First interactive Workspace — TurboVNC and Mesa software OpenGL
 
-TurboVNC 3.3.1 and VirtualGL 3.1.5 are source-pinned for the follow-on comparison.
-Their source/component licenses still need complete file/component review before
-binary publication.
+**Decision (2026-10-31): Mesa software OpenGL is a required dependency of the
+first interactive TurboVNC Workspace, not an optional post-Workspace milestone.**
+The first Workspace gate includes basic X11/2D operation **and** working software
+OpenGL/GLX for applications that need it. The Mesa runtime and its dependencies
+must come from reviewed, immutable Zog source builds; no distribution/host GL
+fallback may satisfy this gate.
 
-Remote TurboVNC workspace acceptance remains a separate concept from a physical
-local seat. It must not be used as evidence that greetd/PAM/logind/local DRM works.
+The initial Mesa profile is intentionally narrow:
+
+- CPU Gallium `swrast` with **llvmpipe** as the required software renderer;
+  softpipe may be retained as a diagnostic fallback but does not replace
+  llvmpipe acceptance.
+- X11/GLX/OpenGL integration usable by the exact selected TurboVNC/Xvnc build;
+  pin the corresponding loader, GL dispatch, and userspace ABI contracts.
+- Freeze the actual selected upstream Mesa release and checksum, full dependency
+  closure, license notices and built-library inventory before recipe admission.
+  **LLVM is a required source-built llvmpipe/JIT dependency**, not an implied
+  capability of the existing toolchain. Review LLVM version, x86 backend,
+  Python/Mako/PyYAML, libdrm and other Meson feature dependencies explicitly.
+- For the first gate disable hardware GPU drivers, Vulkan, DRI3 GPU path,
+  optional Wayland/GBM/DRM device access, VirtualGL GPU redirection, and
+  privileged graphics devices unless a selected upstream build demonstrably
+  needs a narrower exception. Do not confuse a userspace libdrm build
+  prerequisite with authorization to expose a DRM device.
+- Publish Mesa and TurboVNC as immutable application-software artifacts/views
+  (and explicitly bind any necessary compatible rootfs libraries). They do
+  **not** become dependencies of Basic/console-first boot.
+
+First Workspace native acceptance must prove (1) a real TurboVNC X11 session
+over station-access/noVNC with an ordinary 2D desktop and input, (2) actual
+GLX context creation inside that session, (3) `glxinfo -B` showing the expected
+Mesa llvmpipe software renderer, (4) a real OpenGL application producing
+visibly changing frames through noVNC, and (5) no accidental host Mesa/DRI
+library, physical GPU device, or unrecorded driver path. Retain reproducible
+ELF/runtime closure and provenance evidence. A string-only renderer check does
+not constitute application-rendering acceptance.
+
+TurboVNC 3.3.1 is already source-pinned, but its build recipe, Mesa integration
+and binary licensing review remain pending. This decision is a **planning and
+acceptance change**, not evidence that Mesa/LLVM has been compiled or that
+the first Workspace has run.
+
+### Follow-on — GPU acceleration through VirtualGL
+
+VirtualGL 3.1.5 remains separately source-pinned and follow-on. Hardware DRI,
+GPU-device policy, local/physical-seat Xorg and Wayland remain separate future
+milestones. Remote TurboVNC Workspace acceptance does not imply that
+greetd/PAM/logind/local DRM or physical-seat access works.
 
 ## Chromium and Wayland
 
