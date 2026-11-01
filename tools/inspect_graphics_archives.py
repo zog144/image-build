@@ -21,8 +21,9 @@ SOURCE = ROOT / "project/pins/2026-11-01/graphics-source-pin.py"
 MAX_BYTES = 240 * 1024 * 1024
 MEMBER_LIMIT = 2 * 1024 * 1024
 NAMES = ("llvm", "mesa", "mesa-demos", "libdrm", "mako", "pyyaml")
-OPTIONS = ("meson.options", "meson_options.txt", "meson.build",
-           "CMakeLists.txt", "src/xdemos/meson.build")
+OPTIONS = ("meson.options", "meson_options.txt", "CMakeLists.txt",
+           "src/xdemos/meson.build")
+DEMOS_RIGHTS = ("src/xdemos/glxgears.c", "src/xdemos/glxinfo.c")
 NOTICES = ("LICENSE", "COPYING", "NOTICE", "LICENSE.TXT",
            "license.rst", "LICENSE.md", "COPYRIGHT", "README.license")
 
@@ -35,8 +36,9 @@ def check_member(member):
     if len(path.parts) < 2 or len(member.name) > 512:
         return None
     lower = path.name.lower()
+    relative = "/".join(path.parts[1:])
     if (lower in {p.lower() for p in NOTICES}
-            or any(member.name.endswith("/" + p) for p in OPTIONS)
+            or relative in OPTIONS or relative in DEMOS_RIGHTS
             or lower.startswith(("license.", "copying.", "notice."))):
         return path
     return None
@@ -92,11 +94,36 @@ def inspect_one(name, entry, output, fetch=True):
                     "sha256": hashlib.sha256(data).hexdigest(),
                     "size": member.size,
                 }
-        if not any("license" in p.lower() or "copying" in p.lower()
-                   for p in record["members"]):
+        notices = {
+            path: value for path, value in record["members"].items()
+            if any(token in path.rsplit("/", 1)[-1].lower()
+                   for token in ("license", "copying", "notice"))
+        }
+        if name == "mesa-demos":
+            source_paths = [p for p in record["members"]
+                            if p.endswith("/src/xdemos/glxgears.c")
+                            or p.endswith("/src/xdemos/glxinfo.c")]
+            if len(source_paths) != 2:
+                raise ValueError("demo rights source headers are missing")
+        elif not notices:
             raise ValueError("no inspectable upstream notice: " + name)
         output[name] = record
-        print(json.dumps({"package": name, **record}, sort_keys=True))
+        print(json.dumps({
+            "package": name,
+            "source_sha256": digest,
+            "selected_notices": notices,
+            "top_level_options": {
+                p: v for p, v in record["members"].items()
+                if p.endswith("/meson.options") or
+                   p.endswith("/meson_options.txt") or
+                   p.endswith("/CMakeLists.txt")
+            },
+            "demo_sources": {
+                p: v for p,v in record["members"].items()
+                if p.endswith("/src/xdemos/glxgears.c") or
+                   p.endswith("/src/xdemos/glxinfo.c")
+            },
+        }, sort_keys=True))
 
 
 def main():

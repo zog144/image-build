@@ -101,7 +101,8 @@ def test_demo_does_not_depend_on_host_binaries_or_broad_gpu_suite():
     assert "install -Dm755" in commands["install"][0][-1]
     text = str(commands)
     assert "apt " not in text and "dnf " not in text
-    assert "vulkan" not in text.lower()
+    assert "-Dvulkan=disabled" in commands["configure"][0][-1]
+    assert "glxgears" in commands["build"][0][-1]
     for name in NAMES:
         script = str(stage(name, "build.py"))
         assert "curl " not in script and "wget " not in script
