@@ -104,7 +104,7 @@ def test_llvm_jit_and_mesa_software_glx_feature_contract():
 def test_demo_does_not_depend_on_host_binaries_or_broad_gpu_suite():
     commands = stage("mesa-demos", "build.py")
     assert "glxgears glxinfo" in commands["build"][0][-1]
-    assert "pkg-config --exists gl x11 xext" in commands["configure"][0][-1]
+    assert "pkg-config --exists gl glx x11 xext" in commands["configure"][0][-1]
     assert "DESTDIR" in commands["install"][0][-1]
     assert "install -Dm755" in commands["install"][0][-1]
     text = str(commands)
