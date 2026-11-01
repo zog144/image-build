@@ -154,3 +154,31 @@ def test_nested_capture_root_is_not_independent(capture):
 def test_link_command_forgery_cannot_set_native_acceptance(capture):
     capture["envelope"]["native_accepted"] = True
     check_reject(capture, "assert authorization")
+
+
+def test_transitive_provider_needs_captured_loader_closure(capture):
+    provider = base.make_elf(soname="libzog.so.1", needed=("libhost-internal.so",))
+    digest = base.record(capture["roots"]["software"], "lib/libzog.so.1", provider)
+    capture["sidecars"]["library_provenance"][0]["sha256"] = digest
+    check_reject(capture, "unresolved transitive software-library dependencies")
+
+
+def test_transitive_provider_runpath_is_not_silently_trusted(capture):
+    provider = base.make_elf(soname="libzog.so.1", runpath=("$ORIGIN",))
+    digest = base.record(capture["roots"]["software"], "lib/libzog.so.1", provider)
+    capture["sidecars"]["library_provenance"][0]["sha256"] = digest
+    check_reject(capture, "unresolved transitive software-library dependencies")
+
+
+def test_object_symlink_escape_is_rejected(capture):
+    object_path = capture["roots"]["build"] / "obj/demo.o"
+    object_path.unlink()
+    object_path.symlink_to("/etc/passwd")
+    check_reject(capture, "Host path escape")
+
+
+def test_software_library_symlink_escape_is_rejected(capture):
+    provider = capture["roots"]["software"] / "lib/libzog.so.1"
+    provider.unlink()
+    provider.symlink_to("/etc/passwd")
+    check_reject(capture, "Host path escape")
