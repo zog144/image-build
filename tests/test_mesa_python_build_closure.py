@@ -74,6 +74,21 @@ def test_no_host_override_even_when_tools_exist(tmp_path):
     bad=dict(env);bad["PKG_CONFIG_LIBDIR"]="/usr/lib/pkgconfig"
     with pytest.raises(module.IsolationError): module.check_environment(data,bad)
 
+def test_path_aliases_must_match_exact_approved_tools(tmp_path,monkeypatch):
+    module=load()
+    root=tmp_path/"root";root.mkdir()
+    for n in ("python3","cmake","ninja","meson","pkgconf","pkg-config"):
+        exe=root/n;exe.write_text("#!/bin/sh\\nexit 0\\n");exe.chmod(0o755)
+    paths={"python":"python3","cmake":"cmake","ninja":"ninja",
+           "meson":"meson","pkgconf":"pkgconf"}
+    manifest={"tools":{k:{"path":str(root/v)} for k,v in paths.items()}}
+    monkeypatch.setenv("PATH",str(root))
+    with pytest.raises(module.IsolationError):
+        module.check_invoked_commands(manifest)
+    (root/"pkg-config").unlink()
+    (root/"pkg-config").symlink_to(root/"pkgconf")
+    module.check_invoked_commands(manifest)
+
 def test_no_untrusted_receipt_or_host_file(tmp_path):
     module=load()
     root=tmp_path/"root";root.mkdir()

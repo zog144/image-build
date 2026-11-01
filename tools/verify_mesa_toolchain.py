@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import stat
 from pathlib import Path
 import subprocess
@@ -99,6 +100,19 @@ def check_environment(data, env):
         raise IsolationError("Host PATH component")
 
 
+def check_invoked_commands(data):
+    """Prevent PATH aliases from selecting unreviewed binaries in Zog roots."""
+    aliases = {"python3": "python", "cmake": "cmake", "ninja": "ninja",
+               "meson": "meson", "pkgconf": "pkgconf", "pkg-config": "pkgconf"}
+    if "llvm-config" in data["tools"]:
+        aliases["llvm-config"] = "llvm-config"
+    for executable, key in aliases.items():
+        resolved = shutil.which(executable)
+        if resolved is None or Path(resolved).resolve(strict=True) != Path(
+                data["tools"][key]["path"]).resolve(strict=True):
+            raise IsolationError("PATH command is not approved tool: " + executable)
+
+
 def check_imports(data):
     python = data["tools"]["python"]["path"]
     code = """import importlib,json,sys
@@ -176,6 +190,7 @@ def main():
     data = read_protected_receipt(args.attestation)
     check_files(data, args.phase)
     check_environment(data, os.environ)
+    check_invoked_commands(data)
     check_imports(data)
     if args.phase == "mesa":
         check_pkgconf(data)
