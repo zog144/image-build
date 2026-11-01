@@ -12,22 +12,28 @@ is a standalone supplementary pin ledger, not an authorized producer monthly sna
 
 Pins are from the LLVM GitHub release digest, Mesa upstream release notes
 and independent maintained Yocto mesa-demos source checksum, respectively.
-Archive-internal rights notices have not been extracted and SHA256 attested.
-`license.py` entries explicitly hold notice coverage and redistribution.
+The pinned archives and selected archive-internal license/notice members have
+been SHA-256 checked by GitHub Actions. These hashes establish the identity of
+selected evidence, **not** complete component rights or redistribution approval.
+The six draft `license.py` records use canonical schema and remain
+`status='unresolved'`.
 
 The finite intended build contract is: LLVM X86 shared/RTTI, bounded two-job
 CMake/Ninja; Mesa Gallium `swrast` with LLVM enabled and `glx=dri`, X11
-platform, GLVND/DRI3/EGL/GBM/Vulkan/Wayland/GPU drivers disabled; demos
+platform, GLVND/EGL/GBM/Vulkan/Wayland/GPU drivers disabled; no
+kernel DRM device or DRI3 hardware capability is granted. Mesa 25.3.0 no
+longer exposes the obsolete `-Ddri3` Meson option. The demo profile builds
 only `glxgears` and `glxinfo`. These typed source recipes are not
 assertions that exact upstream 25.3.0 Meson options and build targets
 were successfully executed. The GPU-free swrast DRI module does **not**
 authorize any kernel DRM device.
 
-**Native/source-admission blockers:** independently source-pin and build
-`libdrm` (library != /dev/dri authority), Python Mako/PyYAML and any exact
-additional Meson/CMake/pkgconf build edges; verify LLVM 21.1.6/Mesa 25.3.0
-API/ABI compatibility, original source notices, Meson options from the actual
-archive, target install paths, all runtime ELF/driver/GLX loader closure,
+**Native/source-admission blockers:** compile the now-pinned libdrm,
+libxshmfence and libXxf86vm sources (userspace libraries do not authorize
+/dev/dri), close the source-pinned Mako/PyYAML/MarkupSafe/PEP-517
+build-only chain, and verify the LLVM 21.1.6/Mesa 25.3.0 native
+shared-library ABI, installed file paths, complete source/component rights
+and runtime ELF/driver/GLX loader closure,
 and immutable `applications-v1` publication. Host GL and LLVM fallback
 are forbidden. Do not expand Basic/console-first rootfs.
 
@@ -71,3 +77,9 @@ The typed `project/graphics-drafts/admission-plan.json` records the six exact in
 All six native graphics drafts now pass the actual image-build package metadata and licensing parsers in source CI. The three original output manifests had an unsupported `publication` field, now removed. Rights records now use the precise canonical `schema=1` shape, retaining original archive SHA-256 member evidence while declaring `status='unresolved'`, `scope`, and unresolved scoped components. This is **metadata compatibility only**, not compiler, runtime or redistribution acceptance.
 
 The supplementary November pin remains review-only and **no files were promoted to `project/package`**. Mako/MarkupSafe and PyYAML packaging backends, complete selected-component rights, real source-built LLVM/Mesa shared ABI, installed output/ELF inventory, immutable artifact/view and Xvnc `glxgears` smoke remain outstanding. Never use green source CI as native admission.
+
+### Native GLX interface handoff
+
+The Mesa draft now declares the required inherited `x11-xcb`, XCB GLX/SHM/DRI3/Present/Sync/XFixes/RandR, xshmfence, Xxf86vm and libdrm pkg-config modules. Its `configure` step explicitly requires them; the pre-existing libX11 output manifest already names `libX11-xcb.so`. The libxshmfence draft additionally requires its installed `xshmfence.pc`. The mesa-demos configure step requires both `gl` and `glx` pkg-config modules, then installs only Zog-built `glxgears` and `glxinfo`. These exact interfaces must be proved in the real compiler software view; merely declaring the modules in source metadata is not installed verification.
+
+Public source CI [41313406115](https://github.com/zog144/image-build/actions/runs/41313406115) passed 242 local/source tests (one skipped) and 1,794-file public preflight with zero findings; independent pinned archive/option inspection [41313401603](https://github.com/zog144/image-build/actions/runs/41313401603) passed. Neither workflow is native-compilation or redistribution acceptance.
