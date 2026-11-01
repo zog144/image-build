@@ -70,6 +70,13 @@ def fixture(tmp_path):
     compiled = b"int demo(void) { return 1; }\n"
     record(roots["source"], src, compiled)
     object_hash = record(roots["build"], obj, b"synthetic object")
+    header = "include/demo.h"
+    header_bytes = b"#define DEMO_VALUE 1\n"
+    record(roots["source"], header, header_bytes)
+    dep_path = "dep/demo.d"
+    dep_bytes = (str(roots["build"] / obj) + ": " + str(roots["source"] / src) +
+                 " " + str(roots["source"] / header) + "\n").encode()
+    dep_sha = record(roots["build"], dep_path, dep_bytes)
     compiler = roots["software"] / "bin/cc"
     compiler.parent.mkdir()
     compiler.write_bytes(b"synthetic compiler")
@@ -77,6 +84,8 @@ def fixture(tmp_path):
     record(roots["software"], "lib/libzog.so.1", make_elf(soname="libzog.so.1"))
     so = make_elf(soname="libdemo.so", needed=("libzog.so.1",))
     sohash = record(roots["destdir"], "usr/lib/libdemo.so", so)
+    link_output = "lib/libdemo.so"
+    link_sha = record(roots["build"], link_output, so)
     notice = b"Original synthetic terms and copyright.\n"
     nsha = record(roots["destdir"], "usr/share/licenses/mesa/terms.txt", notice)
     drafts = tmp_path / "drafts"
@@ -101,11 +110,27 @@ def fixture(tmp_path):
         "compile_commands": [{
             "directory": str(roots["build"]), "file": source_file,
             "output": object_file,
-            "arguments": [str(compiler), "-c", source_file,
-                          "-o", object_file, "-I", str(roots["source"])]}],
+            "arguments": [str(compiler), "-MD", "-MF",
+                          str(roots["build"] / dep_path),
+                          "-c", source_file, "-o", object_file,
+                          "-I", str(roots["source"])]}],
         "source_objects": [{
             "source_root": "source", "source": src, "source_sha256": sha(compiled),
             "object": obj, "object_sha256": object_hash, "generated_inputs": []}],
+        "implicit_inputs": [{
+            "object": obj, "depfile": dep_path, "depfile_sha256": dep_sha,
+            "inputs": [
+                {"root":"source", "path":src, "sha256":sha(compiled)},
+                {"root":"source", "path":header, "sha256":sha(header_bytes)},
+            ],
+        }],
+        "link_commands": [{
+            "installed_path": "usr/lib/libdemo.so", "output": link_output,
+            "output_sha256": link_sha,
+            "arguments": [str(compiler), "-shared", object_file,
+                          "-o", str(roots["build"] / link_output)],
+            "inputs": [{"root":"build", "path":obj, "sha256":object_hash}],
+        }],
         "installed_inventory": [{
             "path": "usr/lib/libdemo.so", "type": "file", "sha256": sohash
         }, {"path": "usr/share/licenses/mesa/terms.txt",
@@ -264,7 +289,8 @@ def test_realistic_compilation_database_relative_paths_and_optional_output(nativ
     cmd.pop("output")
     cmd["file"] = os.path.relpath(cmd["file"], directory)
     cmd["arguments"] = [
-        cmd["arguments"][0], "-c", cmd["file"], "-o", "obj/demo.o",
+        cmd["arguments"][0], "-MD", "-MF", "dep/demo.d",
+        "-c", cmd["file"], "-o", "obj/demo.o",
         "-I", os.path.relpath(native["roots"]["source"], directory)]
     native["save"]()
     report = module().verify(native["root"], native["drafts"])
@@ -286,6 +312,9 @@ def test_library_runpath_escape_is_rejected_from_actual_elf_bytes(native):
     altered = make_elf(soname="libdemo.so", needed=("libzog.so.1",),
                        runpath=("/usr/lib",))
     binary.write_bytes(altered)
+    linkfile = native["roots"]["build"] / "lib/libdemo.so"
+    linkfile.write_bytes(altered)
+    native["sidecars"]["link_commands"][0]["output_sha256"] = sha(altered)
     native["sidecars"]["installed_inventory"][0]["sha256"] = sha(altered)
     native["sidecars"]["elf_dependencies"][0]["runpath"] = ["/usr/lib"]
     native["save"]()
