@@ -320,6 +320,18 @@ def elf_and_libraries(sidecars, roots, inventory):
         require(len(set(observed["needed"])) == len(observed["needed"]),
                 "duplicate ELF DT_NEEDED name")
         edges.update((name, dep) for dep in observed["needed"])
+    # Every ELF physically installed in DESTDIR must be accounted for.
+    # Otherwise a malicious evidence producer could simply omit a binary
+    # with unresolved DT_NEEDED or a Host RPATH from the report.
+    observed_elf = set()
+    for name, item in inventory.items():
+        if item["type"] != "file":
+            continue
+        path = actual_file(roots["destdir"], name)
+        with path.open("rb") as fd:
+            if fd.read(4) == b"\x7fELF":
+                observed_elf.add(name)
+    require(tracked == observed_elf, "unreported installed ELF object")
     mapped = set()
     for row in links:
         require(set(row) == {"consumer", "needed", "root", "path", "sha256"},
