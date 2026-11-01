@@ -17,7 +17,7 @@
       "-o",
       "pipefail",
       "-c",
-      "cmake --build build-llvm --parallel 2 --target llvm-config LLVM"
+      "cmake --build build-llvm --parallel 2"
     ]
   ],
   "test": [

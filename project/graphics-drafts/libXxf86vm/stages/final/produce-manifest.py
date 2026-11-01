@@ -5,6 +5,6 @@
   ],
   "required": [
     "usr/lib/libXxf86vm.so",
-    "usr/include/X11/extensions/xf86vmode.h"
+    "usr/lib/pkgconfig/xxf86vm.pc"
   ]
 }

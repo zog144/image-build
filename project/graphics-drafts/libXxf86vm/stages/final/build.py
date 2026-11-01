@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" meson install -C build-xxf86vm\nfor f in \"$DESTDIR/usr/lib/libXxf86vm.so\" \"$DESTDIR/usr/include/X11/extensions/xf86vmode.h\"; do test -e \"$f\"; done"
+      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" meson install -C build-xxf86vm\nfor f in \"$DESTDIR/usr/lib/libXxf86vm.so\" \"$DESTDIR/usr/lib/pkgconfig/xxf86vm.pc\"; do test -e \"$f\"; done"
     ]
   ]
 }

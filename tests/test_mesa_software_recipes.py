@@ -135,3 +135,12 @@ def test_exact_source_pins_for_direct_glx_dependencies():
         assert item["source"]["sha256"] == sha
         assert stage(name, "sources.py")[0]["sha256"] == sha
         assert not (PROJECT / "package" / name).exists()
+
+
+def test_original_xxf86vm_pkgconfig_install_and_complete_llvm_target_graph():
+    xxf = stage("libXxf86vm", "produce-manifest.py")
+    assert xxf["required"] == ["usr/lib/libXxf86vm.so", "usr/lib/pkgconfig/xxf86vm.pc"]
+    assert "xf86vmode.h" not in str(xxf)
+    llvm = stage("llvm", "build.py")
+    assert llvm["build"][0][-1] == "cmake --build build-llvm --parallel 2"
+    assert "llvm-config --has-rtti" in stage("mesa", "build.py")["configure"][0][-1]
