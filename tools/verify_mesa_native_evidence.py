@@ -181,7 +181,7 @@ def commands_and_objects(sidecars, roots, envelope):
         if argv is None:
             require(isinstance(cmd["command"], str), "invalid shell command")
             argv = shlex.split(cmd["command"])
-            require(not any(c in cmd["command"] for c in (";", "|", "\n", "\`", "$(")),
+            require(not any(c in cmd["command"] for c in (";", "|", "\n", "`", "$(")),
                     "shell expansion in compile database must be reviewed")
         require(argv and argv[0].startswith("/") and "-c" in argv and "-o" in argv,
                 "unstructured compiler invocation")

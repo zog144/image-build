@@ -234,8 +234,9 @@ def test_destdir_symlink_escape(native):
         "path": "usr/share/licenses/mesa/terms.txt",
         "type": "symlink", "target": "/etc/passwd"}
     native["save"]()
-    with pytest.raises(module().EvidenceError):
-        module().verify(native["root"], native["drafts"])
+    verifier = module()
+    with pytest.raises(verifier.EvidenceError):
+        verifier.verify(native["root"], native["drafts"])
 
 
 def test_generated_source_needs_generator_provenance(native):
@@ -243,12 +244,14 @@ def test_generated_source_needs_generator_provenance(native):
     source["source_root"] = "build"
     source["generated_inputs"] = []
     native["save"]()
-    with pytest.raises(module().EvidenceError, match="generated source"):
-        module().verify(native["root"], native["drafts"])
+    verifier = module()
+    with pytest.raises(verifier.EvidenceError, match="generated source"):
+        verifier.verify(native["root"], native["drafts"])
 
 
 def test_evidence_consistency_does_not_authorize_approval(native):
     native["envelope"]["approved"] = True
     native["save"]()
-    with pytest.raises(module().EvidenceError, match="assert authorization"):
-        module().verify(native["root"], native["drafts"])
+    verifier = module()
+    with pytest.raises(verifier.EvidenceError, match="assert authorization"):
+        verifier.verify(native["root"], native["drafts"])
