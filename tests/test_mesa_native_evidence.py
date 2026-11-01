@@ -255,3 +255,40 @@ def test_evidence_consistency_does_not_authorize_approval(native):
     verifier = module()
     with pytest.raises(verifier.EvidenceError, match="assert authorization"):
         verifier.verify(native["root"], native["drafts"])
+
+
+def test_realistic_compilation_database_relative_paths_and_optional_output(native):
+    import os
+    cmd = native["sidecars"]["compile_commands"][0]
+    directory = native["roots"]["build"]
+    cmd.pop("output")
+    cmd["file"] = os.path.relpath(cmd["file"], directory)
+    cmd["arguments"] = [
+        cmd["arguments"][0], "-c", cmd["file"], "-o", "obj/demo.o",
+        "-I", os.path.relpath(native["roots"]["source"], directory)]
+    native["save"]()
+    report = module().verify(native["root"], native["drafts"])
+    assert report["compile_units"] == 1
+    assert report["native_accepted"] is False
+
+
+def test_compilation_database_wrong_optional_output_rejected(native):
+    cmd = native["sidecars"]["compile_commands"][0]
+    cmd["output"] = str(native["roots"]["build"] / "obj/another.o")
+    native["save"]()
+    verifier = module()
+    with pytest.raises((verifier.EvidenceError, FileNotFoundError)):
+        verifier.verify(native["root"], native["drafts"])
+
+
+def test_library_runpath_escape_is_rejected_from_actual_elf_bytes(native):
+    binary = native["roots"]["destdir"] / "usr/lib/libdemo.so"
+    altered = make_elf(soname="libdemo.so", needed=("libzog.so.1",),
+                       runpath=("/usr/lib",))
+    binary.write_bytes(altered)
+    native["sidecars"]["installed_inventory"][0]["sha256"] = sha(altered)
+    native["sidecars"]["elf_dependencies"][0]["runpath"] = ["/usr/lib"]
+    native["save"]()
+    verifier = module()
+    with pytest.raises(verifier.EvidenceError, match="RPATH/RUNPATH"):
+        verifier.verify(native["root"], native["drafts"])
