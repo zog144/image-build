@@ -150,10 +150,18 @@ acceptance** rather than as a Basic/rootfs or hardware-GPU prerequisite.
 - Produce an immutable software artifact/view with full runtime ELF and
   library/driver path closure. Do not silently expand the console-first
   rootfs or grant `/dev/dri` access.
-- Native gate: desktop plus keyboard/mouse over noVNC; verify a GLX
-  context, `glxinfo -B` identifies llvmpipe, and an actual OpenGL program
-  renders changing frames. Capture evidence that neither host GL libraries
-  nor GPU drivers were inherited. An Xvnc-only 2D smoke is insufficient.
+- **Small, inexpensive native integration smoke only:** start a real Xvnc
+  Workspace over noVNC and run `glxgears`. Its animated window must appear
+  and stay alive briefly without a client/X-server crash. Use `glxinfo -B`
+  when available to identify Mesa llvmpipe; verify that graphics libraries
+  and drivers resolve from Zog's immutable software view, not the host.
+  Preserve normal source/build/inventory/isolation checks, but require no
+  minimum FPS or broader graphics-validation suite. Two to four cores
+  suffice for the initial smoke; do not request expensive 16/32-core
+  instances merely for Mesa/VirtualGL validation.
+- **Deferred hardware path:** evaluate Intel iGPU Mesa drivers on the
+  user's Qotom hardware around January-February 2027; physical DRM/iGPU,
+  DRI3 and VirtualGL acceleration do not block this software smoke gate.
 
 **Status:** newly required planning gate; no Mesa or LLVM recipe, source pin,
 compiled artifact, or native acceptance is claimed in this ledger.
