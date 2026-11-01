@@ -81,6 +81,7 @@ def inspect_one(name, entry, output, fetch=True):
         option_names = set()
         referenced_dependencies = {}
         build_targets = {}
+        dependency_contexts = {}
         with tarfile.open(archive, "r:*") as tar:
             for member in tar:
                 path = check_member(member)
@@ -108,6 +109,17 @@ def inspect_one(name, entry, output, fetch=True):
                     contents = data.decode("utf-8")
                     referenced_dependencies[relative] = sorted(set(re.findall(
                         "dependency\\s*\\(\\s*[\u0027\"]([^\u0027\"]+)", contents)))
+                    if name == "mesa" and relative == "meson.build":
+                        names = ("x11", "x11-xcb", "xcb", "xcb-glx",
+                                 "xcb-dri3", "xcb-present", "xcb-xfixes",
+                                 "xrandr", "xshmfence", "xxf86vm")
+                        dependency_contexts[relative] = {}
+                        for dep in names:
+                            pat = re.compile("dependency\\s*\\(\\s*[\u0027\"]" +
+                                             re.escape(dep) + "[\u0027\"]")
+                            dependency_contexts[relative][dep] = [
+                                contents[max(0, m.start() - 320): m.end() + 250]
+                                for m in list(pat.finditer(contents))[:3]]
                     if relative == "src/xdemos/meson.build":
                         build_targets[relative] = sorted(set(
                             x for x in ("glxgears", "glxinfo") if x in contents))
@@ -148,6 +160,7 @@ def inspect_one(name, entry, output, fetch=True):
             "selected_notices": notices,
             "profile_options_checked": record.get("profile_options_checked", []),
             "referenced_dependencies": referenced_dependencies,
+            "selected_dependency_contexts": dependency_contexts,
             "smoke_build_targets": build_targets,
             "top_level_options": {
                 p: v for p, v in record["members"].items()
