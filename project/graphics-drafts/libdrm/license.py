@@ -10,8 +10,8 @@
   "status": "notice-evidence-pending",
   "expression": "MIT",
   "required_original_notice_paths": [
-    "README.rst",
-    "COPYING"
+    "xf86drm.c",
+    "xf86drm.h"
   ],
   "evidence": [],
   "components": [
@@ -23,6 +23,6 @@
   ],
   "patches": [],
   "notes": [
-    "Checksum from upstream 2.4.128 release announcement; archive notice SHA256 pending."
+    "Checksum from upstream 2.4.128 release announcement; source-header notice SHA256 pending."
   ]
 }

@@ -24,6 +24,7 @@ NAMES = ("llvm", "mesa", "mesa-demos", "libdrm", "mako", "pyyaml")
 OPTIONS = ("meson.options", "meson_options.txt", "CMakeLists.txt",
            "src/xdemos/meson.build")
 DEMOS_RIGHTS = ("src/xdemos/glxgears.c", "src/xdemos/glxinfo.c")
+LIBDRM_RIGHTS = ("xf86drm.c", "xf86drm.h", "meson.build")
 NOTICES = ("LICENSE", "COPYING", "NOTICE", "LICENSE.TXT",
            "license.rst", "LICENSE.md", "COPYRIGHT", "README.license")
 
@@ -38,7 +39,7 @@ def check_member(member):
     lower = path.name.lower()
     relative = "/".join(path.parts[1:])
     if (lower in {p.lower() for p in NOTICES}
-            or relative in OPTIONS or relative in DEMOS_RIGHTS
+            or relative in OPTIONS or relative in DEMOS_RIGHTS or relative in LIBDRM_RIGHTS
             or lower.startswith(("license.", "copying.", "notice."))):
         return path
     return None
@@ -105,6 +106,11 @@ def inspect_one(name, entry, output, fetch=True):
                             or p.endswith("/src/xdemos/glxinfo.c")]
             if len(source_paths) != 2:
                 raise ValueError("demo rights source headers are missing")
+        elif name == "libdrm":
+            inspected = [p for p in record["members"]
+                         if p.endswith("/xf86drm.c") or p.endswith("/xf86drm.h")]
+            if len(inspected) != 2:
+                raise ValueError("libdrm source rights headers are missing")
         elif not notices:
             raise ValueError("no inspectable upstream notice: " + name)
         output[name] = record
@@ -118,10 +124,11 @@ def inspect_one(name, entry, output, fetch=True):
                    p.endswith("/meson_options.txt") or
                    p.endswith("/CMakeLists.txt")
             },
-            "demo_sources": {
+            "source_rights": {
                 p: v for p,v in record["members"].items()
                 if p.endswith("/src/xdemos/glxgears.c") or
-                   p.endswith("/src/xdemos/glxinfo.c")
+                   p.endswith("/src/xdemos/glxinfo.c") or
+                   p.endswith("/xf86drm.c") or p.endswith("/xf86drm.h")
             },
         }, sort_keys=True))
 
