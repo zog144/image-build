@@ -7,7 +7,7 @@
       "-o",
       "pipefail",
       "-c",
-      "command -v meson; command -v ninja; command -v llvm-config\nllvm-config --version | grep -Fx 21.1.6\nllvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86\ntest \"$(llvm-config --has-rtti)\" = YES\ntest \"$(llvm-config --shared-mode)\" = shared\npkg-config --exists x11 xext x11-xcb xcb xcb-randr xcb-glx xcb-shm xcb-dri3 xcb-present xcb-sync xcb-xfixes xshmfence xxf86vm libdrm expat zlib\nmeson setup build-mesa upstream/mesa-25.3.0 --prefix=/usr --libdir=lib --buildtype=release -Dplatforms=x11 -Dgallium-drivers=swrast -Dvulkan-drivers= -Dglx=dri -Degl=disabled -Dgbm=disabled -Dglvnd=disabled -Dllvm=enabled -Dshared-llvm=enabled -Dopengl=true -Dbuild-tests=false -Dallow-fallback-for= -Dauto_features=disabled"
+      "test -n \"${ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION:-}\"\npython3 tools/verify_mesa_toolchain.py --attestation \"$ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION\" --phase mesa\ncommand -v meson; command -v ninja; command -v llvm-config\nllvm-config --version | grep -Fx 21.1.6\nllvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86\ntest \"$(llvm-config --has-rtti)\" = YES\ntest \"$(llvm-config --shared-mode)\" = shared\npkg-config --exists x11 xext x11-xcb xcb xcb-randr xcb-glx xcb-shm xcb-dri3 xcb-present xcb-sync xcb-xfixes xshmfence xxf86vm libdrm expat zlib\nmeson setup build-mesa upstream/mesa-25.3.0 --prefix=/usr --libdir=lib --buildtype=release -Dplatforms=x11 -Dgallium-drivers=swrast -Dvulkan-drivers= -Dglx=dri -Degl=disabled -Dgbm=disabled -Dglvnd=disabled -Dllvm=enabled -Dshared-llvm=enabled -Dopengl=true -Dbuild-tests=false -Dallow-fallback-for= -Dauto_features=disabled"
     ]
   ],
   "build": [

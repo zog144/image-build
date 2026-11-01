@@ -14,6 +14,7 @@ import re
 import os
 from pathlib import Path, PurePosixPath
 import tarfile
+import tomllib
 import tempfile
 import urllib.request
 
@@ -24,6 +25,7 @@ MEMBER_LIMIT = 2 * 1024 * 1024
 NAMES = ("llvm", "mesa", "mesa-demos", "libdrm", "mako", "pyyaml",
          "libxshmfence", "libXxf86vm")
 OPTIONS = ("meson.options", "meson_options.txt", "CMakeLists.txt",
+           "pyproject.toml",
            "meson.build", "src/glx/meson.build",
            "src/gallium/targets/dri/meson.build", "src/xdemos/meson.build")
 DEMOS_RIGHTS = ("src/xdemos/glxgears.c", "src/xdemos/glxinfo.c")
@@ -83,6 +85,7 @@ def inspect_one(name, entry, output, fetch=True):
         names_seen = set()
         source_tree_layout = []
         referenced_dependencies = {}
+        pep517 = None
         build_targets = {}
         dependency_contexts = {}
         with tarfile.open(archive, "r:*") as tar:
@@ -113,6 +116,8 @@ def inspect_one(name, entry, output, fetch=True):
                     "size": member.size,
                 }
                 relative = "/".join(PurePosixPath(member.name).parts[1:])
+                if relative == "pyproject.toml" and name in ("mako", "pyyaml"):
+                    pep517 = tomllib.loads(data.decode("utf-8"))
                 if relative in ("meson.options", "meson_options.txt"):
                     option_names = set(re.findall(
                         "option\\s*\\(\\s*[\u0027\"]([^\u0027\"]+)", data.decode("utf-8")))
@@ -134,6 +139,20 @@ def inspect_one(name, entry, output, fetch=True):
                     if relative == "src/xdemos/meson.build":
                         build_targets[relative] = sorted(set(
                             x for x in ("glxgears", "glxinfo") if x in contents))
+        if name in ("mako", "pyyaml"):
+            required = ({"requires":["setuptools>=77.0.0"],
+                         "build-backend":"setuptools.build_meta"} if name == "mako"
+                        else {"requires":["setuptools",
+                                          "Cython; python_version < '3.13'",
+                                          "Cython>=3.0; python_version >= '3.13'"],
+                              "backend-path":["packaging"],
+                              "build-backend":"_pyyaml_pep517"})
+            if pep517 is None or pep517.get("build-system") != required:
+                raise ValueError("PEP 517 backend requirements changed: " + name)
+            if (name == "mako" and
+                    pep517.get("project", {}).get("dependencies") != ["MarkupSafe >= 2.0"]):
+                raise ValueError("Mako MarkupSafe dependency changed")
+            record["original_pep517"] = required
         notices = {
             path: value for path, value in record["members"].items()
             if any(token in path.rsplit("/", 1)[-1].lower()

@@ -47,6 +47,8 @@ def test_pure_python_pyyaml_source_transform_is_explicit():
     assert "--phase mako" in m["build"][0][-1]
     assert "--phase pyyaml" in y["build"][0][-1]
     assert "none-any.whl" in y["test"][0][-1]
+    assert "--phase pyyaml" in y["prepare"][0][-1]
+    assert "--phase mesa" in lit(DRAFT/"mesa/stages/final/build.py")["configure"][0][-1]
 
 def load():
     spec=importlib.util.spec_from_file_location("mesa_gate",ROOT/"tools/verify_mesa_toolchain.py")
