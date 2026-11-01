@@ -7,15 +7,8 @@
     "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.6/llvm-21.1.6.src.tar.xz",
     "sha256": "908bce97be0275943414b45af2e2b20e8f6d5d9266fdc120bd59f096ebc547ad"
   },
-  "status": "archive-member-hashes-verified-rights-review-pending",
+  "status": "unresolved",
   "expression": "Apache-2.0 WITH LLVM-exception",
-  "required_original_notice_paths": [
-    "LICENSE.TXT",
-    "include/llvm/Support/LICENSE.TXT",
-    "lib/Support/BLAKE3/LICENSE",
-    "test/YAMLParser/LICENSE.txt",
-    "utils/lit/LICENSE.TXT"
-  ],
   "evidence": [
     {
       "path": "llvm-21.1.6.src/LICENSE.TXT",
@@ -47,12 +40,15 @@
     {
       "scope": "Source/bundled components",
       "expression": None,
-      "status": "unresolved"
+      "status": "unresolved",
+      "notes": "Original archive bytes verified; independent component copyright and distribution-rights review remains required."
     }
   ],
   "patches": [],
   "notes": [
     "Do not publish or redistribute until extracted source notices and complete file-level rights are reviewed.",
-    "Source archive exact digest and selected original-member hashes verified by GitHub Actions run 41310820294; independent legal/feature-scoped component rights remain unresolved."
-  ]
+    "Source archive exact digest and selected original-member hashes verified by GitHub Actions run 41310820294; independent legal/feature-scoped component rights remain unresolved.",
+    "Selected upstream rights members: LICENSE.TXT, include/llvm/Support/LICENSE.TXT, lib/Support/BLAKE3/LICENSE, test/YAMLParser/LICENSE.txt, utils/lit/LICENSE.TXT. Previous review-evidence status: archive-member-hashes-verified-rights-review-pending."
+  ],
+  "scope": "Exact llvm source/member SHA-256 evidence only; complete component rights/public redistribution review not approved"
 }

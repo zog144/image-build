@@ -7,12 +7,8 @@
     "url": "https://archive.mesa3d.org/demos/mesa-demos-9.0.0.tar.xz",
     "sha256": "3046a3d26a7b051af7ebdd257a5f23bfeb160cad6ed952329cdff1e9f1ed496b"
   },
-  "status": "archive-member-hashes-verified-rights-review-pending",
+  "status": "unresolved",
   "expression": "MIT AND LicenseRef-Public-Domain",
-  "required_original_notice_paths": [
-    "src/xdemos/glxgears.c",
-    "src/xdemos/glxinfo.c"
-  ],
   "evidence": [
     {
       "path": "mesa-demos-9.0.0/src/xdemos/glxgears.c",
@@ -29,12 +25,15 @@
     {
       "scope": "Source/bundled components",
       "expression": None,
-      "status": "unresolved"
+      "status": "unresolved",
+      "notes": "Original archive bytes verified; independent component copyright and distribution-rights review remains required."
     }
   ],
   "patches": [],
   "notes": [
     "Do not publish or redistribute until extracted source notices and complete file-level rights are reviewed.",
-    "Source archive exact digest and selected original-member hashes verified by GitHub Actions run 41310820294; independent legal/feature-scoped component rights remain unresolved."
-  ]
+    "Source archive exact digest and selected original-member hashes verified by GitHub Actions run 41310820294; independent legal/feature-scoped component rights remain unresolved.",
+    "Selected upstream rights members: src/xdemos/glxgears.c, src/xdemos/glxinfo.c. Previous review-evidence status: archive-member-hashes-verified-rights-review-pending."
+  ],
+  "scope": "Exact mesa-demos source/member SHA-256 evidence only; complete component rights/public redistribution review not approved"
 }

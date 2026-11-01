@@ -7,15 +7,8 @@
     "url": "https://archive.mesa3d.org/mesa-25.3.0.tar.xz",
     "sha256": "0fd54fea7dbbddb154df05ac752b18621f26d97e27863db3be951417c6abe8ae"
   },
-  "status": "archive-member-hashes-verified-rights-review-pending",
+  "status": "unresolved",
   "expression": "MIT",
-  "required_original_notice_paths": [
-    "docs/license.rst",
-    "src/imgui/LICENSE.txt",
-    "src/mesa/glapi/glapi/gen/license.py",
-    "src/vulkan/runtime/radix_sort/LICENSE",
-    "src/vulkan/screenshot-layer/LICENSE.txt"
-  ],
   "evidence": [
     {
       "path": "mesa-25.3.0/docs/license.rst",
@@ -47,12 +40,15 @@
     {
       "scope": "Source/bundled components",
       "expression": None,
-      "status": "unresolved"
+      "status": "unresolved",
+      "notes": "Original archive bytes verified; independent component copyright and distribution-rights review remains required."
     }
   ],
   "patches": [],
   "notes": [
     "Do not publish or redistribute until extracted source notices and complete file-level rights are reviewed.",
-    "Source archive exact digest and selected original-member hashes verified by GitHub Actions run 41310820294; independent legal/feature-scoped component rights remain unresolved."
-  ]
+    "Source archive exact digest and selected original-member hashes verified by GitHub Actions run 41310820294; independent legal/feature-scoped component rights remain unresolved.",
+    "Selected upstream rights members: docs/license.rst, src/imgui/LICENSE.txt, src/mesa/glapi/glapi/gen/license.py, src/vulkan/runtime/radix_sort/LICENSE, src/vulkan/screenshot-layer/LICENSE.txt. Previous review-evidence status: archive-member-hashes-verified-rights-review-pending."
+  ],
+  "scope": "Exact mesa source/member SHA-256 evidence only; complete component rights/public redistribution review not approved"
 }
