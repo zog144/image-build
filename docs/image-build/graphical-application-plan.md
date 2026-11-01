@@ -164,14 +164,23 @@ The initial Mesa profile is intentionally narrow:
   (and explicitly bind any necessary compatible rootfs libraries). They do
   **not** become dependencies of Basic/console-first boot.
 
-First Workspace native acceptance must prove (1) a real TurboVNC X11 session
-over station-access/noVNC with an ordinary 2D desktop and input, (2) actual
-GLX context creation inside that session, (3) `glxinfo -B` showing the expected
-Mesa llvmpipe software renderer, (4) a real OpenGL application producing
-visibly changing frames through noVNC, and (5) no accidental host Mesa/DRI
-library, physical GPU device, or unrecorded driver path. Retain reproducible
-ELF/runtime closure and provenance evidence. A string-only renderer check does
-not constitute application-rendering acceptance.
+**Minimal first-Workspace acceptance (2026-10-31 scope decision):**
+On an inexpensive, small-core-count CPU-only Host, start the accepted
+TurboVNC/Xvnc Workspace through station-access/noVNC, show an ordinary
+X11 desktop, then launch `glxgears` inside the Workspace. Confirm its
+window is visible, animated for a short smoke interval, and neither
+`glxgears` nor the X server crashes. Record a basic `glxinfo -B`
+renderer check if available (llvmpipe is the intended Mesa software
+renderer) and ensure runtime library/driver paths resolve from the
+immutable Zog software view rather than host graphics libraries.
+
+This is **integration smoke acceptance**, not development or
+certification of Mesa/VirtualGL graphics internals. No minimum FPS,
+frame-time target, 3D compatibility suite, cross-instance scaling
+study, 16/32-core instance, GPU, benchmark run, or prolonged soak is
+required. Low FPS on a small CPU instance is expected and acceptable.
+Keep normal source-pin, build verification, installed-file/ELF closure,
+license and isolation checks; avoid inventing a graphics-quality gate.
 
 TurboVNC 3.3.1 is already source-pinned, but its build recipe, Mesa integration
 and binary licensing review remain pending. This decision is a **planning and
