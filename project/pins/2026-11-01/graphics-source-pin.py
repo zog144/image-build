@@ -101,6 +101,44 @@
       "upstream_revision": None,
       "status": "pinned-python-build-input-unpack-not-admitted",
       "recipes": {}
+    },
+    "libxshmfence": {
+      "version": "1.3.3",
+      "source": {
+        "url": "https://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.3.3.tar.xz",
+        "sha256": "d4a4df096aba96fea02c029ee3a44e11a47eb7f7213c1a729be83e85ec3fde10"
+      },
+      "upstream_revision": None,
+      "status": "drafted-glx-closure-not-admitted",
+      "recipes": {
+        "libxshmfence/stages/final": [
+          {
+            "url": "https://xorg.freedesktop.org/archive/individual/lib/libxshmfence-1.3.3.tar.xz",
+            "sha256": "d4a4df096aba96fea02c029ee3a44e11a47eb7f7213c1a729be83e85ec3fde10",
+            "destination": "upstream",
+            "archive": True
+          }
+        ]
+      }
+    },
+    "libXxf86vm": {
+      "version": "1.1.7",
+      "source": {
+        "url": "https://xorg.freedesktop.org/archive/individual/lib/libXxf86vm-1.1.7.tar.xz",
+        "sha256": "ae50c0f669e0af5a67cc4cd0f54f21d64a64d2660af883e80e95d3fe51b945d8"
+      },
+      "upstream_revision": None,
+      "status": "drafted-glx-closure-not-admitted",
+      "recipes": {
+        "libXxf86vm/stages/final": [
+          {
+            "url": "https://xorg.freedesktop.org/archive/individual/lib/libXxf86vm-1.1.7.tar.xz",
+            "sha256": "ae50c0f669e0af5a67cc4cd0f54f21d64a64d2660af883e80e95d3fe51b945d8",
+            "destination": "upstream",
+            "archive": True
+          }
+        ]
+      }
     }
   }
 }

@@ -57,3 +57,7 @@ The supported first-Workspace profile still requires source-level Meson option a
 ### Verified exact-source build profile
 
 The [source archive/option inspection](https://github.com/zog144/image-build/actions/runs/41311239593) passed for the six pinned archives. It checked that the Mesa, demo and libdrm Meson options used in the draft configure commands are actually defined by the corresponding hashed upstream archives. Its next expanded inspection records the original Mesa GLX/DRI and demo Meson dependency references so the remaining X11 and XCB package edges can be reviewed without guessing. LLVM's real CMake/configured ABI must still confirm shared `libLLVM`, X86 backend and RTTI. Source checks are not native configure or installed runtime acceptance.
+
+### GLX source dependency selection
+
+The exact Mesa 25.3.0 `meson.build` inspection ([source evidence 41311622938](https://github.com/zog144/image-build/actions/runs/41311622938)) shows that with X11 + `glx=dri` the producer requires X11, Xext, X11-XCB, XCB-GLX and XCB-SHM. Its DRM DRI branch also requires XCB-DRI3/XCB-Present, XCB-Sync, XSHMFENCE, and direct GLX may require Xxf86vm. XCB extension pkg-config modules come from `libxcb`, X11-XCB comes from `libX11`; `libxshmfence` 1.3.3 and `libXxf86vm` 1.1.7 are now independently pinned **draft** packages, not accepted inherited binaries. Xrandr and libXpresent Xlib are conditional branches not automatically added. The run-time Xvnc GLX/DRI capability must still be checked; no device access is inferred from software DRI support.

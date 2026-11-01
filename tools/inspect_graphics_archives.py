@@ -21,7 +21,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "project/pins/2026-11-01/graphics-source-pin.py"
 MAX_BYTES = 240 * 1024 * 1024
 MEMBER_LIMIT = 2 * 1024 * 1024
-NAMES = ("llvm", "mesa", "mesa-demos", "libdrm", "mako", "pyyaml")
+NAMES = ("llvm", "mesa", "mesa-demos", "libdrm", "mako", "pyyaml",
+         "libxshmfence", "libXxf86vm")
 OPTIONS = ("meson.options", "meson_options.txt", "CMakeLists.txt",
            "meson.build", "src/glx/meson.build",
            "src/gallium/targets/dri/meson.build", "src/xdemos/meson.build")

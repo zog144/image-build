@@ -9,12 +9,16 @@
     "expat-final",
     "zlib-final",
     "mako-final",
-    "pyyaml-final"
+    "pyyaml-final",
+    "libxshmfence-final",
+    "libXxf86vm-final"
   ],
   "runtime": [
     "llvm-final",
     "libX11-final",
     "libXext-final",
-    "libxcb-final"
+    "libxcb-final",
+    "libxshmfence-final",
+    "libXxf86vm-final"
   ]
 }

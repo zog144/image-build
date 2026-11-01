@@ -58,6 +58,8 @@ def test_gallium_dependency_graph_is_exact_and_non_host_fallback():
     demo = stage("mesa-demos", "dependencies.py")
     assert "llvm-final" in mesa["build"] and "llvm-final" in mesa["runtime"]
     assert "libdrm-final" in mesa["build"]
+    assert "libxshmfence-final" in mesa["build"]
+    assert "libXxf86vm-final" in mesa["build"]
     for name in ("libX11-final", "libXext-final", "libxcb-final"):
         assert name in mesa["build"]
     assert "mesa-final" in demo["build"] and "mesa-final" in demo["runtime"]
@@ -119,3 +121,16 @@ def test_only_glxgears_runtime_smoke_remains_native():
     assert "No FPS minimum" in doc
     assert "No /dev/dri" not in doc  # documentation explains separately that no device is granted
     assert "Basic/console-first" in doc
+
+
+def test_exact_source_pins_for_direct_glx_dependencies():
+    pin = lit(PROJECT / "pins/2026-11-01/graphics-source-pin.py")
+    for name, ver, sha in (
+        ("libxshmfence", "1.3.3", "d4a4df096aba96fea02c029ee3a44e11a47eb7f7213c1a729be83e85ec3fde10"),
+        ("libXxf86vm", "1.1.7", "ae50c0f669e0af5a67cc4cd0f54f21d64a64d2660af883e80e95d3fe51b945d8"),
+    ):
+        item = pin["packages"][name]
+        assert item["version"] == ver
+        assert item["source"]["sha256"] == sha
+        assert stage(name, "sources.py")[0]["sha256"] == sha
+        assert not (PROJECT / "package" / name).exists()
