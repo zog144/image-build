@@ -7,13 +7,14 @@
     "libxcb-final",
     "libdrm-final",
     "expat-final",
-    "zlib-final"
+    "zlib-final",
+    "mako-final",
+    "pyyaml-final"
   ],
   "runtime": [
     "llvm-final",
     "libX11-final",
     "libXext-final",
-    "libxcb-final",
-    "libdrm-final"
+    "libxcb-final"
   ]
 }

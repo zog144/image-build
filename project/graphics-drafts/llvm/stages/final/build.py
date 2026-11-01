@@ -27,7 +27,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -x build-llvm/bin/llvm-config\nbuild-llvm/bin/llvm-config --version | grep -Fx 21.1.6\nbuild-llvm/bin/llvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86"
+      "test -x build-llvm/bin/llvm-config\nbuild-llvm/bin/llvm-config --version | grep -Fx 21.1.6\nbuild-llvm/bin/llvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86\ntest \"$(build-llvm/bin/llvm-config --has-rtti)\" = YES\nbuild-llvm/bin/llvm-config --shared-mode | grep -Fx shared\n# The shared LLVM JIT linker ABI must also be checked after install."
     ]
   ],
   "install": [

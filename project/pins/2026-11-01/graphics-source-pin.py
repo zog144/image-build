@@ -62,6 +62,45 @@
           }
         ]
       }
+    },
+    "libdrm": {
+      "version": "2.4.128",
+      "source": {
+        "url": "https://dri.freedesktop.org/libdrm/libdrm-2.4.128.tar.xz",
+        "sha256": "3bb35db8700c2a0b569f2c6729a53f5495786856b310854c8de57782a22bddac"
+      },
+      "upstream_revision": None,
+      "status": "source-contract-native-held",
+      "recipes": {
+        "libdrm/stages/final": [
+          {
+            "url": "https://dri.freedesktop.org/libdrm/libdrm-2.4.128.tar.xz",
+            "sha256": "3bb35db8700c2a0b569f2c6729a53f5495786856b310854c8de57782a22bddac",
+            "destination": "upstream",
+            "archive": True
+          }
+        ]
+      }
+    },
+    "mako": {
+      "version": "1.4.3",
+      "source": {
+        "url": "https://files.pythonhosted.org/packages/5a/09/e07c4b5579a79f4b16f8d4f29f6c54514ac787c4ad506b8c4f28a0e6b0bf/mako-1.4.3.tar.gz",
+        "sha256": "cd6537fe88d5fec315c55c2f8529bc4ce7a9a352ad7db3eeaa6a66e2dd4ec37a"
+      },
+      "upstream_revision": None,
+      "status": "pinned-python-build-input-unpack-not-admitted",
+      "recipes": {}
+    },
+    "pyyaml": {
+      "version": "6.0.3",
+      "source": {
+        "url": "https://files.pythonhosted.org/packages/05/8e/961c0007c59b8dd7729d542c61a4d537767a59645b82a0b521206e1e25c2/pyyaml-6.0.3.tar.gz",
+        "sha256": "d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f"
+      },
+      "upstream_revision": None,
+      "status": "pinned-python-build-input-unpack-not-admitted",
+      "recipes": {}
     }
   }
 }

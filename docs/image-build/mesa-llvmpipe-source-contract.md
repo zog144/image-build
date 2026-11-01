@@ -39,3 +39,9 @@ Zog-owned library paths. No FPS minimum, performance suite, soak,
 high-core-count instance or hardware GPU test.
 
 **Loader boundary:** these packages live in `project/graphics-drafts`, NOT in `project/package`. The canonical package loader and licensing admission suite cannot see them. Promotion requires complete source/notice evidence and a reviewed move into `project/package`, plus a canonical monthly pin; this revision makes no such move.
+
+## Source-closure checkpoint (2026-11-01)
+
+The core userspace libdrm 2.4.128 tarball is pinned to upstream release SHA-256 `3bb35db8700c2a0b569f2c6729a53f5495786856b310854c8de57782a22bddac`; the draft disables vendor KMS drivers, tests, udev integration and device access. This does **not** grant `/dev/dri`. Mako 1.4.3 and PyYAML 6.0.3 source sdists are pinned from PyPI and listed in the supplementary review ledger only. Their full build-only installation is still held pending MarkupSafe and PEP-517 backend provenance (Mako), PyYAML's pure-Python/Cython build policy, and exact import checks. All new packages remain outside `project/package/`.
+
+Mesa draft now uses lowercase Meson booleans and disables fallback subproject acquisition. The GLX/driver install manifest and demonstrated LLVM 21.1.6 shared+RTTI ABI are required native evidence, not asserted source successes. `libdrm` runtime ELF dependencies must be observed from actual immutable Mesa output; it must not be included speculatively or omitted after observation.
