@@ -60,3 +60,19 @@ for Mesa demos distinguish its copyrighted and public-domain source headers.
 The independent reviewer must reconcile compile_commands, source/object hashes,
 DESTDIR manifest and notice outputs. No status is upgraded to reviewed from
 source-level checking, and no graphics artifact may be distributed yet.
+
+
+## Source re-review, November 1: isolation corrections
+
+Build-only Mako and PyYAML stages now invoke the protected verifier using
+\`python3 -I\`, invoke their direct PEP 517 backend under \`python3 -I -\`,
+and use \`python3 -I -m installer\` instead of permitting working-tree module
+shadowing. The verifier rejects Python startup/site environment overrides,
+compiler include and library search overrides, package-manager configuration,
+and unexpected pkgconf environment variables. pkgconf inspects private
+dependencies via \`--static\` and accepts only explicitly parsed, Zog-rooted
+include/library switches; opaque linker options fail closed.
+
+These source changes must still be exercised against an authentic installed
+toolchain and associated protected native receipt; a passing source check
+is not a native isolation attestation.

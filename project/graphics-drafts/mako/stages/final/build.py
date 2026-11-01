@@ -12,7 +12,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION:-}\"; test -n \"${ZOG_GRAPHICS_TOOLCHAIN_VERIFIER:-}\"; python3 \"$ZOG_GRAPHICS_TOOLCHAIN_VERIFIER\" --attestation \"$ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION\" --phase mako\ncd upstream/mako-1.4.3\npython3 - <<'PYBUILD'\nimport pathlib,tomllib,importlib\nfrom importlib.metadata import version\np=tomllib.loads(pathlib.Path('pyproject.toml').read_text())\nassert p['build-system']=={'requires':['setuptools>=77.0.0'],'build-backend':'setuptools.build_meta'}\nassert p['project']['dependencies']==['MarkupSafe >= 2.0']\nassert int(version('setuptools').split('.')[0])>=77\nassert int(version('MarkupSafe').split('.')[0])>=2\nbackend=importlib.import_module('setuptools.build_meta')\nfrom packaging.requirements import Requirement\nfrom importlib.metadata import version\nfor text in backend.get_requires_for_build_wheel({}):\n req=Requirement(text)\n assert req.name.lower().replace('_','-') in ('wheel','setuptools','packaging'),text\n assert req.specifier.contains(version(req.name),prereleases=True),text\npathlib.Path('dist').mkdir(exist_ok=True)\nprint(backend.build_wheel(str(pathlib.Path('dist').resolve()),{}))\nPYBUILD"
+      "test -n \"${ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION:-}\"; test -n \"${ZOG_GRAPHICS_TOOLCHAIN_VERIFIER:-}\"; python3 -I \"$ZOG_GRAPHICS_TOOLCHAIN_VERIFIER\" --attestation \"$ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION\" --phase mako\ncd upstream/mako-1.4.3\npython3 -I - <<'PYBUILD'\nimport pathlib,tomllib,importlib\nfrom importlib.metadata import version\np=tomllib.loads(pathlib.Path('pyproject.toml').read_text())\nassert p['build-system']=={'requires':['setuptools>=77.0.0'],'build-backend':'setuptools.build_meta'}\nassert p['project']['dependencies']==['MarkupSafe >= 2.0']\nassert int(version('setuptools').split('.')[0])>=77\nassert int(version('MarkupSafe').split('.')[0])>=2\nbackend=importlib.import_module('setuptools.build_meta')\nfrom packaging.requirements import Requirement\nfrom importlib.metadata import version\nfor text in backend.get_requires_for_build_wheel({}):\n req=Requirement(text)\n assert req.name.lower().replace('_','-') in ('wheel','setuptools','packaging'),text\n assert req.specifier.contains(version(req.name),prereleases=True),text\npathlib.Path('dist').mkdir(exist_ok=True)\nprint(backend.build_wheel(str(pathlib.Path('dist').resolve()),{}))\nPYBUILD"
     ]
   ],
   "test": [
@@ -32,7 +32,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; cd upstream/mako-1.4.3; python3 -m installer --destdir=\"$DESTDIR\" dist/*.whl; install -Dm644 LICENSE \"$DESTDIR/usr/share/licenses/mako/LICENSE\""
+      "test -n \"${DESTDIR:-}\"; cd upstream/mako-1.4.3; python3 -I -m installer --destdir=\"$DESTDIR\" dist/*.whl; install -Dm644 LICENSE \"$DESTDIR/usr/share/licenses/mako/LICENSE\""
     ]
   ]
 }
