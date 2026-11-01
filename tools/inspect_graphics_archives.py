@@ -80,12 +80,16 @@ def inspect_one(name, entry, output, fetch=True):
             raise ValueError("archive SHA-256 differs for " + name)
         record = {"source_sha256": digest, "url": url, "members": {}}
         option_names = set()
+        names_seen = set()
         source_tree_layout = []
         referenced_dependencies = {}
         build_targets = {}
         dependency_contexts = {}
         with tarfile.open(archive, "r:*") as tar:
             for member in tar:
+                if member.name in names_seen:
+                    raise ValueError("duplicate archive pathname")
+                names_seen.add(member.name)
                 all_parts = PurePosixPath(member.name).parts
                 if (name in ("libxshmfence", "libXxf86vm", "mesa-demos")
                     and len(all_parts) <= 4 and member.isfile()
@@ -135,6 +139,44 @@ def inspect_one(name, entry, output, fetch=True):
             if any(token in path.rsplit("/", 1)[-1].lower()
                    for token in ("license", "copying", "notice"))
         }
+        reviewed = ROOT / "project/graphics-drafts" / name / "license.py"
+        if reviewed.is_file():
+            rights = ast.literal_eval(reviewed.read_text())
+            if rights["source"] != source:
+                raise ValueError("draft notice source pin differs: " + name)
+            for item in rights.get("evidence", []):
+                if (item.get("source_sha256") != digest or
+                    item.get("path") not in record["members"] or
+                    record["members"][item["path"]]["sha256"] !=
+                    item.get("sha256")):
+                    raise ValueError("archive-internal rights hash differs: " +
+                                     name)
+            if not rights.get("evidence"):
+                raise ValueError("archive rights evidence not retained: " + name)
+        expected_roots = {
+            "llvm": ("CMakeLists.txt", "LICENSE.TXT"),
+            "mesa": ("meson.options", "meson.build",
+                     "src/glx/meson.build",
+                     "src/gallium/targets/dri/meson.build"),
+            "mesa-demos": ("meson.build", "meson_options.txt",
+                           "src/xdemos/meson.build",
+                           "src/xdemos/glxgears.c",
+                           "src/xdemos/glxinfo.c"),
+            "libdrm": ("meson_options.txt", "meson.build",
+                       "xf86drm.c", "xf86drm.h"),
+            "libxshmfence": ("configure", "src/Makefile.am",
+                             "xshmfence.pc.in"),
+            "libXxf86vm": ("meson.build", "meson.options",
+                           "src/XF86VMode.c", "xxf86vm.pc.in"),
+        }
+        # Presence is based on the exact full archive member table, not a
+        # renamed/untrusted working-tree checkout.
+        for rel in expected_roots.get(name, ()):
+            exact = [p for p in names_seen
+                     if "/".join(PurePosixPath(p).parts[1:]) == rel]
+            if len(exact) != 1:
+                raise ValueError("missing or duplicated build source member: " +
+                                 name + "/" + rel)
         if name == "mesa-demos":
             source_paths = [p for p in record["members"]
                             if p.endswith("/src/xdemos/glxgears.c")
