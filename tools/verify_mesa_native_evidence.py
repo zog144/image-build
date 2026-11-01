@@ -121,18 +121,36 @@ def compiler_flags(argv, roots, directory):
     require(isinstance(argv, list) and all(isinstance(x, str) and x for x in argv),
             "invalid compiler argv")
     require(not any(x.startswith("@") for x in argv), "response file needs independent expansion")
+    require(argv.count("-c") == 1 and argv.count("-o") == 1,
+            "ambiguous compiler source/output switches")
+    require(argv.count("-MF") == 1,
+            "ambiguous compiler depfile switches")
     # This source verifier cannot inspect compiler driver plugins, alternate
     # sysroots, injected forced headers or opaque option forwarding. Hold them.
     forbidden = ("-include", "-imacros", "-isysroot", "--sysroot",
                  "-sysroot", "-resource-dir", "-fmodule-", "-fplugin",
                  "-specs", "-B", "-Xclang", "-Xlinker", "-Wl,",
-                 "-plugin", "-load", "-T", "-wrapper")
+                 "-plugin", "-load", "-T", "-wrapper", "-Wp,",
+                 "-Wa,", "-Xpreprocessor", "-fprofile-use", "-fprofile-instr-use",
+                 "-F", "-iframework", "-include-pch", "-fmodule-file",
+                 "-fmodule-map-file", "-save-temps")
     require(not any(x.startswith(forbidden) for x in argv),
             "unsupported implicit or linker/compiler input")
     prefixes = ("-I", "-L", "-isystem", "-iquote", "-idirafter")
     i = 0
     while i < len(argv):
         arg = argv[i]
+        if arg in ("-c", "-o", "-MF", "-MT", "-MQ"):
+            i += 1
+            require(i < len(argv), "compiler option missing value")
+            if arg == "-MF":
+                p = Path(argv[i])
+                p = p if p.is_absolute() else directory / p
+                require(within_if_exists(p, roots[1]), "compiler depfile outside build root")
+            i += 1
+            continue
+        require(not arg.startswith(("-MF", "-MT", "-MQ")),
+                "unreviewed concatenated dependency option")
         if arg in prefixes:
             i += 1
             require(i < len(argv), "missing compiler path option")
@@ -147,6 +165,8 @@ def compiler_flags(argv, roots, directory):
                     "compiler Host include/library directory: " + path)
         require(not arg.startswith(("-Wl,", "-fplugin", "-B/")),
                 "opaque linker or compiler plugin argument requires review")
+        if path is None and not arg.startswith("-"):
+            raise EvidenceError("additional unreviewed compiler input: " + arg)
         i += 1
 
 
@@ -195,7 +215,7 @@ def commands_and_objects(sidecars, roots, envelope):
         if argv is None:
             require(isinstance(cmd["command"], str), "invalid shell command")
             argv = shlex.split(cmd["command"])
-            require(not any(c in cmd["command"] for c in (";", "|", "\n", "`", "$(")),
+            require(not any(c in cmd["command"] for c in (";", "|", "\n", "`", "$(", "&", "<", ">", "$", "\r")),
                     "shell expansion in compile database must be reviewed")
         require(argv and argv[0].startswith("/") and "-c" in argv and "-o" in argv,
                 "unstructured compiler invocation")
