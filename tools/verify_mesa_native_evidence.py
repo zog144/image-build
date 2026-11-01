@@ -143,10 +143,6 @@ def compiler_flags(argv, roots, directory):
         if arg in ("-c", "-o", "-MF", "-MT", "-MQ"):
             i += 1
             require(i < len(argv), "compiler option missing value")
-            if arg == "-MF":
-                p = Path(argv[i])
-                p = p if p.is_absolute() else directory / p
-                require(within_if_exists(p, roots[1]), "compiler depfile outside build root")
             i += 1
             continue
         require(not arg.startswith(("-MF", "-MT", "-MQ")),
