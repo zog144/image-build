@@ -23,7 +23,8 @@ MAX_BYTES = 240 * 1024 * 1024
 MEMBER_LIMIT = 2 * 1024 * 1024
 NAMES = ("llvm", "mesa", "mesa-demos", "libdrm", "mako", "pyyaml")
 OPTIONS = ("meson.options", "meson_options.txt", "CMakeLists.txt",
-           "src/xdemos/meson.build")
+           "meson.build", "src/glx/meson.build",
+           "src/gallium/targets/dri/meson.build", "src/xdemos/meson.build")
 DEMOS_RIGHTS = ("src/xdemos/glxgears.c", "src/xdemos/glxinfo.c")
 LIBDRM_RIGHTS = ("xf86drm.c", "xf86drm.h", "meson.build")
 NOTICES = ("LICENSE", "COPYING", "NOTICE", "LICENSE.TXT",
@@ -78,6 +79,8 @@ def inspect_one(name, entry, output, fetch=True):
             raise ValueError("archive SHA-256 differs for " + name)
         record = {"source_sha256": digest, "url": url, "members": {}}
         option_names = set()
+        referenced_dependencies = {}
+        build_targets = {}
         with tarfile.open(archive, "r:*") as tar:
             for member in tar:
                 path = check_member(member)
@@ -101,6 +104,13 @@ def inspect_one(name, entry, output, fetch=True):
                 if relative in ("meson.options", "meson_options.txt"):
                     option_names = set(re.findall(
                         "option\\s*\\(\\s*[\u0027\"]([^\u0027\"]+)", data.decode("utf-8")))
+                if relative.endswith("meson.build"):
+                    contents = data.decode("utf-8")
+                    referenced_dependencies[relative] = sorted(set(re.findall(
+                        "dependency\\s*\\(\\s*[\u0027\"]([^\u0027\"]+)", contents)))
+                    if relative == "src/xdemos/meson.build":
+                        build_targets[relative] = sorted(set(
+                            x for x in ("glxgears", "glxinfo") if x in contents))
         notices = {
             path: value for path, value in record["members"].items()
             if any(token in path.rsplit("/", 1)[-1].lower()
@@ -137,6 +147,8 @@ def inspect_one(name, entry, output, fetch=True):
             "source_sha256": digest,
             "selected_notices": notices,
             "profile_options_checked": record.get("profile_options_checked", []),
+            "referenced_dependencies": referenced_dependencies,
+            "smoke_build_targets": build_targets,
             "top_level_options": {
                 p: v for p, v in record["members"].items()
                 if p.endswith("/meson.options") or

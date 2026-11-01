@@ -53,3 +53,7 @@ GitHub Actions [41310820294](https://github.com/zog144/image-build/actions/runs/
 The supported first-Workspace profile still requires source-level Meson option and GLX dependency closure, exact built filename/ELF verification and a native installed smoke before canonical admission. No `/dev/dri`, large-core performance benchmark or hardware driver is needed.
 
 **Exact upstream option correction:** Mesa 25.3.0 removed the `dri3` Meson option. Do not pass the earlier guessed `-Ddri3=disabled`. Restrict hardware exposure via software-only `swrast` selection, the approved immutable software view, no device grants, and GLX loader/runtime isolation; no DRI3 hardware acceptance is implied.
+
+### Verified exact-source build profile
+
+The [source archive/option inspection](https://github.com/zog144/image-build/actions/runs/41311239593) passed for the six pinned archives. It checked that the Mesa, demo and libdrm Meson options used in the draft configure commands are actually defined by the corresponding hashed upstream archives. Its next expanded inspection records the original Mesa GLX/DRI and demo Meson dependency references so the remaining X11 and XCB package edges can be reviewed without guessing. LLVM's real CMake/configured ABI must still confirm shared `libLLVM`, X86 backend and RTTI. Source checks are not native configure or installed runtime acceptance.

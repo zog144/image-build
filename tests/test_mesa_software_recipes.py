@@ -80,6 +80,8 @@ def test_llvm_jit_and_mesa_software_glx_feature_contract():
     assert "-DLLVM_ENABLE_PROJECTS=" in lc
     assert "--parallel 2" in llvm["build"][0][-1]
     assert "llvm-config --version" in mc
+    assert "llvm-config --shared-mode" in mc
+    assert "llvm-config --has-rtti" in mc
     for option in (
         "-Dplatforms=x11", "-Dgallium-drivers=swrast", "-Dglx=dri",
         "-Dllvm=enabled", "-Dshared-llvm=enabled",
