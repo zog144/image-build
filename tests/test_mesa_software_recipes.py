@@ -144,3 +144,28 @@ def test_original_xxf86vm_pkgconfig_install_and_complete_llvm_target_graph():
     llvm = stage("llvm", "build.py")
     assert llvm["build"][0][-1] == "cmake --build build-llvm --parallel 2"
     assert "llvm-config --has-rtti" in stage("mesa", "build.py")["configure"][0][-1]
+
+
+def test_canonical_admission_is_explicitly_held_pending_real_closure():
+    import json
+    plan = json.loads((PROJECT / "graphics-drafts/admission-plan.json").read_text())
+    assert plan["schema"] == "image-build-first-workspace-graphics-canonical-admission-v1"
+    assert plan["status"] == "source-prepared-native-and-rights-NO-GO"
+    assert plan["source_pin_contract"] == "supplementary-review-only-not-canonical"
+    assert plan["immutable_publication"] == "applications-v1"
+    assert plan["intended_stage_order"] == [
+        "llvm-final", "libdrm-final", "libxshmfence-final",
+        "libXxf86vm-final", "mesa-final", "mesa-demos-final",
+    ]
+    assert {p["name"] for p in plan["blocked_python_build_inputs"]} == {
+        "mako-final", "pyyaml-final",
+    }
+    assert len(plan["required_acceptance"]) == 6
+    assert any("glxgears" in item for item in plan["required_acceptance"])
+    assert all(not (PROJECT / "package" / name).exists()
+               for name in ("llvm", "libdrm", "libxshmfence",
+                            "libXxf86vm", "mesa", "mesa-demos"))
+    assert (PROJECT / "package/libX11/stages/final/produce-manifest.py").exists()
+    x11 = lit(PROJECT / "package/libX11/stages/final/produce-manifest.py")
+    assert "usr/lib/libX11-xcb.so" in x11["required"]
+    assert (PROJECT / "package/libxcb/stages/final/produce-manifest.py").exists()

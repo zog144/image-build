@@ -196,3 +196,7 @@ All rows above remain source preparation until a supported host-deploy/image-bui
 submission route is explicitly authorized for the compiler host.  GitHub Actions may
 validate metadata and download exact public sources for evidence; it is not evidence
 that the Zog rootfs package was compiled or installed.
+
+### Software GL source-closure checkpoint (2026-11-01)
+
+Draft source pins, original archive-member rights SHA-256, and upstream Meson option names were checked in GitHub Actions. Direct GLX requirements now include independently pinned libdrm 2.4.128, libxshmfence 1.3.3 and libXxf86vm 1.1.7 alongside the authored libX11/libXext/libxcb/xorgproto predecessors; Mako/PyYAML raw source archives are pinned but their isolated packaging closures are not admitted. The review-only `project/graphics-drafts/admission-plan.json` governs later migration to `project/package`. Native build/installed inventory/ELF and final rights review remain NO-GO.
