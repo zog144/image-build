@@ -17,7 +17,8 @@ import struct
 
 COMPONENTS = ("llvm", "mesa", "libdrm", "libxshmfence", "libXxf86vm", "mesa-demos")
 SIDECARS = ("compile_commands", "source_objects", "installed_inventory",
-            "elf_dependencies", "library_provenance", "delivered_notices")
+            "elf_dependencies", "library_provenance", "delivered_notices",
+            "implicit_inputs", "link_commands")
 SCHEMA = "zog-mesa-native-evidence-v1"
 MAX_JSON = 8 * 1024 * 1024
 MAX_ENTRIES = 200000
@@ -250,6 +251,153 @@ def file_digest_matches(path, compilers):
     return False
 
 
+def verify_implicit_inputs(sidecars, roots):
+    """Compare full -MD compiler depfile bytes with independently inventoried inputs.
+
+    -MMD excludes system headers and is inadequate here. This still checks
+    only the submitted capture, not whether a compiler truly produced it.
+    """
+    commands = sidecars["compile_commands"]
+    mapped = sidecars["source_objects"]
+    evidence = sidecars["implicit_inputs"]
+    require(len(evidence) == len(commands), "implicit dependency coverage incomplete")
+    by_obj = {}
+    for row in evidence:
+        require(set(row) == {"object", "depfile", "depfile_sha256", "inputs"},
+                "incomplete implicit-input record")
+        object_path = (roots["build"] / relative(row["object"])).resolve(strict=True)
+        require(object_path not in by_obj, "duplicated implicit-input record")
+        by_obj[object_path] = row
+        file_hash(roots["build"], row["depfile"], row["depfile_sha256"])
+        text = actual_file(roots["build"], row["depfile"]).read_text()
+        require("$" not in text and "\x00" not in text,
+                "unsupported dependency expansion")
+        text = text.replace("\\\n", " ")
+        require(text.count(":") == 1, "unsupported depfile grammar")
+        target, deps = text.split(":", 1)
+        words = shlex.split(deps)
+        require(words and len(words) == len(set(words)),
+                "missing/duplicated implicit dependency")
+        target_path = Path(target.strip())
+        target_path = (roots["build"] / target_path).resolve(strict=True) if not target_path.is_absolute() else target_path.resolve(strict=True)
+        require(target_path == object_path, "depfile object mismatch")
+        claimed = set()
+        for item in row["inputs"]:
+            require(set(item) == {"root", "path", "sha256"}
+                    and item["root"] in ("source", "build", "software"),
+                    "invalid implicit dependency origin")
+            file_hash(roots[item["root"]], item["path"], item["sha256"])
+            claimed.add(str(actual_file(roots[item["root"]], item["path"])))
+        require(len(claimed) == len(row["inputs"]), "duplicated implicit input")
+        actual = set()
+        for word in words:
+            path = Path(word)
+            path = path if path.is_absolute() else roots["build"] / path
+            path = path.resolve(strict=True)
+            require(any(path == r or r in path.parents
+                        for r in (roots["source"], roots["build"], roots["software"])),
+                    "Host implicit compiler dependency")
+            actual.add(str(path))
+        require(actual == claimed, "depfile/input digest inventory mismatch")
+    for cmd in commands:
+        argv = cmd.get("arguments")
+        if argv is None:
+            argv = shlex.split(cmd["command"])
+        require("-MD" in argv and "-MMD" not in argv,
+                "full system-inclusive -MD dependency capture required")
+        require(argv.count("-MF") == 1 and argv.index("-MF") + 1 < len(argv),
+                "unreviewed or absent depfile flag")
+        depfile = Path(argv[argv.index("-MF") + 1])
+        directory = Path(cmd["directory"]).resolve(strict=True)
+        depfile = depfile if depfile.is_absolute() else directory / depfile
+        output = Path(argv[argv.index("-o") + 1])
+        output = output if output.is_absolute() else directory / output
+        key = output.resolve(strict=True)
+        require(key in by_obj, "implicit inputs omit compile object")
+        expected = roots["build"] / relative(by_obj[key]["depfile"])
+        require(depfile.resolve(strict=True) == expected.resolve(strict=True),
+                "compiler depfile path differs from captured bytes")
+    require({(roots["build"] / relative(r["object"])).resolve(strict=True)
+             for r in mapped} == set(by_obj), "unmapped implicit compiler inputs")
+
+
+def verify_link_commands(sidecars, roots, envelope):
+    """Require explicit link input and output bytes; reject opaque link stages."""
+    links = sidecars["link_commands"]
+    binaries = sidecars["elf_dependencies"]
+    objects = sidecars["source_objects"]
+    require(len(links) == len(binaries), "ELF/link command coverage incomplete")
+    object_hashes = {str((roots["build"] / relative(row["object"])).resolve(strict=True)):
+                     row["object_sha256"] for row in objects}
+    seen = set()
+    for row in links:
+        require(set(row) == {"installed_path", "output", "output_sha256",
+                             "arguments", "inputs"}, "incomplete link command record")
+        installed = relative(row["installed_path"]).as_posix()
+        require(installed in {e["path"] for e in binaries} and installed not in seen,
+                "missing/duplicate linked output")
+        seen.add(installed)
+        file_hash(roots["build"], row["output"], row["output_sha256"])
+        file_hash(roots["destdir"], installed, row["output_sha256"])
+        argv = row["arguments"]
+        require(isinstance(argv, list) and len(argv) >= 5
+                and all(isinstance(a, str) and a for a in argv),
+                "invalid linker command")
+        exe = Path(argv[0])
+        require(exe.is_file() and within_if_exists(exe, roots["software"])
+                and file_digest_matches(exe, envelope["compilers"]),
+                "unapproved linker bytes")
+        require(argv.count("-o") == 1 and argv.index("-o") + 1 < len(argv),
+                "link command missing explicit output")
+        named_output = Path(argv[argv.index("-o") + 1])
+        if not named_output.is_absolute():
+            named_output = roots["build"] / named_output
+        require(named_output.resolve(strict=True) ==
+                (roots["build"] / relative(row["output"])).resolve(strict=True),
+                "linker output differs from recorded object")
+        require("-shared" in argv, "unsupported executable link/interpreter mode")
+        require(not any(a.startswith(("@", "-Wl,", "-Xlinker", "-T", "--script",
+                                     "--sysroot", "-fuse-ld", "-plugin", "-l",
+                                     "-L", "-B", "-fplugin", "-specs", "-Wl"))
+                        for a in argv[1:]), "unsupported opaque linker input")
+        allowed_flags = {"-shared", "-fPIC", "-pthread"}
+        actual_inputs = []
+        skip_next = False
+        for i, item in enumerate(argv[1:], 1):
+            if skip_next:
+                skip_next = False
+                continue
+            if item == "-o":
+                skip_next = True
+                continue
+            if item in allowed_flags:
+                continue
+            require(not item.startswith("-"), "unsupported linker flag")
+            path = Path(item)
+            path = path if path.is_absolute() else roots["build"] / path
+            path = path.resolve(strict=True)
+            require(within_if_exists(path, roots["build"]),
+                    "Host or unsupported linker input")
+            require(path.suffix in (".o", ".obj"),
+                    "archive/linker script/opaque library input not admitted")
+            actual_inputs.append(str(path))
+        claimed = []
+        for item in row["inputs"]:
+            require(set(item) == {"root", "path", "sha256"} and item["root"] == "build",
+                    "unreviewed linker input provenance")
+            file_hash(roots["build"], item["path"], item["sha256"])
+            path = str((roots["build"] / relative(item["path"])).resolve(strict=True))
+            require(object_hashes.get(path) == item["sha256"],
+                    "linker object has no compilation source provenance")
+            claimed.append(path)
+        require(len(actual_inputs) == len(set(actual_inputs))
+                and len(claimed) == len(set(claimed))
+                and set(actual_inputs) == set(claimed)
+                and claimed, "unreported/missing linker inputs")
+    require(seen == {e["path"] for e in binaries},
+            "unlinked ELF installed output")
+
+
 def installed_files(rows, root, expected):
     require(isinstance(rows, list) and rows, "missing DESTDIR inventory")
     seen = set()
@@ -456,6 +604,8 @@ def verify(folder, drafts):
     sidecars = load_sidecars(folder, envelope)
     roots = roots_from(envelope)
     number = commands_and_objects(sidecars, roots, envelope)
+    verify_implicit_inputs(sidecars, roots)
+    verify_link_commands(sidecars, roots, envelope)
     inventory = installed_files(sidecars["installed_inventory"], roots["destdir"],
                                 contract["required"])
     elfcount, edges = elf_and_libraries(sidecars, roots, inventory)
