@@ -143,6 +143,8 @@ OpenGL/GLX for applications that need it. The Mesa runtime and its dependencies
 must come from reviewed, immutable Zog source builds; no distribution/host GL
 fallback may satisfy this gate.
 
+Three source-pinned recipe drafts are now recorded under `project/package/llvm`, `project/package/mesa`, and `project/package/mesa-demos`, with `project/pins/2026-11-01/graphics-source-pin.py` as a supplementary-only review ledger. All remain `catalogue-only` / **native HOLD** until their unpinned dependencies, original archive notices and installed-file closure are independently accepted. The frozen October inputs remain unchanged.
+
 The initial Mesa profile is intentionally narrow:
 
 - CPU Gallium `swrast` with **llvmpipe** as the required software renderer;

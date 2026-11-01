@@ -166,8 +166,7 @@ acceptance** rather than as a Basic/rootfs or hardware-GPU prerequisite.
   user's Qotom hardware around January-February 2027; physical DRM/iGPU,
   DRI3 and VirtualGL acceleration do not block this software smoke gate.
 
-**Status:** newly required planning gate; no Mesa or LLVM recipe, source pin,
-compiled artifact, or native acceptance is claimed in this ledger.
+**Status (2026-11-01):** source-authored native-held LLVM 21.1.6, Mesa 25.3.0 and mesa-demos 9.0.0 stage drafts now exist on PR #8, with a separate supplementary November graphics source ledger and source-only contract tests. They are not canonical monthly build-admitted recipes; exact notice hashes, libdrm, Python Mako/PyYAML and Meson/GLX closure remain blocked. No native compilation, graphics artifact or Workspace acceptance is claimed.
 
 ### F. VirtualGL — later GPU acceleration
 
