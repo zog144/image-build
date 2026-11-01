@@ -620,6 +620,12 @@ def verify(folder, drafts):
     license_record = ast.literal_eval((root / "license.py").read_text())
     require(license_record["status"] == "unresolved",
             "source verifier cannot consume approved rights as authority")
+    require(license_record["evidence"] and all(
+        item.get("source_sha256") == source_sha and sha(item.get("sha256"))
+        for item in license_record["evidence"]),
+        "notice rights member not bound to selected source archive")
+    require(len({item["path"] for item in license_record["evidence"]}) ==
+            len(license_record["evidence"]), "duplicate original notice member")
     rights["_original_member_hashes"] = {item["path"]: item["sha256"]
                                         for item in license_record["evidence"]}
     sidecars = load_sidecars(folder, envelope)
