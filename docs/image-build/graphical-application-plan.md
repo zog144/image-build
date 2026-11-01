@@ -163,6 +163,9 @@ The initial Mesa profile is intentionally narrow:
 - Publish Mesa and TurboVNC as immutable application-software artifacts/views
   (and explicitly bind any necessary compatible rootfs libraries). They do
   **not** become dependencies of Basic/console-first boot.
+- Source-pin and build the narrow `mesa-demos` utility needed for the smoke
+  (`glxgears`, optionally `glxinfo`); these are not supplied by Mesa itself.
+  Do not run an untracked host-installed `glxgears`.
 
 **Minimal first-Workspace acceptance (2026-10-31 scope decision):**
 On an inexpensive, small-core-count CPU-only Host, start the accepted
