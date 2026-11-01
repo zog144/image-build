@@ -2,6 +2,7 @@
 
 Forged evidence is deliberately *untrusted*, including when self-consistent.
 """
+import ast
 import hashlib
 import importlib.util
 import struct
@@ -182,3 +183,11 @@ def test_software_library_symlink_escape_is_rejected(capture):
     provider.unlink()
     provider.symlink_to("/etc/passwd")
     check_reject(capture, "Host path escape")
+
+
+def test_notice_source_archive_binding_cannot_be_swapped(capture):
+    record_path = capture["drafts"] / "mesa/license.py"
+    record = ast.literal_eval(record_path.read_text())
+    record["evidence"][0]["source_sha256"] = "b" * 64
+    record_path.write_text(repr(record))
+    check_reject(capture, "notice rights member not bound")
