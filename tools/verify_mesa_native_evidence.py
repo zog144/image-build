@@ -563,8 +563,13 @@ def elf_and_libraries(sidecars, roots, inventory):
         require(any(within_if_exists(target.parent, root) and
                     target.parent == d.resolve(strict=False) for d in directories),
                 "library provider outside modeled loader search")
-        require(elf_dynamic(target)["soname"] == row["needed"],
+        provider = elf_dynamic(target)
+        require(provider["soname"] == row["needed"],
                 "resolved library SONAME mismatch")
+        if row["root"] == "software":
+            require(not provider["needed"] and not provider["rpath"] and
+                    not provider["runpath"],
+                    "unresolved transitive software-library dependencies")
     require(mapped == edges, "DT_NEEDED with no library byte provenance")
     return len(tracked), len(edges)
 
