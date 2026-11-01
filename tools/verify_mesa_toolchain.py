@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import shutil
+import shlex
 import stat
 from pathlib import Path
 import subprocess
@@ -90,15 +91,22 @@ def check_files(data, phase="mesa"):
 
 
 def check_environment(data, env):
-    for name in ("PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE",
-                 "PIP_INDEX_URL", "PIP_EXTRA_INDEX_URL", "CMAKE_PREFIX_PATH",
-                 "CMAKE_MODULE_PATH", "LD_LIBRARY_PATH", "LD_PRELOAD",
-                 "LD_AUDIT", "PKG_CONFIG_PATH", "PKG_CONFIG_ALLOW_SYSTEM_CFLAGS",
-                 "PKG_CONFIG_ALLOW_SYSTEM_LIBS"):
+    for name in ("PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE", "PYTHONINSPECT",
+                 "PYTHONSTARTUP", "PYTHONPYCACHEPREFIX", "PYTHONPLATLIBDIR",
+                 "PIP_INDEX_URL", "PIP_EXTRA_INDEX_URL", "PIP_CONFIG_FILE",
+                 "CMAKE_PREFIX_PATH", "CMAKE_MODULE_PATH", "CMAKE_TOOLCHAIN_FILE",
+                 "LD_LIBRARY_PATH", "LD_PRELOAD", "LD_AUDIT",
+                 "CPATH", "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "LIBRARY_PATH",
+                 "GCC_EXEC_PREFIX", "COMPILER_PATH", "MESON_PACKAGE_CACHE_DIR",
+                 "BASH_ENV", "ENV", "PKG_CONFIG_PATH",
+                 "PKG_CONFIG_ALLOW_SYSTEM_CFLAGS", "PKG_CONFIG_ALLOW_SYSTEM_LIBS"):
         if env.get(name):
             raise IsolationError("Host search override: " + name)
     if env.get("PYTHONNOUSERSITE") != "1" or env.get("PIP_NO_INDEX") != "1":
         raise IsolationError("unisolated Python packaging")
+    allowed_pc = {"PKG_CONFIG_LIBDIR", "PKG_CONFIG_SYSROOT_DIR", "PKG_CONFIG_PATH"}
+    if any(name.startswith("PKG_CONFIG_") and name not in allowed_pc for name in env):
+        raise IsolationError("unsupported pkgconf environment override")
     if env.get("PKG_CONFIG_LIBDIR") != os.pathsep.join(data["pkgconfig_dirs"]):
         raise IsolationError("pkgconf can resolve Host .pc files")
     if env.get("PKG_CONFIG_SYSROOT_DIR") != data["sysroot"]:
@@ -129,6 +137,7 @@ def check_imports(data):
     code = """import importlib,json,sys
 names = %r
 print(json.dumps({"executable":sys.executable,"paths":sys.path,
+ "isolated":sys.flags.isolated,"no_user_site":sys.flags.no_user_site,
  "modules":{n:getattr(importlib.import_module(n),"__file__",None) for n in names}}))
 """ % (tuple(data["imports"]),)
     result = subprocess.run([python, "-I", "-c", code], capture_output=True,
@@ -136,6 +145,10 @@ print(json.dumps({"executable":sys.executable,"paths":sys.path,
     report = json.loads(result.stdout)
     if Path(report["executable"]).resolve() != Path(python).resolve():
         raise IsolationError("wrong Python interpreter")
+    if report.get("isolated") != 1 or report.get("no_user_site") != 1:
+        raise IsolationError("Python isolated mode was not active")
+    if set(report["modules"]) != set(data["imports"]):
+        raise IsolationError("Python import observation incomplete")
     roots = [Path(p).resolve(strict=True) for p in data["allowed_roots"]]
     for name, origin in report["modules"].items():
         allowed = tuple(Path(p).resolve(strict=True) for p in data["imports"][name])
@@ -144,6 +157,33 @@ print(json.dumps({"executable":sys.executable,"paths":sys.path,
     for search_path in report["paths"]:
         if search_path and not inside(search_path, roots):
             raise IsolationError("Host Python sys.path: " + search_path)
+
+
+def check_pkgconf_flags(package, raw, roots):
+    """Allow ordinary pkgconf switches; hold opaque options for native review."""
+    words = shlex.split(raw)
+    paired = ("-I", "-L", "-isystem", "-iquote", "-idirafter")
+    i = 0
+    while i < len(words):
+        arg = words[i]
+        if arg in paired:
+            i += 1
+            if i >= len(words) or not inside(words[i], roots):
+                raise IsolationError("Host pkgconf split include/library path: " + package)
+        elif any(arg.startswith(prefix) and len(arg) > len(prefix)
+                 for prefix in paired):
+            prefix = next(prefix for prefix in paired if arg.startswith(prefix))
+            if not inside(arg[len(prefix):], roots):
+                raise IsolationError("Host pkgconf include/library path: " + package)
+        elif arg.startswith("-l") and len(arg) > 2 and "/" not in arg:
+            pass
+        elif arg.startswith(("-D", "-U")) and "/" not in arg and "@" not in arg:
+            pass
+        elif arg == "-pthread":
+            pass
+        else:
+            raise IsolationError("unreviewed pkgconf compiler/linker option: " + package)
+        i += 1
 
 
 def check_pkgconf(data):
@@ -159,13 +199,12 @@ def check_pkgconf(data):
         found = check.stdout.strip()
         if not found or not inside(found, roots):
             raise IsolationError("Host pkgconf provider: " + package)
-        flags = subprocess.run([exe, "--cflags", "--libs", package],
+        # Also include Requires.private and Libs.private. Native ELF and
+        # actual library resolution evidence remains a separate acceptance gate.
+        flags = subprocess.run([exe, "--static", "--cflags", "--libs", package],
                                env=env, capture_output=True, text=True,
-                               timeout=20, check=True).stdout.split()
-        for flag in flags:
-            if (flag.startswith(("-I", "-L")) and len(flag)>2 and
-                not inside(flag[2:], roots)):
-                raise IsolationError("Host pkgconf include/library path: " + package)
+                               timeout=20, check=True).stdout
+        check_pkgconf_flags(package, flags, roots)
 
 
 def read_protected_receipt(receipt):
