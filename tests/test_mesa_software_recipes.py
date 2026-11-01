@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from zog.image_build.errors import ImageBuildError
-from zog.image_build.metadata import load_package
 
 PROJECT = Path(__file__).resolve().parents[1] / "project"
 NAMES = ("llvm", "mesa", "mesa-demos")
@@ -24,7 +22,7 @@ def lit(path):
 
 
 def stage(name, part):
-    return lit(PROJECT / "package" / name / "stages" / "final" / part)
+    return lit(PROJECT / "graphics-drafts" / name / "stages" / "final" / part)
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -50,8 +48,8 @@ def test_exact_archive_and_supplementary_pin_agree_without_boot_input_mutation(n
     assert notice["evidence"] == []
     assert notice["required_original_notice_paths"]
     assert notice["components"][0]["status"] == "unresolved"
-    with pytest.raises(ImageBuildError, match="catalogue-only"):
-        load_package(package)
+    # A source draft is not discoverable as a compiled/admitted package.
+    assert not (PROJECT / "package" / name).exists()
 
 
 def test_gallium_dependency_graph_is_exact_and_non_host_fallback():

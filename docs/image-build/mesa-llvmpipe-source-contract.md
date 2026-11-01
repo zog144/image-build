@@ -37,3 +37,5 @@ station-access/noVNC; briefly observe animated gears without client/X
 server crash. Capture `glxinfo -B` optionally and confirm llvmpipe and
 Zog-owned library paths. No FPS minimum, performance suite, soak,
 high-core-count instance or hardware GPU test.
+
+**Loader boundary:** these packages live in `project/graphics-drafts`, NOT in `project/package`. The canonical package loader and licensing admission suite cannot see them. Promotion requires complete source/notice evidence and a reviewed move into `project/package`, plus a canonical monthly pin; this revision makes no such move.
