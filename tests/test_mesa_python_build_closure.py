@@ -43,6 +43,8 @@ def test_pure_python_pyyaml_source_transform_is_explicit():
     assert "setuptools.build_meta" in m["build"][0][-1]
     assert "_pyyaml_pep517" in y["build"][0][-1]
     assert "Cython" in y["prepare"][0][-1] and "original_sha256" in y["prepare"][0][-1]
+    assert len(lit(DRAFT/"pyyaml/license.py")["patches"]) == 1
+    assert lit(DRAFT/"pyyaml/license.py")["patches"][0]["status"] == "unresolved"
     assert "PYYAML_FORCE_LIBYAML" in y["environment"]
     assert "--phase mako" in m["build"][0][-1]
     assert "--phase pyyaml" in y["build"][0][-1]

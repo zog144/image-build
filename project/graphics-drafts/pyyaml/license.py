@@ -24,9 +24,17 @@
       "notes": "Full selection and redistribution attribution pending."
     }
   ],
-  "patches": [],
+  "patches": [
+    {
+      "scope": "Exact PyYAML 6.0.3 pyproject.toml build-system declaration only",
+      "expression": None,
+      "status": "unresolved",
+      "notes": "Pure-Python Mesa build profile removes conditional Cython requirements, preserves _pyyaml_pep517 backend and records original/revised SHA-256 in build output. Transformation must be independently reviewed before admission."
+    }
+  ],
   "notes": [
-    "Original archive-member LICENSE digest checked by graphics archive inspector. No publication authority."
+    "Original archive-member LICENSE digest checked by graphics archive inspector. No publication authority.",
+    "Unmodified upstream archive pin remains authoritative; prepare applies reviewed-in-source transformation and retains original/revised digests. No unrecorded Cython fallback."
   ],
   "scope": "Build-only module rights; full distribution approval withheld"
 }
