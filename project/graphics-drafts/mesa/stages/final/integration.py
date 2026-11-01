@@ -11,5 +11,24 @@
     "Original archive notice/component hashes pending"
   ],
   "device_policy": "No /dev/dri, kernel graphics devices, GPU/Vulkan drivers or Wayland requirement.",
-  "runtime_smoke": "ELF/GLX dependency closure; no native acceptance claimed."
+  "runtime_smoke": "ELF/GLX dependency closure; no native acceptance claimed.",
+  "inherited_glx_pkgconfig": [
+    "x11",
+    "xext",
+    "x11-xcb",
+    "xcb",
+    "xcb-randr",
+    "xcb-glx",
+    "xcb-shm",
+    "xcb-dri3",
+    "xcb-present",
+    "xcb-sync",
+    "xcb-xfixes",
+    "xshmfence",
+    "xxf86vm",
+    "libdrm",
+    "expat",
+    "zlib"
+  ],
+  "immutable_elf_check": "Native-only: verify DT_NEEDED/SONAME/RPATH/RUNPATH, swrast LLVM shared linkage and zero Host graphic library leakage; do not infer runtime libdrm requirement from build-only pkg-config."
 }

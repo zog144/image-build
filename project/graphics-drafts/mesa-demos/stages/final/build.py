@@ -7,7 +7,7 @@
       "-o",
       "pipefail",
       "-c",
-      "command -v meson; command -v ninja\npkg-config --exists gl x11 xext\nmeson setup build-demos upstream/mesa-demos-9.0.0 --prefix=/usr --libdir=lib --buildtype=release -Dx11=enabled -Degl=disabled -Dgles1=disabled -Dgles2=disabled -Dvulkan=disabled -Dglut=disabled -Dauto_features=disabled"
+      "command -v meson; command -v ninja\npkg-config --exists gl glx x11 xext\nmeson setup build-demos upstream/mesa-demos-9.0.0 --prefix=/usr --libdir=lib --buildtype=release -Dx11=enabled -Degl=disabled -Dgles1=disabled -Dgles2=disabled -Dvulkan=disabled -Dglut=disabled -Dauto_features=disabled"
     ]
   ],
   "build": [

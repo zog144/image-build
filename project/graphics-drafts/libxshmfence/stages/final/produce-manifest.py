@@ -5,6 +5,7 @@
   ],
   "required": [
     "usr/lib/libxshmfence.so",
-    "usr/include/X11/xshmfence.h"
+    "usr/include/X11/xshmfence.h",
+    "usr/lib/pkgconfig/xshmfence.pc"
   ]
 }

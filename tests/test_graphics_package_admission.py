@@ -83,3 +83,23 @@ def test_source_archive_inspector_verifies_actual_bytes_not_git_tag_assumptions(
     assert 'unrecognized exact-release Meson option' in source
     assert 'missing or duplicated build source member' in source
     assert 'source_tree_layout' in source
+
+
+def test_exact_glx_pkgconfig_contract_includes_xcb_extensions_and_xshmfence():
+    mesa = literal(DRAFT / "mesa/stages/final/integration.py")
+    required = set(mesa["inherited_glx_pkgconfig"])
+    assert {"x11-xcb","xcb-glx","xcb-dri3","xcb-present",
+            "xcb-shm","xcb-sync","xcb-xfixes","xshmfence","xxf86vm",
+            "libdrm"} <= required
+    assert "DT_NEEDED/SONAME/RPATH/RUNPATH" in mesa["immutable_elf_check"]
+    builder = literal(DRAFT / "mesa/stages/final/build.py")
+    command = builder["configure"][0][-1]
+    assert "pkg-config --exists " + " ".join(mesa["inherited_glx_pkgconfig"]) in command
+    x11 = literal(CANONICAL / "libX11/stages/final/produce-manifest.py")
+    assert "usr/lib/libX11-xcb.so" in x11["required"]
+    xshmfence = literal(DRAFT / "libxshmfence/stages/final/produce-manifest.py")
+    assert "usr/lib/pkgconfig/xshmfence.pc" in xshmfence["required"]
+    xshmfence_install = literal(DRAFT / "libxshmfence/stages/final/build.py")["install"][0][-1]
+    assert "usr/lib/pkgconfig/xshmfence.pc" in xshmfence_install
+    demos = literal(DRAFT / "mesa-demos/stages/final/build.py")["configure"][0][-1]
+    assert "pkg-config --exists gl glx x11 xext" in demos
