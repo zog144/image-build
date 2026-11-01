@@ -65,3 +65,9 @@ The exact Mesa 25.3.0 `meson.build` inspection ([source evidence 41311622938](ht
 ## Canonical package admission handoff
 
 The typed `project/graphics-drafts/admission-plan.json` records the six exact intended native stages, already-authored X11 predecessors, blocked Python build-input stages, mandatory rights/source/ELF checks and the limited `glxgears` criterion. This plan is a **hold**, not an executable build request. Its source tests refuse silently treating the drafts as packages in `project/package/`. Source-only build and archive inspection being green does **not** authorize package publication or imply a usable llvmpipe renderer.
+
+## Canonical metadata boundary (2026-11-01)
+
+All six native graphics drafts now pass the actual image-build package metadata and licensing parsers in source CI. The three original output manifests had an unsupported `publication` field, now removed. Rights records now use the precise canonical `schema=1` shape, retaining original archive SHA-256 member evidence while declaring `status='unresolved'`, `scope`, and unresolved scoped components. This is **metadata compatibility only**, not compiler, runtime or redistribution acceptance.
+
+The supplementary November pin remains review-only and **no files were promoted to `project/package`**. Mako/MarkupSafe and PyYAML packaging backends, complete selected-component rights, real source-built LLVM/Mesa shared ABI, installed output/ELF inventory, immutable artifact/view and Xvnc `glxgears` smoke remain outstanding. Never use green source CI as native admission.
