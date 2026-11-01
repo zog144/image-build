@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import os
+import stat
 from pathlib import Path
 import subprocess
 
@@ -26,7 +27,9 @@ class IsolationError(RuntimeError):
 
 
 def inside(path, roots):
-    real = Path(path).resolve(strict=True)
+    # sys.path may legitimately contain an uncreated pythonXY.zip under Zog.
+    # Resolve existing symlink prefixes, but do not treat absence as Host access.
+    real = Path(path).resolve(strict=False)
     return any(real == root or root in real.parents for root in roots)
 
 
@@ -54,7 +57,7 @@ def check_files(data, phase="mesa"):
     if not data["pkgconfig_dirs"]:
         raise IsolationError("missing pkgconf search roots")
     for d in data["pkgconfig_dirs"]:
-        if not inside(d, roots):
+        if not Path(d).is_dir() or not inside(d, roots):
             raise IsolationError("Host pkgconfig directory")
     if not inside(data["sysroot"], roots):
         raise IsolationError("Host sysroot")
@@ -140,15 +143,37 @@ def check_pkgconf(data):
                 raise IsolationError("Host pkgconf include/library path: " + package)
 
 
+def read_protected_receipt(receipt):
+    """Reject symlinks and user-writable directory replacement before reading."""
+    path = Path(receipt)
+    if not path.is_absolute():
+        raise IsolationError("native receipt must use absolute protected path")
+    for ancestor in list(reversed(path.parents)):
+        st = ancestor.lstat()
+        if not stat.S_ISDIR(st.st_mode) or st.st_uid != 0 or st.st_mode & 0o022:
+            raise IsolationError("unprotected receipt ancestor: " + str(ancestor))
+    st = path.lstat()
+    if not stat.S_ISREG(st.st_mode) or st.st_uid != 0 or st.st_mode & 0o022:
+        raise IsolationError("unprotected receipt file")
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid != 0 or st.st_mode & 0o022:
+            raise IsolationError("receipt changed during inspection")
+        if st.st_size > 1024 * 1024:
+            raise IsolationError("oversized receipt")
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            return json.loads(stream.read(1024 * 1024 + 1))
+    finally:
+        os.close(fd)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--attestation", required=True, type=Path)
     parser.add_argument("--phase", required=True, choices=("mako", "pyyaml", "mesa"))
     args = parser.parse_args()
-    receipt = args.attestation
-    if not receipt.is_file() or receipt.stat().st_uid != 0 or receipt.stat().st_mode & 0o022:
-        raise IsolationError("receipt must be protected and root-owned")
-    data = json.loads(receipt.read_text())
+    data = read_protected_receipt(args.attestation)
     check_files(data, args.phase)
     check_environment(data, os.environ)
     check_imports(data)

@@ -85,6 +85,20 @@ def test_no_untrusted_receipt_or_host_file(tmp_path):
                           "authority":"root-control-protected-installed-bytes",
                           "allowed_roots":["/"]})
 
+def test_symlink_receipt_and_uncreated_python_zip_are_handled_fail_closed(tmp_path):
+    module=load()
+    protected=tmp_path/"untrusted"
+    protected.mkdir()
+    actual=protected/"payload.json"
+    actual.write_text("{}")
+    linked=protected/"linked.json"
+    linked.symlink_to(actual)
+    with pytest.raises(module.IsolationError):
+        module.read_protected_receipt(linked)
+    root=tmp_path/"approved";root.mkdir()
+    assert module.inside(root/"missing-python3.15.zip",[root])
+    assert not module.inside(root/"missing-python3.15.zip",[root/"not-existing-root"])
+
 def test_all_six_still_rights_and_publication_held():
     rights=json.loads((DRAFT/"rights-admission-evidence.json").read_text())
     assert rights["status"].endswith("NO-GO")
