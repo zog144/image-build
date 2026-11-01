@@ -83,6 +83,8 @@ def test_source_archive_inspector_verifies_actual_bytes_not_git_tag_assumptions(
     assert 'unrecognized exact-release Meson option' in source
     assert 'missing or duplicated build source member' in source
     assert 'source_tree_layout' in source
+    assert 'source_review_candidates' in source
+    assert 'missing scoped source candidate' in source
     assert 'original_pep517' in source
     assert 'PEP 517 backend requirements changed' in source
 

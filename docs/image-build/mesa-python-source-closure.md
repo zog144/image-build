@@ -76,3 +76,20 @@ include/library switches; opaque linker options fail closed.
 These source changes must still be exercised against an authentic installed
 toolchain and associated protected native receipt; a passing source check
 is not a native isolation attestation.
+
+
+## Scoped original-source candidates
+
+The archive inspector is extended to SHA-256 the exact original source
+candidates listed in \`rights-admission-evidence.json\`: LLVM BLAKE3 notice
+and support notice; Mesa llvmpipe screen source, GLX build metadata and
+GLAPI generator notice; libdrm core implementation/header and mode source;
+libxshmfence original Makefile and COPYING; libXxf86vm original source and
+COPYING; and the two mesa-demos selected source files. Each candidate must
+exist exactly once in the verified upstream archive or source CI fails.
+
+This identifies attributable *source candidates*, not proof that the actual
+native compiler selected them. Disabled Mesa Vulkan/imgui sources, LLVM
+generated code and third-party components remain separate reviewer questions.
+An independent source-to-object compilation inventory and final notice
+delivery/rights assessment are still prerequisites for distribution.

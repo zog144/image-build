@@ -28,6 +28,35 @@ OPTIONS = ("meson.options", "meson_options.txt", "CMakeLists.txt",
            "pyproject.toml",
            "meson.build", "src/glx/meson.build",
            "src/gallium/targets/dri/meson.build", "src/xdemos/meson.build")
+SOURCE_RIGHTS_CANDIDATES = {
+  "llvm": (
+    "lib/Support/BLAKE3/LICENSE",
+    "include/llvm/Support/LICENSE.TXT"
+  ),
+  "mesa": (
+    "src/gallium/drivers/llvmpipe/lp_screen.c",
+    "src/glx/meson.build",
+    "src/mesa/glapi/glapi/gen/license.py"
+  ),
+  "libdrm": (
+    "xf86drm.c",
+    "xf86drm.h",
+    "xf86drmMode.c"
+  ),
+  "libxshmfence": (
+    "src/Makefile.am",
+    "COPYING"
+  ),
+  "libXxf86vm": (
+    "src/XF86VMode.c",
+    "COPYING"
+  ),
+  "mesa-demos": (
+    "src/xdemos/glxgears.c",
+    "src/xdemos/glxinfo.c"
+  )
+}
+CANDIDATE_MEMBERS = frozenset(p for paths in SOURCE_RIGHTS_CANDIDATES.values() for p in paths)
 DEMOS_RIGHTS = ("src/xdemos/glxgears.c", "src/xdemos/glxinfo.c")
 LIBDRM_RIGHTS = ("xf86drm.c", "xf86drm.h", "meson.build")
 NOTICES = ("LICENSE", "COPYING", "NOTICE", "LICENSE.TXT",
@@ -44,7 +73,8 @@ def check_member(member):
     lower = path.name.lower()
     relative = "/".join(path.parts[1:])
     if (lower in {p.lower() for p in NOTICES}
-            or relative in OPTIONS or relative in DEMOS_RIGHTS or relative in LIBDRM_RIGHTS
+            or relative in OPTIONS or relative in CANDIDATE_MEMBERS
+            or relative in DEMOS_RIGHTS or relative in LIBDRM_RIGHTS
             or lower.startswith(("license.", "copying.", "notice."))):
         return path
     return None
@@ -153,6 +183,17 @@ def inspect_one(name, entry, output, fetch=True):
                     pep517.get("project", {}).get("dependencies") != ["MarkupSafe >= 2.0"]):
                 raise ValueError("Mako MarkupSafe dependency changed")
             record["original_pep517"] = required
+        # Archive candidates are concrete original-source bytes. Inclusion in
+        # selected native objects remains unproven until compile_commands.
+        if name in SOURCE_RIGHTS_CANDIDATES:
+            candidates = {}
+            for relative in SOURCE_RIGHTS_CANDIDATES[name]:
+                matched = [p for p in record["members"]
+                           if "/".join(PurePosixPath(p).parts[1:]) == relative]
+                if len(matched) != 1:
+                    raise ValueError("missing scoped source candidate: " + name + "/" + relative)
+                candidates[relative] = record["members"][matched[0]]
+            record["source_review_candidates"] = candidates
         notices = {
             path: value for path, value in record["members"].items()
             if any(token in path.rsplit("/", 1)[-1].lower()
@@ -237,6 +278,7 @@ def inspect_one(name, entry, output, fetch=True):
                    p.endswith("/meson_options.txt") or
                    p.endswith("/CMakeLists.txt")
             },
+            "original_scoped_source_candidates": record.get("source_review_candidates", {}),
             "source_rights": {
                 p: v for p,v in record["members"].items()
                 if p.endswith("/src/xdemos/glxgears.c") or

@@ -55,7 +55,20 @@
           "status": "draft install command only; actual byte and rights verification required"
         }
       ],
-      "delivery_plan_status": "source-authored-but-not-native-observed"
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "lib/Support/BLAKE3/LICENSE",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "include/llvm/Support/LICENSE.TXT",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        }
+      ],
+      "actual_compile_commands_status": "not received"
     },
     "mesa": {
       "verified_notice_members": [
@@ -92,7 +105,25 @@
           "status": "draft install command only; actual byte and rights verification required"
         }
       ],
-      "delivery_plan_status": "source-authored-but-not-native-observed"
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/gallium/drivers/llvmpipe/lp_screen.c",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "src/glx/meson.build",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "src/mesa/glapi/glapi/gen/license.py",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        }
+      ],
+      "actual_compile_commands_status": "not received"
     },
     "libdrm": {
       "verified_notice_members": [
@@ -127,7 +158,25 @@
           "status": "draft install command only; actual byte and rights verification required"
         }
       ],
-      "delivery_plan_status": "source-authored-but-not-native-observed"
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "xf86drm.c",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "xf86drm.h",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "xf86drmMode.c",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        }
+      ],
+      "actual_compile_commands_status": "not received"
     },
     "libxshmfence": {
       "verified_notice_members": [
@@ -153,7 +202,20 @@
           "status": "draft install command only; actual byte and rights verification required"
         }
       ],
-      "delivery_plan_status": "source-authored-but-not-native-observed"
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/Makefile.am",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "COPYING",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        }
+      ],
+      "actual_compile_commands_status": "not received"
     },
     "libXxf86vm": {
       "verified_notice_members": [
@@ -178,7 +240,20 @@
           "status": "draft install command only; actual byte and rights verification required"
         }
       ],
-      "delivery_plan_status": "source-authored-but-not-native-observed"
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/XF86VMode.c",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "COPYING",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        }
+      ],
+      "actual_compile_commands_status": "not received"
     },
     "mesa-demos": {
       "verified_notice_members": [
@@ -212,7 +287,20 @@
           "status": "draft install command only; actual byte and rights verification required"
         }
       ],
-      "delivery_plan_status": "source-authored-but-not-native-observed"
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/xdemos/glxgears.c",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        },
+        {
+          "relative_member": "src/xdemos/glxinfo.c",
+          "source_sha256_status": "original archive inspection required",
+          "selected_native_compilation": "unobserved"
+        }
+      ],
+      "actual_compile_commands_status": "not received"
     }
   },
   "required_evidence": [
@@ -230,6 +318,7 @@
     "original_notices_hashed": true,
     "compile_commands_received": false,
     "installed_manifest_received": false,
-    "license_delivery_received": false
+    "license_delivery_received": false,
+    "native_source_selection_approved": false
   }
 }
