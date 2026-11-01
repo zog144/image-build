@@ -61,14 +61,14 @@
           "relative_member": "lib/Support/BLAKE3/LICENSE",
           "source_sha256_status": "original archive SHA-256 verified",
           "selected_native_compilation": "unobserved",
-          "sha256": "54cbc326a78b9400065bfc5830a57fdcdaf808286d4ac35d8a9e324aa77b7241",
+          "sha256": "6a94bedb8b707ed97f6e310d0d015ab14e0683ffa0a612b02958581b9cc9fc0e",
           "verification_run": 41330909677
         },
         {
           "relative_member": "include/llvm/Support/LICENSE.TXT",
           "source_sha256_status": "original archive SHA-256 verified",
           "selected_native_compilation": "unobserved",
-          "sha256": "6a94bedb8b707ed97f6e310d0d015ab14e0683ffa0a612b02958581b9cc9fc0e",
+          "sha256": "54cbc326a78b9400065bfc5830a57fdcdaf808286d4ac35d8a9e324aa77b7241",
           "verification_run": 41330909677
         }
       ],
@@ -224,14 +224,14 @@
           "relative_member": "src/Makefile.am",
           "source_sha256_status": "original archive SHA-256 verified",
           "selected_native_compilation": "unobserved",
-          "sha256": "64a579d1a0b3347301d87c94698a58ea7933d0ae6ca7e8fdd702fde2ea376301",
+          "sha256": "18775cc259f873802489a621f492ece321c55d635e6e3600b9348993175d49af",
           "verification_run": 41330909677
         },
         {
           "relative_member": "COPYING",
           "source_sha256_status": "original archive SHA-256 verified",
           "selected_native_compilation": "unobserved",
-          "sha256": "18775cc259f873802489a621f492ece321c55d635e6e3600b9348993175d49af",
+          "sha256": "64a579d1a0b3347301d87c94698a58ea7933d0ae6ca7e8fdd702fde2ea376301",
           "verification_run": 41330909677
         }
       ],
@@ -266,14 +266,14 @@
           "relative_member": "src/XF86VMode.c",
           "source_sha256_status": "original archive SHA-256 verified",
           "selected_native_compilation": "unobserved",
-          "sha256": "f3da8eaed19e27e4f67e6f076d4ebdb8d649e15a8ad33a415fb65a23de1b6689",
+          "sha256": "0dc5864c31f4fd97e3c9ba42662ea9bb24d9d33a6cb73e188037e1d844857e53",
           "verification_run": 41330909677
         },
         {
           "relative_member": "COPYING",
           "source_sha256_status": "original archive SHA-256 verified",
           "selected_native_compilation": "unobserved",
-          "sha256": "0dc5864c31f4fd97e3c9ba42662ea9bb24d9d33a6cb73e188037e1d844857e53",
+          "sha256": "f3da8eaed19e27e4f67e6f076d4ebdb8d649e15a8ad33a415fb65a23de1b6689",
           "verification_run": 41330909677
         }
       ],
