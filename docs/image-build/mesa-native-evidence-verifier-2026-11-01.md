@@ -1,0 +1,44 @@
+# Mesa native build-evidence consistency verifier (source-prepared)
+
+**Scope:** image-build PR #8; source review only. No native compilation, witness authentication, rights grant, canonical recipe admission or artifact publication is performed here.
+
+`tools/verify_mesa_native_evidence.py` consumes an evidence bundle and the current noncanonical `project/graphics-drafts` contracts. Its only successful result is `evidence-consistent-not-native-accepted`; the JSON explicitly sets `native_accepted=false`, `source_archives_independently_accepted=false` and `redistribution_authorized=false`.
+
+## Invocation
+
+```bash
+python3 tools/verify_mesa_native_evidence.py \
+  --bundle /path/to/native-capture-bundle \
+  --drafts project/graphics-drafts
+```
+
+The bundle contains `evidence.json` and six separately SHA-256-referenced JSON sidecars named `compile_commands.json`, `source_objects.json`, `installed_inventory.json`, `elf_dependencies.json`, `library_provenance.json`, and `delivered_notices.json`. The `evidence` object maps those keys to `{"file":"...","sha256":"..."}`. The envelope must have:
+
+- `schema="zog-mesa-native-evidence-v1"`, `component` one of the six graphics drafts, `capture_status="untrusted-observation"`, and `source_archive_sha256` equal to that draft's immutable upstream pin;
+- absolute existing `roots` for `source`, `build`, `destdir`, `software`; each is deliberately treated as supplied evidence rather than installation authority;
+- an exact-path SHA-256 list `compilers` for the compiler programs used by `compile_commands.json`.
+
+The verifier does **not** execute compiler or linker commands, fetch archives, invoke `readelf`, execute ELF, or use any privilege. The collector must supply an honest, complete immutable snapshot of actual native bytes: compiler executable(s), source and object files, installed DESTDIR, and every needed library under the approved immutable software root. The bundle's absolute roots are necessary references to captured bytes, not a reason to trust them.
+
+## Sidecar contracts
+
+| Sidecar | Required content and cross-check |
+|---|---|
+| `compile_commands` | Standard compilation database rows with `directory`, `file`, and exactly one of `arguments`/`command`, plus optional `output`; match normalized `-c` source and `-o` object to source-object map, with compiler byte hash and include/library path containment |
+| `source_objects` | Full compilation unit map: `source_root` (`source` or `build`), source relative path/SHA, object relative path/SHA, generated input provenance; one-to-one with compilation commands |
+| `installed_inventory` | Complete DESTDIR leaf enumeration; exact installed-file digests and contained relative symlink targets; all expected binary/header/notice paths from draft manifest |
+| `elf_dependencies` | Every physical installed ELF64 little-endian dynamic file; `DT_NEEDED`, SONAME, RPATH and RUNPATH cross-checked against the ELF program headers and dynamic strings in actual installed bytes, not merely a self-reported `readelf` result |
+| `library_provenance` | One exact resolved byte digest per reported `DT_NEEDED` edge, rooted in captured `software` or `destdir`, with matching actual library SONAME; no Host library fallback |
+| `delivered_notices` | Exact planned notice-member path and installed-byte digest; compare against original archive-member SHA-256 in the draft's `license.py` evidence, requiring every planned notice |
+
+A missing compilation unit, unreported ELF, extra installed output, wrong notice bytes, Host include paths, library-soname mismatch, symlink escape, tampered sidecar hash, and bundle-supplied approval are negative cases. The test fixture generates tiny synthetic ELF64 PT_DYNAMIC bytes and deliberately *recalculates* sidecar SHA-256 after many tampering changes so the verifier must detect semantic inconsistencies.
+
+## Production capture/acceptance boundary
+
+1. **Native source:** independently verify exact upstream archive SHA-256, original notices, and any selected patches; the bundle's assertion of a pin is not proof.
+2. **Native installation and execution:** a protected host-install/root-control witness must bind a genuine installation ID/generation and protected compiler/software root, immutable build source, namespace and execution identity, capture time, and a complete immutable manifest of the observed files. An attacker-provided bundle, even if internally consistent, cannot establish this.
+3. **Compiler and linker provenance:** collect the complete build graph, command expansions and response files, generated-source transformations, static archives, scripts, compiler startup/system headers, implicit link dependencies and actual ELF loader resolution. The current verifier deliberately rejects opaque linker paths and unsupported ELF formats rather than claiming broad coverage.
+4. **Complete dynamic and distribution inspection:** reconcile real installed outputs against the entire dependency closure and per-file rights, including bundled LLVM BLAKE3, Mesa's generated GLAPI, disabled sources, and all delivered notices. The limited current notice delivery plan is not a legal clearance.
+5. **Separate authorization:** actual native acceptance, original-source/patch verification and independent redistribution rights require their own independently signed evidence and explicit authorization. Do not promote any of the six graphics drafts to `project/package` or modify frozen Boot A pins on this source-only result.
+
+The synthetic evidence fixtures intentionally prove nothing about an EC2 compiler, native installed artifacts, or graphics operation. They test the verifier and its fail-closed behavior only. Eventually, a low-cost Xvnc/noVNC `glxgears` smoke can validate graphical operation after the independent native and rights gates pass; no FPS threshold.
