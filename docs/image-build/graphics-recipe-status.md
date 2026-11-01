@@ -150,6 +150,9 @@ acceptance** rather than as a Basic/rootfs or hardware-GPU prerequisite.
 - Produce an immutable software artifact/view with full runtime ELF and
   library/driver path closure. Do not silently expand the console-first
   rootfs or grant `/dev/dri` access.
+- Author a separately pinned, minimal `mesa-demos` smoke-test utility
+  recipe for `glxgears` (and `glxinfo` if needed). Mesa does not install
+  these tools; use immutable Zog-built tools, not host-provided binaries.
 - **Small, inexpensive native integration smoke only:** start a real Xvnc
   Workspace over noVNC and run `glxgears`. Its animated window must appear
   and stay alive briefly without a client/X-server crash. Use `glxinfo -B`
