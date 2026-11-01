@@ -80,11 +80,17 @@ def inspect_one(name, entry, output, fetch=True):
             raise ValueError("archive SHA-256 differs for " + name)
         record = {"source_sha256": digest, "url": url, "members": {}}
         option_names = set()
+        source_tree_layout = []
         referenced_dependencies = {}
         build_targets = {}
         dependency_contexts = {}
         with tarfile.open(archive, "r:*") as tar:
             for member in tar:
+                all_parts = PurePosixPath(member.name).parts
+                if (name in ("libxshmfence", "libXxf86vm", "mesa-demos")
+                    and len(all_parts) <= 4 and member.isfile()
+                    and len(source_tree_layout) < 120):
+                    source_tree_layout.append("/".join(all_parts[1:]))
                 path = check_member(member)
                 if path is None:
                     continue
@@ -158,6 +164,7 @@ def inspect_one(name, entry, output, fetch=True):
         print(json.dumps({
             "package": name,
             "source_sha256": digest,
+            "source_tree_layout": source_tree_layout,
             "selected_notices": notices,
             "profile_options_checked": record.get("profile_options_checked", []),
             "referenced_dependencies": referenced_dependencies,
