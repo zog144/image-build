@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; meson install -C build-mesa --destdir \"$DESTDIR\"\ntest -e \"$DESTDIR/usr/lib/libGL.so\"\ntest -e \"$DESTDIR/usr/lib/dri/swrast_dri.so\""
+      "test -n \"${DESTDIR:-}\"; meson install -C build-mesa --destdir \"$DESTDIR\"\ntest -e \"$DESTDIR/usr/lib/libGL.so\"\ntest -e \"$DESTDIR/usr/lib/dri/swrast_dri.so\"\ninstall -Dm644 \"upstream/mesa-25.3.0/docs/license.rst\" \"$DESTDIR/usr/share/licenses/mesa/license.rst\"\ninstall -Dm644 \"upstream/mesa-25.3.0/src/mesa/glapi/glapi/gen/license.py\" \"$DESTDIR/usr/share/licenses/mesa/glapi-generator-license.py\""
     ]
   ]
 }

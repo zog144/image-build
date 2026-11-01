@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" meson install -C build-libdrm\nfor required in \"$DESTDIR/usr/lib/libdrm.so\" \"$DESTDIR/usr/include/xf86drm.h\" \"$DESTDIR/usr/lib/pkgconfig/libdrm.pc\"; do test -e \"$required\"; done"
+      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" meson install -C build-libdrm\nfor required in \"$DESTDIR/usr/lib/libdrm.so\" \"$DESTDIR/usr/include/xf86drm.h\" \"$DESTDIR/usr/lib/pkgconfig/libdrm.pc\"; do test -e \"$required\"; done\ninstall -Dm644 \"upstream/libdrm-2.4.128/xf86drm.c\" \"$DESTDIR/usr/share/licenses/libdrm/xf86drm.c\"\ninstall -Dm644 \"upstream/libdrm-2.4.128/xf86drm.h\" \"$DESTDIR/usr/share/licenses/libdrm/xf86drm.h\""
     ]
   ]
 }

@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" cmake --install build-llvm --prefix /usr\ntest -x \"$DESTDIR/usr/bin/llvm-config\"\n# Verify libLLVM runtime output and its ELF closure before native admission."
+      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" cmake --install build-llvm --prefix /usr\ntest -x \"$DESTDIR/usr/bin/llvm-config\"\n# Verify libLLVM runtime output and its ELF closure before native admission.\ninstall -Dm644 \"upstream/llvm-21.1.6.src/LICENSE.TXT\" \"$DESTDIR/usr/share/licenses/llvm/LICENSE.TXT\"\ninstall -Dm644 \"upstream/llvm-21.1.6.src/lib/Support/BLAKE3/LICENSE\" \"$DESTDIR/usr/share/licenses/llvm/BLAKE3-LICENSE\""
     ]
   ]
 }

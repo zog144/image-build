@@ -34,11 +34,28 @@
       ],
       "expected_output_paths": [
         "usr/bin/llvm-config",
-        "usr/lib/libLLVM.so"
+        "usr/lib/libLLVM.so",
+        "usr/share/licenses/llvm/LICENSE.TXT",
+        "usr/share/licenses/llvm/BLAKE3-LICENSE"
       ],
       "installed_outputs_observed": false,
       "notice_delivery_verified": false,
-      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "llvm-21.1.6.src/LICENSE.TXT",
+          "installed_path": "usr/share/licenses/llvm/LICENSE.TXT",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "llvm-21.1.6.src/lib/Support/BLAKE3/LICENSE",
+          "installed_path": "usr/share/licenses/llvm/BLAKE3-LICENSE",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed"
     },
     "mesa": {
       "verified_notice_members": [
@@ -54,11 +71,28 @@
       ],
       "expected_output_paths": [
         "usr/lib/libGL.so",
-        "usr/lib/dri/swrast_dri.so"
+        "usr/lib/dri/swrast_dri.so",
+        "usr/share/licenses/mesa/license.rst",
+        "usr/share/licenses/mesa/glapi-generator-license.py"
       ],
       "installed_outputs_observed": false,
       "notice_delivery_verified": false,
-      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "mesa-25.3.0/docs/license.rst",
+          "installed_path": "usr/share/licenses/mesa/license.rst",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "mesa-25.3.0/src/mesa/glapi/glapi/gen/license.py",
+          "installed_path": "usr/share/licenses/mesa/glapi-generator-license.py",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed"
     },
     "libdrm": {
       "verified_notice_members": [
@@ -72,11 +106,28 @@
       "expected_output_paths": [
         "usr/lib/libdrm.so",
         "usr/include/xf86drm.h",
-        "usr/lib/pkgconfig/libdrm.pc"
+        "usr/lib/pkgconfig/libdrm.pc",
+        "usr/share/licenses/libdrm/xf86drm.c",
+        "usr/share/licenses/libdrm/xf86drm.h"
       ],
       "installed_outputs_observed": false,
       "notice_delivery_verified": false,
-      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "libdrm-2.4.128/xf86drm.c",
+          "installed_path": "usr/share/licenses/libdrm/xf86drm.c",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "libdrm-2.4.128/xf86drm.h",
+          "installed_path": "usr/share/licenses/libdrm/xf86drm.h",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed"
     },
     "libxshmfence": {
       "verified_notice_members": [
@@ -88,11 +139,21 @@
       "expected_output_paths": [
         "usr/lib/libxshmfence.so",
         "usr/include/X11/xshmfence.h",
-        "usr/lib/pkgconfig/xshmfence.pc"
+        "usr/lib/pkgconfig/xshmfence.pc",
+        "usr/share/licenses/libxshmfence/COPYING"
       ],
       "installed_outputs_observed": false,
       "notice_delivery_verified": false,
-      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "libxshmfence-1.3.3/COPYING",
+          "installed_path": "usr/share/licenses/libxshmfence/COPYING",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed"
     },
     "libXxf86vm": {
       "verified_notice_members": [
@@ -103,11 +164,21 @@
       ],
       "expected_output_paths": [
         "usr/lib/libXxf86vm.so",
-        "usr/lib/pkgconfig/xxf86vm.pc"
+        "usr/lib/pkgconfig/xxf86vm.pc",
+        "usr/share/licenses/libXxf86vm/COPYING"
       ],
       "installed_outputs_observed": false,
       "notice_delivery_verified": false,
-      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "libXxf86vm-1.1.7/COPYING",
+          "installed_path": "usr/share/licenses/libXxf86vm/COPYING",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed"
     },
     "mesa-demos": {
       "verified_notice_members": [
@@ -120,11 +191,28 @@
       ],
       "expected_output_paths": [
         "usr/bin/glxgears",
-        "usr/bin/glxinfo"
+        "usr/bin/glxinfo",
+        "usr/share/licenses/mesa-demos/glxgears.c",
+        "usr/share/licenses/mesa-demos/glxinfo.c"
       ],
       "installed_outputs_observed": false,
       "notice_delivery_verified": false,
-      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "mesa-demos-9.0.0/src/xdemos/glxgears.c",
+          "installed_path": "usr/share/licenses/mesa-demos/glxgears.c",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "mesa-demos-9.0.0/src/xdemos/glxinfo.c",
+          "installed_path": "usr/share/licenses/mesa-demos/glxinfo.c",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed"
     }
   },
   "required_evidence": [

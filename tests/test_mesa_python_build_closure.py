@@ -130,3 +130,25 @@ def test_all_six_still_rights_and_publication_held():
             DRAFT/name/"stages/final/produce-manifest.py")["required"]
         assert lit(DRAFT/name/"license.py")["status"]=="unresolved"
         assert not (ROOT/"project/package"/name).exists()
+
+
+def test_original_archive_notice_delivery_is_explicit_and_still_unapproved():
+    r=json.loads((DRAFT/"rights-admission-evidence.json").read_text())
+    for name, row in r["components"].items():
+        manifest=lit(DRAFT/name/"stages/final/produce-manifest.py")
+        license_record=lit(DRAFT/name/"license.py")
+        installer=lit(DRAFT/name/"stages/final/build.py")["install"][0][-1]
+        originals={p["path"] for p in license_record["evidence"]}
+        assert row["original_member_delivery_plan"]
+        assert row["delivery_plan_status"]=="source-authored-but-not-native-observed"
+        for planned in row["original_member_delivery_plan"]:
+            assert planned["original_member"] in originals
+            assert planned["installed_path"] in manifest["required"]
+            assert planned["installed_path"] in row["expected_output_paths"]
+            assert planned["installed_path"] in installer
+            assert f'upstream/{planned["original_member"]}' in installer
+        assert row["notice_delivery_verified"] is False
+        assert row["installed_outputs_observed"] is False
+        assert license_record["status"] == "unresolved"
+    assert r["rights_approved"] is False
+    assert r["canonical_admitted"] is False

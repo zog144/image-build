@@ -141,7 +141,8 @@ def test_exact_source_pins_for_direct_glx_dependencies():
 
 def test_original_xxf86vm_pkgconfig_install_and_complete_llvm_target_graph():
     xxf = stage("libXxf86vm", "produce-manifest.py")
-    assert xxf["required"] == ["usr/lib/libXxf86vm.so", "usr/lib/pkgconfig/xxf86vm.pc"]
+    assert xxf["required"][:2] == ["usr/lib/libXxf86vm.so", "usr/lib/pkgconfig/xxf86vm.pc"]
+    assert "usr/share/licenses/libXxf86vm/COPYING" in xxf["required"]
     assert "xf86vmode.h" not in str(xxf)
     llvm = stage("llvm", "build.py")
     assert llvm["build"][0][-1] == "cmake --build build-llvm --parallel 2"

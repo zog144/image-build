@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; make -C upstream/libxshmfence-1.3.3 DESTDIR=\"$DESTDIR\" install\nfor f in \"$DESTDIR/usr/lib/libxshmfence.so\" \"$DESTDIR/usr/include/X11/xshmfence.h\" \"$DESTDIR/usr/lib/pkgconfig/xshmfence.pc\"; do test -e \"$f\"; done"
+      "test -n \"${DESTDIR:-}\"; make -C upstream/libxshmfence-1.3.3 DESTDIR=\"$DESTDIR\" install\nfor f in \"$DESTDIR/usr/lib/libxshmfence.so\" \"$DESTDIR/usr/include/X11/xshmfence.h\" \"$DESTDIR/usr/lib/pkgconfig/xshmfence.pc\"; do test -e \"$f\"; done\ninstall -Dm644 \"upstream/libxshmfence-1.3.3/COPYING\" \"$DESTDIR/usr/share/licenses/libxshmfence/COPYING\""
     ]
   ]
 }

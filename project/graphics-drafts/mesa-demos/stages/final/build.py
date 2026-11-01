@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"\nfor tool in glxgears glxinfo; do\n  found=$(find build-demos -type f -name \"$tool\" -print)\n  test \"$(printf '%s\\n' \"$found\" | sed '/^$/d' | wc -l)\" -eq 1\n  install -Dm755 \"$found\" \"$DESTDIR/usr/bin/$tool\"\ndone"
+      "test -n \"${DESTDIR:-}\"\nfor tool in glxgears glxinfo; do\n  found=$(find build-demos -type f -name \"$tool\" -print)\n  test \"$(printf '%s\\n' \"$found\" | sed '/^$/d' | wc -l)\" -eq 1\n  install -Dm755 \"$found\" \"$DESTDIR/usr/bin/$tool\"\ndone\ninstall -Dm644 \"upstream/mesa-demos-9.0.0/src/xdemos/glxgears.c\" \"$DESTDIR/usr/share/licenses/mesa-demos/glxgears.c\"\ninstall -Dm644 \"upstream/mesa-demos-9.0.0/src/xdemos/glxinfo.c\" \"$DESTDIR/usr/share/licenses/mesa-demos/glxinfo.c\""
     ]
   ]
 }
