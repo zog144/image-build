@@ -85,6 +85,7 @@ def test_source_archive_inspector_verifies_actual_bytes_not_git_tag_assumptions(
     assert 'source_tree_layout' in source
     assert 'source_review_candidates' in source
     assert 'missing scoped source candidate' in source
+    assert 'scoped source hash differs from original archive' in source
     assert 'original_pep517' in source
     assert 'PEP 517 backend requirements changed' in source
 

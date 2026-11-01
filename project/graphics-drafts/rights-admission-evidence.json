@@ -59,13 +59,17 @@
       "original_scoped_source_candidates": [
         {
           "relative_member": "lib/Support/BLAKE3/LICENSE",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "54cbc326a78b9400065bfc5830a57fdcdaf808286d4ac35d8a9e324aa77b7241",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "include/llvm/Support/LICENSE.TXT",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "6a94bedb8b707ed97f6e310d0d015ab14e0683ffa0a612b02958581b9cc9fc0e",
+          "verification_run": 41330909677
         }
       ],
       "actual_compile_commands_status": "not received"
@@ -109,18 +113,24 @@
       "original_scoped_source_candidates": [
         {
           "relative_member": "src/gallium/drivers/llvmpipe/lp_screen.c",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "77005dfcb7ad695a8ea508a82c87f383ef117d66d4170d553239fabb6ed4ddc5",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "src/glx/meson.build",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "f4b555b609029603e796ddf87620f642eb6e612b3617dfe8f0ca7dd7bde5b394",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "src/mesa/glapi/glapi/gen/license.py",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "9f11bc368fa08ad8a0fed990e5d54235425e4d1908625a4b06e860bb9aa1352a",
+          "verification_run": 41330909677
         }
       ],
       "actual_compile_commands_status": "not received"
@@ -162,18 +172,24 @@
       "original_scoped_source_candidates": [
         {
           "relative_member": "xf86drm.c",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "676845942ab8b9bc5759b295528fce0f32b28ca7765c17d4546e253caaba62c4",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "xf86drm.h",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "5fad86acbddcc3b6a685690da0c7de59412d354d1375644734672f5c6bdf4202",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "xf86drmMode.c",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "642bf81371fd6e8cc4b76147772f78bea5fbcdfdbfeecca5180877623dd80dda",
+          "verification_run": 41330909677
         }
       ],
       "actual_compile_commands_status": "not received"
@@ -206,13 +222,17 @@
       "original_scoped_source_candidates": [
         {
           "relative_member": "src/Makefile.am",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "64a579d1a0b3347301d87c94698a58ea7933d0ae6ca7e8fdd702fde2ea376301",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "COPYING",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "18775cc259f873802489a621f492ece321c55d635e6e3600b9348993175d49af",
+          "verification_run": 41330909677
         }
       ],
       "actual_compile_commands_status": "not received"
@@ -244,13 +264,17 @@
       "original_scoped_source_candidates": [
         {
           "relative_member": "src/XF86VMode.c",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "f3da8eaed19e27e4f67e6f076d4ebdb8d649e15a8ad33a415fb65a23de1b6689",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "COPYING",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "0dc5864c31f4fd97e3c9ba42662ea9bb24d9d33a6cb73e188037e1d844857e53",
+          "verification_run": 41330909677
         }
       ],
       "actual_compile_commands_status": "not received"
@@ -291,13 +315,17 @@
       "original_scoped_source_candidates": [
         {
           "relative_member": "src/xdemos/glxgears.c",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "344a03aff01708350d90603fd6b841bccd295157670f519b459bbf3874acf847",
+          "verification_run": 41330909677
         },
         {
           "relative_member": "src/xdemos/glxinfo.c",
-          "source_sha256_status": "original archive inspection required",
-          "selected_native_compilation": "unobserved"
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "54844ad4d57d65ae2041467f52035f3f4f8d299467a5790a0b6f6d56e6a2a4f7",
+          "verification_run": 41330909677
         }
       ],
       "actual_compile_commands_status": "not received"
@@ -319,6 +347,7 @@
     "compile_commands_received": false,
     "installed_manifest_received": false,
     "license_delivery_received": false,
-    "native_source_selection_approved": false
+    "native_source_selection_approved": false,
+    "source_candidate_digest_ledger_checked": true
   }
 }

@@ -194,6 +194,16 @@ def inspect_one(name, entry, output, fetch=True):
                     raise ValueError("missing scoped source candidate: " + name + "/" + relative)
                 candidates[relative] = record["members"][matched[0]]
             record["source_review_candidates"] = candidates
+            ledger = json.loads((ROOT / "project/graphics-drafts" /
+                                 "rights-admission-evidence.json").read_text())
+            reviewed = ledger["components"][name]["original_scoped_source_candidates"]
+            pinned = {entry["relative_member"]: entry["sha256"] for entry in reviewed}
+            if set(pinned) != set(candidates):
+                raise ValueError("source candidate ledger mismatch: " + name)
+            for relative, metadata in candidates.items():
+                if pinned[relative] != metadata["sha256"]:
+                    raise ValueError("scoped source hash differs from original archive: " +
+                                     name + "/" + relative)
         notices = {
             path: value for path, value in record["members"].items()
             if any(token in path.rsplit("/", 1)[-1].lower()
