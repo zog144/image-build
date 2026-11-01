@@ -119,6 +119,10 @@ def test_all_six_still_rights_and_publication_held():
     assert rights["status"].endswith("NO-GO")
     assert not rights["canonical_admitted"] and not rights["rights_approved"]
     assert set(rights["components"])=={"llvm","mesa","libdrm","libxshmfence","libXxf86vm","mesa-demos"}
-    for name in rights["components"]:
+    for name, row in rights["components"].items():
+        assert not row["installed_outputs_observed"]
+        assert not row["notice_delivery_verified"]
+        assert row["expected_output_paths"] == lit(
+            DRAFT/name/"stages/final/produce-manifest.py")["required"]
         assert lit(DRAFT/name/"license.py")["status"]=="unresolved"
         assert not (ROOT/"project/package"/name).exists()

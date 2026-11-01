@@ -31,7 +31,14 @@
         "compiled/bundled BLAKE3 linkage",
         "generated-code license origins",
         "install-time notices"
-      ]
+      ],
+      "expected_output_paths": [
+        "usr/bin/llvm-config",
+        "usr/lib/libLLVM.so"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
     },
     "mesa": {
       "verified_notice_members": [
@@ -44,7 +51,14 @@
         "selected GLAPI and llvmpipe source copyrights",
         "prove Vulkan/imgui excluded from built bytes",
         "generated shader/JIT material"
-      ]
+      ],
+      "expected_output_paths": [
+        "usr/lib/libGL.so",
+        "usr/lib/dri/swrast_dri.so"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
     },
     "libdrm": {
       "verified_notice_members": [
@@ -54,7 +68,15 @@
       "outstanding": [
         "all common library sources",
         "prove GPU KMS and udev excluded from built bytes"
-      ]
+      ],
+      "expected_output_paths": [
+        "usr/lib/libdrm.so",
+        "usr/include/xf86drm.h",
+        "usr/lib/pkgconfig/libdrm.pc"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
     },
     "libxshmfence": {
       "verified_notice_members": [
@@ -62,7 +84,15 @@
       ],
       "outstanding": [
         "selected compiled files and notice delivery"
-      ]
+      ],
+      "expected_output_paths": [
+        "usr/lib/libxshmfence.so",
+        "usr/include/X11/xshmfence.h",
+        "usr/lib/pkgconfig/xshmfence.pc"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
     },
     "libXxf86vm": {
       "verified_notice_members": [
@@ -70,7 +100,14 @@
       ],
       "outstanding": [
         "compiled files, xorgproto inherited header rights"
-      ]
+      ],
+      "expected_output_paths": [
+        "usr/lib/libXxf86vm.so",
+        "usr/lib/pkgconfig/xxf86vm.pc"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
     },
     "mesa-demos": {
       "verified_notice_members": [
@@ -80,7 +117,14 @@
       "outstanding": [
         "exact public-domain versus copyright attribution",
         "only selected linked source objects"
-      ]
+      ],
+      "expected_output_paths": [
+        "usr/bin/glxgears",
+        "usr/bin/glxinfo"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required"
     }
   },
   "required_evidence": [
@@ -91,5 +135,13 @@
     "genuinely independent reviewer authorization"
   ],
   "rights_approved": false,
-  "canonical_admitted": false
+  "canonical_admitted": false,
+  "review_scope": {
+    "kind": "source-and-selected-original-member-review",
+    "independent_reviewer_signed": false,
+    "original_notices_hashed": true,
+    "compile_commands_received": false,
+    "installed_manifest_received": false,
+    "license_delivery_received": false
+  }
 }
