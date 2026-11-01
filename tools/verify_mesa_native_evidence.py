@@ -112,7 +112,7 @@ def roots_from(envelope):
     return roots
 
 
-def compiler_flags(argv, roots):
+def compiler_flags(argv, roots, directory):
     require(isinstance(argv, list) and all(isinstance(x, str) and x for x in argv),
             "invalid compiler argv")
     require(not any(x.startswith("@") for x in argv), "response file needs independent expansion")
@@ -128,9 +128,10 @@ def compiler_flags(argv, roots):
             prefix = next((p for p in prefixes if arg.startswith(p) and len(arg) > len(p)), None)
             path = arg[len(prefix):] if prefix else None
         if path is not None:
-            require(Path(path).is_absolute() and any(
-                within_if_exists(Path(path), root) for root in roots),
-                "compiler Host include/library directory: " + path)
+            candidate = Path(path)
+            candidate = candidate if candidate.is_absolute() else directory / candidate
+            require(any(within_if_exists(candidate, root) for root in roots),
+                    "compiler Host include/library directory: " + path)
         require(not arg.startswith(("-Wl,", "-fplugin", "-B/")),
                 "opaque linker or compiler plugin argument requires review")
         i += 1
@@ -173,8 +174,8 @@ def commands_and_objects(sidecars, roots, envelope):
         mapped[key] = row
     seen = set()
     for cmd in commands:
-        require("directory" in cmd and "file" in cmd and "output" in cmd,
-                "compile database lacks directory/file/output")
+        require("directory" in cmd and "file" in cmd,
+                "compile database lacks directory/file")
         require(("arguments" in cmd) != ("command" in cmd),
                 "compile database must specify exactly one argument representation")
         argv = cmd.get("arguments")
@@ -185,7 +186,8 @@ def commands_and_objects(sidecars, roots, envelope):
                     "shell expansion in compile database must be reviewed")
         require(argv and argv[0].startswith("/") and "-c" in argv and "-o" in argv,
                 "unstructured compiler invocation")
-        require(Path(cmd["directory"]).resolve(strict=True) == roots["build"],
+        directory = Path(cmd["directory"]).resolve(strict=True)
+        require(within(directory, roots["build"]) == directory and directory.is_dir(),
                 "compiler working directory outside selected build root")
         compiler = Path(argv[0])
         require(compiler.is_file() and within_if_exists(compiler, roots["software"]),
@@ -196,13 +198,19 @@ def commands_and_objects(sidecars, roots, envelope):
             arg_output = argv[argv.index("-o") + 1]
         except IndexError:
             raise EvidenceError("truncated -c/-o option") from None
-        require(arg_source == cmd["file"] and arg_output == cmd["output"],
-                "compile command source/output mismatch")
-        require(Path(arg_source).is_absolute() and Path(arg_output).is_absolute(),
-                "unbound compiler source/output")
-        compiler_flags(argv[1:], tuple(roots.values()))
-        key = (str(Path(cmd["file"]).resolve(strict=True)),
-               str(Path(cmd["output"]).resolve(strict=True)))
+        # CMake/Meson may omit the optional 'output' member and use relative
+        # command paths. Normalize against the declared compilation directory.
+        def normalize(value):
+            require(isinstance(value, str) and value, "invalid compiler file path")
+            p = Path(value)
+            return p.resolve(strict=True) if p.is_absolute() else (directory / p).resolve(strict=True)
+        require(normalize(arg_source) == normalize(cmd["file"]),
+                "compile command source mismatch")
+        if "output" in cmd:
+            require(normalize(arg_output) == normalize(cmd["output"]),
+                    "compile command output mismatch")
+        compiler_flags(argv[1:], tuple(roots.values()), directory)
+        key = (str(normalize(cmd["file"])), str(normalize(arg_output)))
         require(key in mapped and key not in seen, "missing or duplicated source-object mapping")
         seen.add(key)
     require(seen == set(mapped), "unobserved mapped compiler output")
