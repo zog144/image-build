@@ -22,6 +22,12 @@ def test_draft_wheels_have_exact_source_and_existing_canonical_backends():
     assert "python-setuptools-final" in m["build"] and "python-setuptools-final" in y["build"]
     assert "python-installer-final" in m["build"] and "python-installer-final" in y["build"]
     assert "python-wheel-final" in y["build"]
+    from zog.image_build.metadata import load_package
+    from zog.image_build.licensing import validate
+    for name in ("mako", "pyyaml"):
+        pkg=load_package(DRAFT/name/"stages/final")
+        assert pkg.build_dependencies and pkg.sources
+        assert validate(lit(DRAFT/name/"license.py"),pkg.sources)==pkg.licensing
     upstream=lit(ROOT/"project/package/python-markupsafe/upstream.py")
     assert len(upstream["sha256"])==64
     for name in ("python", "cmake", "ninja", "meson", "pkgconf", "python-setuptools"):
@@ -38,6 +44,8 @@ def test_pure_python_pyyaml_source_transform_is_explicit():
     assert "_pyyaml_pep517" in y["build"][0][-1]
     assert "Cython" in y["prepare"][0][-1] and "original_sha256" in y["prepare"][0][-1]
     assert "PYYAML_FORCE_LIBYAML" in y["environment"]
+    assert "--phase mako" in m["build"][0][-1]
+    assert "--phase pyyaml" in y["build"][0][-1]
     assert "none-any.whl" in y["test"][0][-1]
 
 def load():

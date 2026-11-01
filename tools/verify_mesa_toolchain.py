@@ -12,8 +12,10 @@ import os
 from pathlib import Path
 import subprocess
 
-TOOLS = ("python", "cmake", "ninja", "meson", "pkgconf", "llvm-config")
-MODULES = ("setuptools", "packaging", "wheel", "installer", "markupsafe", "mako", "yaml")
+BASE_TOOLS = ("python", "cmake", "ninja", "meson", "pkgconf")
+BASE_MODULES = ("setuptools", "packaging", "wheel", "installer", "markupsafe")
+TOOLS = BASE_TOOLS + ("llvm-config",)
+MODULES = BASE_MODULES + ("mako", "yaml")
 PC = ("x11", "xext", "x11-xcb", "xcb", "xcb-randr", "xcb-glx", "xcb-shm",
       "xcb-dri3", "xcb-present", "xcb-sync", "xcb-xfixes", "xshmfence",
       "xxf86vm", "libdrm", "expat", "zlib")
@@ -39,11 +41,15 @@ def roots_for(data):
     return roots
 
 
-def check_files(data):
+def check_files(data, phase="mesa"):
     roots = roots_for(data)
-    if set(data["tools"]) != set(TOOLS):
+    needed_tools = TOOLS if phase == "mesa" else BASE_TOOLS
+    needed_modules = MODULES if phase == "mesa" else BASE_MODULES
+    if phase not in ("mako", "pyyaml", "mesa"):
+        raise IsolationError("unknown build phase")
+    if set(data["tools"]) != set(needed_tools):
         raise IsolationError("incomplete executable closure")
-    if set(data["imports"]) != set(MODULES):
+    if set(data["imports"]) != set(needed_modules):
         raise IsolationError("incomplete Python import closure")
     if not data["pkgconfig_dirs"]:
         raise IsolationError("missing pkgconf search roots")
@@ -96,7 +102,7 @@ def check_imports(data):
 names = %r
 print(json.dumps({"executable":sys.executable,"paths":sys.path,
  "modules":{n:getattr(importlib.import_module(n),"__file__",None) for n in names}}))
-""" % (MODULES,)
+""" % (tuple(data["imports"]),)
     result = subprocess.run([python, "-I", "-c", code], capture_output=True,
                             text=True, timeout=40, check=True)
     report = json.loads(result.stdout)
@@ -137,15 +143,17 @@ def check_pkgconf(data):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--attestation", required=True, type=Path)
+    parser.add_argument("--phase", required=True, choices=("mako", "pyyaml", "mesa"))
     args = parser.parse_args()
     receipt = args.attestation
     if not receipt.is_file() or receipt.stat().st_uid != 0 or receipt.stat().st_mode & 0o022:
         raise IsolationError("receipt must be protected and root-owned")
     data = json.loads(receipt.read_text())
-    check_files(data)
+    check_files(data, args.phase)
     check_environment(data, os.environ)
     check_imports(data)
-    check_pkgconf(data)
+    if args.phase == "mesa":
+        check_pkgconf(data)
     print("ZOG_MESA_ISOLATED_TOOLCHAIN_PASS")
 
 
