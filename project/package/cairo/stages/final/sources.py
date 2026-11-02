@@ -1,0 +1,9 @@
+# Data only; parsed with ast.literal_eval.
+[
+  {
+    "url": "https://cairographics.org/releases/cairo-1.18.4.tar.xz",
+    "sha256": "445ed8208a6e4823de1226a74ca319d3600e83f6369f99b14265006599c32ccb",
+    "destination": "upstream",
+    "archive": True
+  }
+]
