@@ -1,0 +1,8 @@
+# Data only; parsed with ast.literal_eval.
+{
+  "schema": 1,
+  "version": "1.0.16",
+  "release_url": "https://www.x.org/releases/individual/lib/libXaw-1.0.16.tar.xz",
+  "sha256": "731d572b54c708f81e197a6afa8016918e2e06dfd3025e066ca642a5b8c39c8f",
+  "verification_status": "original archive and COPY member verified GitHub Actions #41505944709"
+}
