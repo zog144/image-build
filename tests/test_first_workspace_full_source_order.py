@@ -157,3 +157,33 @@ def test_no_host_binary_or_pkgconfig_fallback_can_be_approved_from_source():
     assert graph["canonical_promotion_allowed"] is False
     for required in ("zlib","ncurses"):
         assert any(required in x for x in graph["source_only_dag_hold"])
+
+
+def verify_order(order, *, overrides=None):
+    """Verify reported ordering independently of DFS traversal."""
+    overrides=overrides or {}
+    if len(order)!=len(set(order)):
+        raise AssertionError("duplicate stage in proposed package order")
+    positions={name:i for i,name in enumerate(order)}
+    for name in order:
+        deps=overrides.get(name,literal(stage_dir(name)/"dependencies.py"))
+        for ref in dict.fromkeys(deps["build"]+deps["runtime"]):
+            if ref.endswith("-final"):
+                child=ref[:-6]
+                if child in SELECTED and (child not in positions or positions[child]>=positions[name]):
+                    raise AssertionError("incorrect package ordering or missing predecessor: "+ref)
+            elif ref in ("zlib-native-environment","ncurses-temporary"):
+                continue
+            else:
+                raise AssertionError("unexpected unreviewed stage identity: "+ref)
+    return True
+
+def test_adversarial_package_order_and_missing_runtime_predecessor_denied():
+    order,_=source_order()
+    assert verify_order(order)
+    with pytest.raises(AssertionError,match="incorrect package ordering"):
+        verify_order(order[::-1])
+    with pytest.raises(AssertionError,match="missing predecessor"):
+        verify_order([x for x in order if x!="xkbcomp"])
+    with pytest.raises(AssertionError,match="duplicate stage"):
+        verify_order(order+["i3"])
