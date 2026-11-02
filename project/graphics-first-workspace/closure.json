@@ -103,7 +103,9 @@
     "libSM",
     "libXt",
     "libev",
+    "libjpeg-turbo",
     "libxkbcommon",
+    "pixman",
     "startup-notification",
     "xcb-util",
     "xcb-util-cursor",
@@ -119,8 +121,6 @@
     "cairo",
     "pango",
     "glib",
-    "pixman",
-    "libjpeg-turbo",
     "libXaw",
     "libXmu",
     "libXpm",
@@ -138,16 +138,23 @@
     "Trusted accepted fonts/XCB/X11 generation predecessor chain",
     "libxkbcommon 1.13.2 upstream patch from BLFS must be separately scoped, pinned and reviewed before native acceptance.",
     "YAJL 2.1.0 legacy CMake install-output locations and static library defaults need native controlled CMake tests.",
-    "GLib/GObject, Cairo/Pango and xterm font/Xaw/Xmu/Xpm/Xft closure not source-ready."
+    "GLib/GObject, Cairo/Pango and xterm font/Xaw/Xmu/Xpm/Xft closure not source-ready.",
+    "Pango/Cairo/GLib source identities are known but HarfBuzz/FriBidi/Xrender and native code-generation/feature closure remain unavailable."
   ],
   "build_submission_allowed": false,
   "canonical_promotion_allowed": false,
   "source_authored_native_held": [
     "libev",
-    "yajl",
-    "startup-notification",
+    "libjpeg-turbo",
     "libxkbcommon",
-    "xkeyboard-config"
+    "pixman",
+    "startup-notification",
+    "xkeyboard-config",
+    "yajl"
   ],
-  "source_rights_scope": "Original source/member SHA-256 checked on 2026-11-02; all newly authored license components unresolved; these do not represent independently approved redistribution or compiler outputs."
+  "source_rights_scope": "Original source/member SHA-256 checked on 2026-11-02; all newly authored license components unresolved; these do not represent independently approved redistribution or compiler outputs.",
+  "source_draft_unadmitted": {
+    "turbovnc": "project/graphics-first-workspace/turbovnc-draft",
+    "text_stack": "project/graphics-first-workspace/text-stack-candidates.json"
+  }
 }
