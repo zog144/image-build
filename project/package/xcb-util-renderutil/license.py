@@ -8,8 +8,8 @@
     "sha256": "3e15d4f0e22d8ddbfbb9f5d77db43eacd7a304029bf25a6166cc63caa96d04ba"
   },
   "status": "declared",
-  "expression": "X11-family; final expression requires per-file review",
-  "scope": "Original COPYING notice SHA-256 verified within exact pinned archive, retained unchanged on install; no public rights approval.",
+  "expression": "LicenseRef-XCB-Renderutil-0.3.10-Original-COPYING-Unreviewed",
+  "scope": "Original COPYING notice SHA-256 verified within exact pinned archive, retained unchanged on install; no public rights approval. The LicenseRef is a temporary identifier, not a redistribution grant.",
   "evidence": [
     {
       "path": "xcb-util-renderutil-0.3.10/COPYING",

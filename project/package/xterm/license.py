@@ -8,8 +8,8 @@
     "sha256": "b48bc780c1cbc14f6d89269f7e593712af6095876960d650be28b55e5dad65a6"
   },
   "status": "declared",
-  "expression": "Original COPYING must be reviewed independently for exact selected source and generated outputs",
-  "scope": "Source-pinned notice evidence only; final redistribution approval and actual selected binary inventory pending",
+  "expression": "LicenseRef-Xterm-412-Original-COPYING-Unreviewed",
+  "scope": "Source-pinned notice evidence only; final redistribution approval and actual selected binary inventory pending The LicenseRef is a temporary identifier, not a redistribution grant.",
   "evidence": [
     {
       "path": "xterm-412/COPYING",
