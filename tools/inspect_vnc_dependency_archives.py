@@ -21,6 +21,7 @@ def inspect(name,data):
         raise ValueError("unexpected original pixman archive SHA-512")
     notices={}
     build={}
+    source_feature_checks={}
     with tarfile.open(fileobj=io.BytesIO(data),mode="r:*") as tar:
         for m in tar.getmembers():
             if m.name.startswith("/") or ".." in m.name.split("/"):
@@ -33,12 +34,24 @@ def inspect(name,data):
                         "unix/Xvnc/lib/zlib-ng/LICENSE.md"):
                 notices[m.name]=hashlib.sha256(tar.extractfile(m).read()).hexdigest()
             if rel in ("meson.build","meson_options.txt","CMakeLists.txt",
-                        "unix/CMakeLists.txt","unix/Xvnc/CMakeLists.txt","BUILDING.md"):
-                build[m.name]=hashlib.sha256(tar.extractfile(m).read()).hexdigest()
+                        "unix/CMakeLists.txt","unix/Xvnc/CMakeLists.txt","unix/Xvnc/programs/Xserver/CMakeLists.txt","BUILDING.md"):
+                cmake_source=tar.extractfile(m).read()
+                build[m.name]=hashlib.sha256(cmake_source).hexdigest()
+                if name=="turbovnc" and rel=="unix/Xvnc/CMakeLists.txt":
+                    if b"option(TVNC_DRI3" not in cmake_source:
+                        raise ValueError("DRI3 optional feature lost from original TurboVNC source")
+                    source_feature_checks["TVNC_DRI3_option_original"]=True
+                if name=="turbovnc" and rel=="unix/Xvnc/programs/Xserver/CMakeLists.txt":
+                    for marker in (b"if(TVNC_DRI3)",b"add_subdirectory(dri3)",b"glx-server",b"install(TARGETS Xvnc"):
+                        if marker not in cmake_source:raise ValueError("original Xvnc CMake graph changed")
+                    source_feature_checks["DRI3_requires_explicit_disable"]=True
+    if name=="turbovnc" and set(source_feature_checks)!={"TVNC_DRI3_option_original","DRI3_requires_explicit_disable"}:
+        raise ValueError("missing selected Xvnc original CMake evidence")
     if not notices or not build:
         raise ValueError("original upstream notice/build metadata not found")
     return {"name":name,"version":spec["version"],"url":spec["url"],
             "archive_sha256":sha,"notices":notices,"build_metadata":build,
+            "selected_source_feature_checks":source_feature_checks,
             "state":"upstream-source-observed-not-native-or-redistribution-approved"}
 if __name__=="__main__":
     import argparse
