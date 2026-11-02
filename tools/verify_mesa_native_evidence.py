@@ -475,15 +475,17 @@ def verify_link_commands(sidecars, roots, envelope):
                      row["object_sha256"] for row in objects}
     seen = set()
     for row in links:
-        require(set(row) == {"installed_path", "output", "output_sha256",
-                             "arguments", "inputs"}, "incomplete link command record")
+        basic = {"installed_path", "output", "output_sha256", "arguments", "inputs"}
+        extras = {"response_files", "archives"}
+        require(set(row) in (basic, basic | extras), "incomplete link command record")
         installed = relative(row["installed_path"]).as_posix()
         require(installed in {e["path"] for e in binaries} and installed not in seen,
                 "missing/duplicate linked output")
         seen.add(installed)
         file_hash(roots["build"], row["output"], row["output_sha256"])
         file_hash(roots["destdir"], installed, row["output_sha256"])
-        argv = row["arguments"]
+        argv = expand_link_response_files(row["arguments"],
+                                          row.get("response_files", []), roots)
         require(isinstance(argv, list) and len(argv) >= 5
                 and all(isinstance(a, str) and a for a in argv),
                 "invalid linker command")
@@ -504,8 +506,10 @@ def verify_link_commands(sidecars, roots, envelope):
                                      "--sysroot", "-fuse-ld", "-plugin", "-l",
                                      "-L", "-B", "-fplugin", "-specs", "-Wl"))
                         for a in argv[1:]), "unsupported opaque linker input")
+        archives, selected_members = expand_static_archives(
+            row.get("archives", []), roots, objects)
         allowed_flags = {"-shared", "-fPIC", "-pthread"}
-        actual_inputs = []
+        actual_inputs, actual_archives = [], []
         skip_next = False
         for i, item in enumerate(argv[1:], 1):
             if skip_next:
@@ -522,9 +526,12 @@ def verify_link_commands(sidecars, roots, envelope):
             path = path.resolve(strict=True)
             require(within_if_exists(path, roots["build"]),
                     "Host or unsupported linker input")
-            require(path.suffix in (".o", ".obj"),
-                    "archive/linker script/opaque library input not admitted")
-            actual_inputs.append(str(path))
+            if path.suffix == ".a":
+                actual_archives.append(path.relative_to(roots["build"]).as_posix())
+            else:
+                require(path.suffix in (".o", ".obj"),
+                        "archive/linker script/opaque library input not admitted")
+                actual_inputs.append(str(path))
         claimed = []
         for item in row["inputs"]:
             require(set(item) == {"root", "path", "sha256"} and item["root"] == "build",
@@ -536,8 +543,15 @@ def verify_link_commands(sidecars, roots, envelope):
             claimed.append(path)
         require(len(actual_inputs) == len(set(actual_inputs))
                 and len(claimed) == len(set(claimed))
-                and set(actual_inputs) == set(claimed)
-                and claimed, "unreported/missing linker inputs")
+                and set(actual_inputs) == set(claimed),
+                "unreported/missing linker inputs")
+        require(len(actual_archives) == len(set(actual_archives))
+                and set(actual_archives) == set(archives),
+                "unreported or unused static archive")
+        require(bool(claimed or selected_members), "link has no source-derived input")
+        require(all(any(m["selected"] for m in a["members"])
+                    for a in archives.values()),
+                "archive has no claimed selected members")
     require(seen == {e["path"] for e in binaries},
             "unlinked ELF installed output")
 
