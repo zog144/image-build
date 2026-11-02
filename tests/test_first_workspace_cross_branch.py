@@ -44,3 +44,19 @@ def test_local_and_mesa_source_authority_escalation_denied(path,value):
     group[path[-1]]=value
     with pytest.raises(ValueError):
         mod.guard(local,plan,records,scope)
+
+
+def test_exact_selected_review_blob_binding_rejects_substituted_bytes():
+    for path in mod.REVIEW_BLOBS:
+        with pytest.raises(ValueError, match="byte identity"):
+            mod.verify_review_blob(path, b"forged but structurally consistent approval")
+
+
+def test_selected_review_artifacts_are_newer_but_cannot_change_native_holds():
+    assert mod.MESA_HEAD == "9da9ee74b0bceeb5104fe079fd8b48a9e74ce2d4"
+    assert set(mod.REVIEW_BLOBS) == {
+        "tests/test_mesa_selected_notice_rights.py",
+        "docs/image-build/mesa-selected-notice-re-review-2026-11-02.md",
+        ".github/workflows/public-source-ci.yml",
+    }
+    mod.guard(*valid())
