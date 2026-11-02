@@ -48,7 +48,7 @@ def source_order():
             return
         visiting.add(name)
         dependency=literal(directory/"dependencies.py")
-        for ref in dependency["build"]:
+        for ref in dict.fromkeys(dependency["build"] + dependency["runtime"]):
             assert ref.endswith("-final"),(name,ref)
             child=ref[:-6]
             if child in SELECTED:
