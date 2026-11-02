@@ -547,7 +547,7 @@ def verify_link_commands(sidecars, roots, envelope):
                 "unreported/missing linker inputs")
         require(len(actual_archives) == len(set(actual_archives))
                 and set(actual_archives) == set(archives),
-                "unreported or unused static archive")
+                "archive/linker script/opaque library input not admitted: unreported or unused static archive")
         require(bool(claimed or selected_members), "link has no source-derived input")
         require(all(any(m["selected"] for m in a["members"])
                     for a in archives.values()),
