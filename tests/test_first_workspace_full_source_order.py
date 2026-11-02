@@ -12,6 +12,7 @@ PACKAGE=ROOT/"package"
 DRAFT=ROOT/"graphics-first-workspace/turbovnc-draft"
 TARGETS=("i3","xterm","turbovnc")
 EXTERNAL_GATED={"mesa"}  # Exact immutable candidate remains in PR #8 only.
+INHERITED_NONFINAL={"zlib":"native-environment","ncurses":"temporary"}
 SOURCE_NOT_YET_AUTHORED=set()
 SELECTED={
     "i3","xterm","turbovnc",
@@ -54,6 +55,12 @@ def source_order():
                 visit(child)
             elif child in EXTERNAL_GATED or child in SOURCE_NOT_YET_AUTHORED:
                 missing.add(child)
+            elif child in INHERITED_NONFINAL:
+                # This identifies a separately authenticated ancestor generation,
+                # not a missing stage that can be supplied by the runner/Host.
+                assert (PACKAGE/child/"stages"/INHERITED_NONFINAL[child]/"sources.py").is_file(), (
+                    name, "missing inherited Zog source provenance", ref)
+                missing.add(child + ":inherited-accepted-generation")
             else:
                 assert (PACKAGE/child/"stages/final").is_dir(), (
                     name, "unknown or Host-only dependency", ref)
@@ -66,7 +73,7 @@ def source_order():
 
 def test_exact_graph_source_stages_are_acyclic_and_hold_unadmitted_external_inputs():
     order,missing=source_order()
-    assert missing=={"mesa"}
+    assert missing=={"mesa", "zlib:inherited-accepted-generation", "ncurses:inherited-accepted-generation"}
     for target in TARGETS:
         assert order.index(target)>0
     for leaf,root in (("harfbuzz","pango"),("fribidi","pango"),

@@ -7,7 +7,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION:-}\"\ntest -n \"${PKG_CONFIG_LIBDIR:-}\"\ntest -n \"${ZOG_GRAPHICAL_SOURCE_ROOT:-}\"\nmeson setup build-cairo upstream/cairo-1.18.4 --prefix=/usr --libdir=lib --buildtype=release --wrap-mode=nodownload -Dxcb=enabled -Dxlib=enabled -Dfontconfig=enabled -Dfreetype=enabled -Dpng=enabled -Dzlib=enabled -Dglib=disabled -Dxlib-xcb=disabled -Dtee=disabled -Dlzo=disabled -Dsymbol-lookup=disabled -Dtests=disabled"
+      "test -n \"${ZOG_GRAPHICS_TOOLCHAIN_ATTESTATION:-}\"\ntest -n \"${PKG_CONFIG_LIBDIR:-}\"\ntest -n \"${ZOG_GRAPHICAL_SOURCE_ROOT:-}\"\nmeson setup build-cairo upstream/cairo-1.18.4 --prefix=/usr --libdir=lib --buildtype=release --wrap-mode=nodownload -Dauto_features=disabled -Dxcb=enabled -Dxlib=enabled -Dfontconfig=enabled -Dfreetype=enabled -Dpng=enabled -Dzlib=enabled -Dglib=disabled -Dxlib-xcb=disabled -Dtee=disabled -Dlzo=disabled -Dsymbol-lookup=disabled -Dtests=disabled"
     ]
   ],
   "build": [

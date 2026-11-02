@@ -182,6 +182,7 @@
   "source_only_dag_hold": [
     "Mesa source remains isolated PR #8 and is not a canonical source package",
     "Xvnc and font installed outputs need true native acceptance",
-    "Source-only graph and original 6x13 font hash do not authorize binary redistribution"
+    "Source-only graph and original 6x13 font hash do not authorize binary redistribution",
+    "zlib and ncurses remain separately accepted inherited generation requirements (existing stages native-environment and temporary); final is not a real authored stage and Host fallback is forbidden."
   ]
 }
