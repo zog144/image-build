@@ -99,23 +99,23 @@
     }
   },
   "reviewed_source_present": [
-    "xcb-util",
-    "xcb-util-image",
-    "xcb-util-keysyms",
-    "xcb-util-wm",
-    "xcb-util-xrm",
-    "xcb-util-renderutil",
-    "xcb-util-cursor",
     "libICE",
     "libSM",
-    "libXt"
+    "libXt",
+    "libev",
+    "libxkbcommon",
+    "startup-notification",
+    "xcb-util",
+    "xcb-util-cursor",
+    "xcb-util-image",
+    "xcb-util-keysyms",
+    "xcb-util-renderutil",
+    "xcb-util-wm",
+    "xcb-util-xrm",
+    "xkeyboard-config",
+    "yajl"
   ],
   "remaining_source_packages": [
-    "libev",
-    "yajl",
-    "startup-notification",
-    "libxkbcommon",
-    "xkeyboard-config",
     "cairo",
     "pango",
     "glib",
@@ -135,8 +135,19 @@
     "TurboVNC Xvnc configured feature scope/bundled-code source and license audit",
     "xterm exact upstream SHA-256 and notice member",
     "Mesa GLX native loader/LLVM source-derived library graph",
-    "Trusted accepted fonts/XCB/X11 generation predecessor chain"
+    "Trusted accepted fonts/XCB/X11 generation predecessor chain",
+    "libxkbcommon 1.13.2 upstream patch from BLFS must be separately scoped, pinned and reviewed before native acceptance.",
+    "YAJL 2.1.0 legacy CMake install-output locations and static library defaults need native controlled CMake tests.",
+    "GLib/GObject, Cairo/Pango and xterm font/Xaw/Xmu/Xpm/Xft closure not source-ready."
   ],
   "build_submission_allowed": false,
-  "canonical_promotion_allowed": false
+  "canonical_promotion_allowed": false,
+  "source_authored_native_held": [
+    "libev",
+    "yajl",
+    "startup-notification",
+    "libxkbcommon",
+    "xkeyboard-config"
+  ],
+  "source_rights_scope": "Original source/member SHA-256 checked on 2026-11-02; all newly authored license components unresolved; these do not represent independently approved redistribution or compiler outputs."
 }

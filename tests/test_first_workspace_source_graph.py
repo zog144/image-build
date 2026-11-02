@@ -43,7 +43,11 @@ def test_i3_direct_xcb_and_pango_consumer_edges_are_not_hidden():
                    "pangocairo", "cairo", "glib-2.0", "gobject-2.0",
                    "xkbcommon-x11", "yajl", "libpcre2-8"):
         assert wanted in deps
-    assert set(("libev", "yajl", "pixman", "pango", "xterm")).issubset(
+    assert set(("pixman", "pango", "xterm")).issubset(
+        set(plan["remaining_source_packages"]))
+    assert set(("libev","yajl","startup-notification","libxkbcommon","xkeyboard-config")).issubset(
+        set(plan["source_authored_native_held"]))
+    assert not set(plan["source_authored_native_held"]).intersection(
         set(plan["remaining_source_packages"]))
     for name in ("i3", "turbovnc"):
         metadata = ast.literal_eval(

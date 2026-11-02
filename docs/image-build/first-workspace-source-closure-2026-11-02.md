@@ -43,3 +43,27 @@ readiness gate** until those conditions are actually true.
 
 Do not auto-expand Xorg libraries, use host-installed Cairo/Pango/JPEG,
 replace selected generation IDs, or infer native completion from this file.
+
+## i3 non-graphical source input checkpoint — November 2
+
+Additional source recipe records: libev 4.33, YAJL 2.1.0,
+startup-notification 0.12, libxkbcommon 1.13.2 and
+xkeyboard-config 2.48. Original source archives and license/COPYING
+member SHA-256 were inspected in GitHub Actions #41498150323.
+The exact independently published digest was known in advance for
+libev and xkeyboard-config; YAJL's upstream GitHub tag reproduced the
+previously published archive SHA. libxkbcommon's tag and the
+startup-notification direct release archive are observed but still
+require immutable upstream/provenance and legal review.
+
+Each carries catalogue-only metadata and a source stage. The real
+flat package loader checks the new five-stage ordering, including
+xcb-util → startup-notification and xkeyboard-config → libxkbcommon.
+No package was promoted to a monthly pin; dependency fallback to Host
+must be denied by the later true isolated native worker. Review
+libxkbcommon's upstream compatibility patch and the legacy YAJL CMake
+output paths during that native review.
+
+The still-missing GLib/GObject/Pango/Cairo/Pixman/Harfbuzz/Fribidi
+and xterm/Xaw/font/TurboJPEG source closure is **not** solved by this
+checkpoint. See `closure.json`.
