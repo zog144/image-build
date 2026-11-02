@@ -24,8 +24,11 @@ def inspect(name,blob,published):
     spec=SOURCES[name]
     digest=hashlib.sha256(blob).hexdigest()
     published_text=published.decode("utf-8",errors="strict")
-    tokens=re.findall(r"(?<![a-fA-F0-9])[a-fA-F0-9]{64}(?![a-fA-F0-9])",published_text)
-    if len(tokens)!=1 or tokens[0].lower()!=digest or name+"-"+spec["version"] not in published_text:
+    target=name+"-"+spec["version"]+".tar.xz"
+    entries=[line.split() for line in published_text.splitlines()
+             if line.split() and len(line.split())==2 and
+             line.split()[1].lstrip("*")==target]
+    if len(entries)!=1 or not re.fullmatch(r"[a-fA-F0-9]{64}",entries[0][0]) or entries[0][0].lower()!=digest:
         raise ValueError("published original-source hash doesn't bind selected archive")
     rights={}
     meta={}
