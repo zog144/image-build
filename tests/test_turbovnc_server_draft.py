@@ -33,3 +33,19 @@ def test_bundled_license_bytes_and_native_go_decision_are_held():
     assert "libjpeg-turbo-final" in deps["build"]
     assert "pixman-final" in deps["build"]
     assert "mesa-final" in deps["runtime"]
+
+
+def test_xvnc_selected_xserver_linker_profile_excludes_hardware_dri3():
+    flags=lit("stages/final/build.py")["configure"][0][-1]
+    assert "-DTVNC_DRI3=OFF" in flags
+    assert "-DTVNC_ZLIBNG=OFF" in flags
+    assert 'pkgconf --exists xfont2 pixman-1 x11 xau xdmcp xkbfile gl zlib' in flags
+    assert "PKG_CONFIG_LIBDIR" in flags and "CMAKE_PREFIX_PATH" in flags
+    deps=lit("stages/final/dependencies.py")
+    for target in ("libXfont2-final","xkbcomp-final","mesa-final","zlib-final","openssl-final"):
+        assert target in deps["build"]
+    integration=lit("stages/final/integration.py")
+    assert "bundled Xorg" in integration["native_admission"]
+    assert "xkbcomp" in integration["missing_native_predecessor"]
+    assert integration["selected_bundled_originals"]["Xserver/COPYING"] == (
+        "4cc0447a22635c7b2f1a93fec4aa94f1970fadeb72a063de006b51cf4963a06f")

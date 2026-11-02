@@ -9,7 +9,13 @@
     "libXdmcp-final",
     "libxkbfile-final",
     "libXfont2-final",
-    "mesa-final"
+    "mesa-final",
+    "openssl-final",
+    "zlib-final",
+    "libXext-final",
+    "libXrender-final",
+    "xorgproto-final",
+    "xkbcomp-final"
   ],
   "runtime": [
     "libjpeg-turbo-final",
@@ -20,6 +26,12 @@
     "libXdmcp-final",
     "libxkbfile-final",
     "libXfont2-final",
-    "mesa-final"
+    "mesa-final",
+    "openssl-final",
+    "zlib-final",
+    "libXext-final",
+    "libXrender-final",
+    "xorgproto-final",
+    "xkbcomp-final"
   ]
 }
