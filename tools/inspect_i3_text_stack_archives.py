@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read-only selected Cairo/Pango/GLib archive, upstream hash and rights survey."""
-import hashlib,io,json,re,tarfile
+import ast,hashlib,io,json,re,tarfile
+from pathlib import Path
 from urllib.request import Request,urlopen
 
 SOURCES={
@@ -33,6 +34,7 @@ def inspect(name,blob,published):
     rights={}
     meta={}
     options={}
+    declarations={}
     with tarfile.open(fileobj=io.BytesIO(blob),mode="r:xz") as tf:
         for item in tf.getmembers():
             if item.name.startswith("/") or ".." in item.name.split("/"):
@@ -46,14 +48,38 @@ def inspect(name,blob,published):
                 contents=tf.extractfile(item).read()
                 meta[item.name]=hashlib.sha256(contents).hexdigest()
                 if rel in ("meson_options.txt","meson.options"):
+                    declarations[rel]=contents.decode("utf-8",errors="strict")
                     options[rel]=sorted(set(re.findall(
                         r"option\s*\(\s*['\"]([^'\"]+)['\"]",
                         contents.decode("utf-8",errors="replace"))))
 
     if not rights or not meta:raise ValueError("original license or build source absent")
+    if not declarations:
+        raise ValueError("missing exact selected Meson options")
+    source_options={}
+    for original in declarations.values():
+        matches=list(re.finditer(r"option\\s*\\(\\s*['\\\"]([^'\\\"]+)['\\\"]", original))
+        for index,m in enumerate(matches):
+            chunk=original[m.end():matches[index+1].start() if index+1<len(matches) else len(original)]
+            option_type=re.search(r"type\\s*:\\s*['\\\"]([a-z-]+)['\\\"]",chunk)
+            if not option_type:raise ValueError("unknown Meson type for "+m.group(1))
+            source_options[m.group(1)]=option_type.group(1)
+    config=Path(__file__).resolve().parents[1]/"project/package"/name/"stages/final/build.py"
+    selected=ast.literal_eval(config.read_text())["configure"][0][-1]
+    selected_options=re.findall(r"(?:^|\\s)-D([a-zA-Z0-9_-]+)=([^\\s]+)",selected)
+    for option,value in selected_options:
+        if option in ("auto_features","default_library"):
+            continue
+        kind=source_options.get(option)
+        if not kind:raise ValueError("unrecognized exact-release Meson option: "+option)
+        if (kind=="feature" and value not in ("enabled","disabled","auto")) or (
+                kind=="boolean" and value not in ("true","false")):
+            raise ValueError("unsupported Meson option value/type: "+option+"="+value)
+
     return {"package":name,"version":spec["version"],"source_url":spec["url"],
             "sha256":digest,"original_notice_members":rights,
-            "original_build_metadata":meta,"meson_option_names":options,"published_digest_url":spec["digest_url"],
+            "original_build_metadata":meta,"meson_option_names":options,
+            "selected_source_build_options_validated":True,"published_digest_url":spec["digest_url"],
             "status":"source-identity-observed-text-closure-not-admitted"}
 
 if __name__=="__main__":
