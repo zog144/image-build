@@ -58,15 +58,15 @@ def inspect(name,blob,published):
         raise ValueError("missing exact selected Meson options")
     source_options={}
     for original in declarations.values():
-        matches=list(re.finditer(r"option\\s*\\(\\s*['\\\"]([^'\\\"]+)['\\\"]", original))
+        matches=list(re.finditer(r"option\s*\(\s*['\"]([^'\"]+)['\"]", original))
         for index,m in enumerate(matches):
             chunk=original[m.end():matches[index+1].start() if index+1<len(matches) else len(original)]
-            option_type=re.search(r"type\\s*:\\s*['\\\"]([a-z-]+)['\\\"]",chunk)
+            option_type=re.search(r"type\s*:\s*['\"]([a-z-]+)['\"]",chunk)
             if not option_type:raise ValueError("unknown Meson type for "+m.group(1))
             source_options[m.group(1)]=option_type.group(1)
     config=Path(__file__).resolve().parents[1]/"project/package"/name/"stages/final/build.py"
     selected=ast.literal_eval(config.read_text())["configure"][0][-1]
-    selected_options=re.findall(r"(?:^|\\s)-D([a-zA-Z0-9_-]+)=([^\\s]+)",selected)
+    selected_options=re.findall(r"(?:^|\s)-D([a-zA-Z0-9_-]+)=([^\s]+)",selected)
     for option,value in selected_options:
         if option in ("auto_features","default_library"):
             continue
