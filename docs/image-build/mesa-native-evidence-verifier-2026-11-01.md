@@ -27,7 +27,7 @@ The verifier does **not** execute compiler or linker commands, fetch archives, i
 | `compile_commands` | Standard compilation database rows with `directory`, `file`, and exactly one of `arguments`/`command`, plus optional `output`; match normalized `-c` source and `-o` object to source-object map, with compiler byte hash and include/library path containment |
 | `source_objects` | Full compilation unit map: `source_root` (`source` or `build`), source relative path/SHA, object relative path/SHA, generated input provenance; one-to-one with compilation commands and all physical `.o`/`.obj` files found in the captured build tree |
 | `implicit_inputs` | One original or generated source dependency graph per compilation unit, checked against the actual full `-MD -MF` depfile bytes (not `-MMD`); source/header SHA-256 and approved root, with no Host implicit includes |
-| `link_commands` | One captured shared-ELF link output per installed ELF, with exact linker, compiled object inputs, build-output and installed-byte digests; response files, static archives, linker scripts and opaque flags are held |
+| `link_commands` | Captured shared-ELF link output, approved linker bytes, independently compiled `.o` inputs, complete optional bounded classic ar archive-member inventory and selected-member assertions, plus byte-matched one-level response-file expansions; linker scripts, unknown flags and nonshared links remain held |
 | `installed_inventory` | Complete DESTDIR leaf enumeration; exact installed-file digests and contained relative symlink targets; all expected binary/header/notice paths from draft manifest |
 | `elf_dependencies` | Every physical installed ELF64 little-endian dynamic file; `DT_NEEDED`, SONAME, RPATH and RUNPATH cross-checked against the ELF program headers and dynamic strings in actual installed bytes, not merely a self-reported `readelf` result |
 | `library_provenance` | One exact resolved byte digest per reported `DT_NEEDED` edge, rooted in captured `software` or `destdir`, with matching actual library SONAME; no Host library fallback in the conservative modeled lookup; a software-library provider with unexpanded transitive dependencies or search paths is rejected |
@@ -63,3 +63,48 @@ authority, verified source code provenance or redistribution rights from a
 successful consistency result. The native witness must establish the selected
 installed-generation root, immutable capture, actual compiler execution, and
 reproducible link/loader closure independently.
+
+
+## Bounded static archives and linker response files (2026-11-02)
+
+`link_commands` retains the original `installed_path`, `output`,
+`output_sha256`, `arguments` and `inputs` fields. The extended form
+adds **both** `archives` and `response_files` (empty arrays are permitted).
+The response-file record has exact keys `path` (relative to captured build root),
+`sha256` (of the actual file bytes) and `arguments` (tokens that must match
+`shlex.split` of those exact bytes). Only a single layer of `@path` is
+supported; references must be unique, every declared response file must be
+used, and nested files, shell interpolation, byte escapes, unreadable files
+or Host paths are rejected. This source parser models a deliberately bounded
+POSIX-style token grammar, not every GCC/Clang response dialect.
+
+The archive record has `path` (relative `.a`), `sha256` (whole ar file)
+and `members` (the **complete** file-ordered member inventory).
+Each member requires `name`, `sha256`, `object` (source-derived
+captured `.o`/ `.obj` file), `object_sha256` and a boolean
+`selected`. The original ar member bytes must equal that exact compiler
+object's bytes. A claim that a member was selected is **not** a proof of what
+the linker actually loaded. In this revision classic **non-thin** ar with
+short regular object member names is supported; the optional GNU symbol
+index is covered by the whole archive digest. GNU extended-name tables,
+BSD names, thin archives, nested archives, scripts, inferred link search and
+non-object members are held for separate native extension. Every referenced
+archive must be recorded, and every record must correspond to an actual
+link input.
+
+The synthetic tests exercise legal bounded captures and hostile modified
+member bytes, missing or duplicated members, missing/unused response files,
+nested response files and apparent selected-member claims. They also
+intentionally forge a complete depfile and its digest while omitting an actual
+header: consistency **can** still pass and must not become acceptance.
+
+**Authentication boundary:** all response-file and archive hashes originate
+from the submitted capture. The verifier checks their relationships; it does
+not authenticate their origin, that they were actually supplied to a genuine
+linker, or that the reported selected members are complete. Before native
+admission, root-control/host-install must independently witness the
+installation/generation, exact command and working directory, captured bytes,
+actual ar-member selection, linker-driver toolchain (including defaults),
+full source/header closure, loader resolution and immutable capture identity.
+Selected-source licensing and redistribution authorization remain separate
+NO-GO gates.
