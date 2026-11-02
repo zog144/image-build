@@ -2,15 +2,17 @@
   "schema": "zog-first-workspace-source-to-native-handoff-v1",
   "status": "PREPARED_NOT_SUBMITTABLE",
   "source_revisions": {
-    "workspace_pr9": "17c4fbceabf9cc2ac2a650583bd7b0caf8972974",
+    "workspace_pr9_reviewed_input": "db13d73a45f8a3be579226656442c331a9f701ea",
     "mesa_pr8": "9cbd652226b863a7b4bb2d6d9539722e1a262508"
   },
   "producer_order": [
     "fonts",
     "XCB",
     "X11",
+    "LLVM",
+    "Mesa",
     "Xvnc-i3-xterm",
-    "Mesa"
+    "mesa-demos-smoke"
   ],
   "accepted_generation_receipts": {
     "fonts": null,
@@ -18,6 +20,7 @@
     "X11": null,
     "zlib_native_environment": null,
     "ncurses_temporary": null,
+    "LLVM": null,
     "Mesa": null
   },
   "inherited_stages": [
@@ -35,7 +38,29 @@
       "xcb-util-cursor",
       "i3",
       "xterm",
-      "turbovnc"
+      "turbovnc",
+      "libICE",
+      "libSM",
+      "libXt",
+      "xcb-util",
+      "xcb-util-image",
+      "xcb-util-renderutil",
+      "xcb-util-keysyms",
+      "xcb-util-wm",
+      "xcb-util-xrm",
+      "libxkbcommon",
+      "glib",
+      "cairo",
+      "pango",
+      "harfbuzz",
+      "fribidi",
+      "libXrender",
+      "pixman",
+      "libjpeg-turbo",
+      "libX11",
+      "libxcb",
+      "libXfont2",
+      "libxkbfile"
     ],
     "mesa_draft": [
       "llvm",
@@ -52,7 +77,11 @@
     "usr/share/X11/xkb",
     "usr/bin/xkbcomp",
     "usr/share/X11/app-defaults/XTerm",
-    "usr/share/terminfo/x/xterm"
+    "usr/share/terminfo/x/xterm",
+    "usr/share/X11/xserver",
+    "usr/lib/pkgconfig",
+    "usr/share/licenses/turbovnc/Xserver-COPYING",
+    "usr/share/licenses/turbovnc/libsha1-COPYING"
   ],
   "required_tools": [
     "meson",
@@ -74,7 +103,18 @@
     "usr/lib/libGL.so",
     "usr/lib/dri/swrast_dri.so",
     "usr/bin/glxgears",
-    "usr/bin/glxinfo"
+    "usr/bin/glxinfo",
+    "usr/bin/i3bar",
+    "usr/bin/i3-msg",
+    "usr/bin/i3-nagbar",
+    "usr/bin/vncserver",
+    "usr/bin/vncpasswd",
+    "usr/share/fonts/X11/misc/6x13.pcf.gz",
+    "usr/share/fonts/X11/misc/fonts.dir",
+    "usr/share/X11/app-defaults/XTerm",
+    "usr/share/terminfo/x/xterm",
+    "usr/bin/xkbcomp",
+    "usr/share/licenses/turbovnc/libsha1-COPYING"
   ],
   "protected_evidence": [
     "signed selected-stage grant and immutable exact revisions",
@@ -90,5 +130,47 @@
   "native_accepted": false,
   "rights_authorized": false,
   "build_submission_allowed": false,
-  "canonical_promotion_allowed": false
+  "canonical_promotion_allowed": false,
+  "source_revision_policy": "Reviewed PR9 input is the exact pre-handoff snapshot. Subsequent PR9 source commits must be independently re-frozen and authenticated as final build source; never treat a moving PR head as a generation identity.",
+  "producer_edges": [
+    [
+      "fonts",
+      "Xvnc-i3-xterm"
+    ],
+    [
+      "XCB",
+      "X11"
+    ],
+    [
+      "X11",
+      "Mesa"
+    ],
+    [
+      "X11",
+      "Xvnc-i3-xterm"
+    ],
+    [
+      "LLVM",
+      "Mesa"
+    ],
+    [
+      "Mesa",
+      "Xvnc-i3-xterm"
+    ],
+    [
+      "Xvnc-i3-xterm",
+      "mesa-demos-smoke"
+    ]
+  ],
+  "generation_receipt_policy": "Every non-null generation must be independently attested via protected authority/issuer/checkpoint, bound to exact source, manifest and selected stage; GitHub source CI cannot validate trust.",
+  "selected_package_order_contract": "Use actual package stages and inherited zlib-native-environment/ncurses-temporary; test independent topological sort and expected runtime resources; not a claim of executed stages.",
+  "required_tool_provenance": {
+    "C-C++-linker-ar-objcopy-readelf": "exact selected compiler/binutils generation and flags; forbid Host headers/link paths",
+    "meson-ninja-cmake-pkgconf": "declared pinned build-environment source or accepted build-only generation, exact binary/module/package-config search origins",
+    "python-generators": "exact Python interpreter, modules and template/input origin (Mako, PyYAML, LLVM TableGen, GLAPI code generators as selected)",
+    "XKB-and-font-tools": "source-pinned xkbcomp, bdftopcf, mkfontscale with installed data byte identities",
+    "build-utilities": "exact selected shell, Make/Autotools and any lex/yacc tooling required by observed generator plan"
+  },
+  "rights_gate": "HOLD: PR9 bundled TurboVNC/Xserver/libsha1/zlib-ng and PR8 LLVM/Mesa/libdrm/mesa-demos component-by-component independent redistribution authorization absent.",
+  "native_readiness": "REFUSE_MISSING_AUTHENTIC_RECEIPTS_AND_INDEPENDENT_ADMISSION"
 }
