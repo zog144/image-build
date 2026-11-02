@@ -20,7 +20,7 @@
     "libxcb-final",
     "xorgproto-final",
     "expat-final",
-    "zlib-final"
+    "zlib-native-environment"
   ],
   "blocked_python_build_inputs": [
     {

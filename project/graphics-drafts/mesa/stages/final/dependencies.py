@@ -7,7 +7,7 @@
     "libxcb-final",
     "libdrm-final",
     "expat-final",
-    "zlib-final",
+    "zlib-native-environment",
     "mako-final",
     "pyyaml-final",
     "libxshmfence-final",

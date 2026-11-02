@@ -1,9 +1,9 @@
 # Data only; parsed with ast.literal_eval.
 {
   "build": [
-    "zlib-final"
+    "zlib-native-environment"
   ],
   "runtime": [
-    "zlib-final"
+    "zlib-native-environment"
   ]
 }

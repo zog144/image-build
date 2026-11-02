@@ -65,7 +65,7 @@ def test_gallium_dependency_graph_is_exact_and_non_host_fallback():
     for name in ("libX11-final", "libXext-final", "libxcb-final"):
         assert name in mesa["build"]
     assert "mesa-final" in demo["build"] and "mesa-final" in demo["runtime"]
-    assert llvm["build"] == ["zlib-final"]
+    assert llvm["build"] == ["zlib-native-environment"]
     for name in NAMES:
         integration = stage(name, "integration.py")
         assert integration["native_admission"].startswith("HOLD")
@@ -172,3 +172,13 @@ def test_canonical_admission_is_explicitly_held_pending_real_closure():
     x11 = lit(PROJECT / "package/libX11/stages/final/produce-manifest.py")
     assert "usr/lib/libX11-xcb.so" in x11["required"]
     assert (PROJECT / "package/libxcb/stages/final/produce-manifest.py").exists()
+
+
+def test_real_inherited_zlib_source_stage_remains_frozen_input_not_host_fallback():
+    inherited = PROJECT/"package/zlib/stages/native-environment"
+    assert (inherited/"sources.py").is_file()
+    assert not (PROJECT/"package/zlib/stages/final").is_dir()
+    for name in ("llvm","mesa"):
+        record=stage(name,"dependencies.py")
+        assert "zlib-native-environment" in record["build"]
+        assert "zlib-final" not in record["build"]

@@ -48,6 +48,10 @@ def test_held_six_stage_closure_exposes_unadmitted_python_inputs():
     }
     for name, package in direct.items():
         for dep in package.build_dependencies + package.runtime_dependencies:
+            if dep=="zlib-native-environment":
+                assert (CANONICAL/"zlib/stages/native-environment/sources.py").is_file()
+                assert not (CANONICAL/"zlib/stages/final").exists()
+                continue
             assert dep.endswith("-final"), (name, dep)
             resolved = dep[:-len("-final")]
             assert resolved in SIX or resolved in predecessors or resolved in (
