@@ -3,11 +3,11 @@
   "build": [
     "libffi-final",
     "pcre2-final",
-    "zlib-final"
+    "zlib-native-environment"
   ],
   "runtime": [
     "libffi-final",
     "pcre2-final",
-    "zlib-final"
+    "zlib-native-environment"
   ]
 }

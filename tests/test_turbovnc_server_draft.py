@@ -42,7 +42,7 @@ def test_xvnc_selected_xserver_linker_profile_excludes_hardware_dri3():
     assert 'pkgconf --exists xfont2 pixman-1 x11 xau xdmcp xkbfile gl zlib' in flags
     assert "PKG_CONFIG_LIBDIR" in flags and "CMAKE_PREFIX_PATH" in flags
     deps=lit("stages/final/dependencies.py")
-    for target in ("libXfont2-final","xkbcomp-final","mesa-final","zlib-final","openssl-final"):
+    for target in ("libXfont2-final","xkbcomp-final","mesa-final","zlib-native-environment","openssl-final"):
         assert target in deps["build"]
     integration=lit("stages/final/integration.py")
     assert "bundled Xorg" in integration["native_admission"]

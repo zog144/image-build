@@ -5,7 +5,7 @@
     "freetype-final",
     "fontconfig-final",
     "libpng-final",
-    "zlib-final",
+    "zlib-native-environment",
     "libxcb-final",
     "libX11-final",
     "libXrender-final"
@@ -15,7 +15,7 @@
     "freetype-final",
     "fontconfig-final",
     "libpng-final",
-    "zlib-final",
+    "zlib-native-environment",
     "libxcb-final",
     "libX11-final",
     "libXrender-final"

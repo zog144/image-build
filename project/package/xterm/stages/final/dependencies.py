@@ -6,7 +6,7 @@
     "libXmu-final",
     "libXpm-final",
     "libXft-final",
-    "ncurses-final"
+    "ncurses-temporary"
   ],
   "runtime": [
     "libXt-final",
@@ -14,7 +14,7 @@
     "libXmu-final",
     "libXpm-final",
     "libXft-final",
-    "ncurses-final",
+    "ncurses-temporary",
     "luit-final",
     "basic-font-final"
   ]

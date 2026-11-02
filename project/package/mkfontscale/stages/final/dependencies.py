@@ -3,11 +3,11 @@
   "build": [
     "freetype-final",
     "libfontenc-final",
-    "zlib-final"
+    "zlib-native-environment"
   ],
   "runtime": [
     "freetype-final",
     "libfontenc-final",
-    "zlib-final"
+    "zlib-native-environment"
   ]
 }
