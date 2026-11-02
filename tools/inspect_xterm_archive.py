@@ -18,22 +18,40 @@ def inspect(archive):
     if source_sha != spec["sha256"]:
         raise ValueError("xterm 412 original source archive mismatch")
     members = {}
+    configure_bytes = None
+    makefile_bytes = None
     with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as tar:
         for item in tar.getmembers():
             if item.name.startswith("/") or ".." in item.name.split("/"):
                 raise ValueError("unsafe xterm member pathname")
             stripped = item.name.removeprefix("xterm-412/")
-            if stripped in ("COPYING", "configure", "MANIFEST"):
+            if stripped in ("COPYING", "configure", "MANIFEST", "Makefile.in"):
                 if not item.isfile() or item.size > 2 * 1024 * 1024:
                     raise ValueError("unsafe original xterm metadata member")
                 opened = tar.extractfile(item)
                 if opened is None:
                     raise ValueError("unreadable original member")
-                members[stripped] = hashlib.sha256(opened.read()).hexdigest()
-    if "COPYING" not in members or "configure" not in members:
-        raise ValueError("missing original xterm notice or configure evidence")
+                content = opened.read()
+                members[stripped] = hashlib.sha256(content).hexdigest()
+                if stripped == "configure":
+                    configure_bytes = content
+                elif stripped == "Makefile.in":
+                    makefile_bytes = content
+    if "COPYING" not in members or configure_bytes is None or makefile_bytes is None:
+        raise ValueError("missing original xterm notice or build metadata")
+    # These are literal options present in the original immutable configure,
+    # not an assertion that the source will build on a native Host.
+    needed = (b"--with-app-defaults", b"--disable-setuid",
+              b"--disable-setgid", b"--enable-256-color")
+    for option in needed:
+        if option not in configure_bytes:
+            raise ValueError("unsupported selected xterm option: " + option.decode())
+    if b"install-ti" not in makefile_bytes:
+        raise ValueError("xterm terminfo install target unconfirmed")
     return {"package": "xterm", "version": "412", "original_source_sha256": source_sha,
             "archive_members": members,
+            "selected_build_options_confirmed": [x.decode() for x in needed],
+            "terminfo_install_target_seen": True,
             "status": "source-observed-not-canonical-or-redistribution-approved"}
 
 
