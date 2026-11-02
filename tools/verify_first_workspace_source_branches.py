@@ -59,7 +59,7 @@ REVIEW_BLOBS = {
 def verify_review_blob(path, data):
     # SHA-1 is the Git *object identity* here, not a new source hash or
     # authority. The exact reviewed PR8 commit provides the immutable origin.
-    actual = hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\\0" + data).hexdigest()
+    actual = hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + bytes([0]) + data).hexdigest()
     if actual != REVIEW_BLOBS[path]:
         raise ValueError("selected Mesa notice-review byte identity changed")
 
