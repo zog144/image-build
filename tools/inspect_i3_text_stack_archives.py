@@ -47,7 +47,7 @@ def inspect(name,blob,published):
                 meta[item.name]=hashlib.sha256(contents).hexdigest()
                 if rel in ("meson_options.txt","meson.options"):
                     options[rel]=sorted(set(re.findall(
-                        r"option\\s*\\(\\s*['\\\"]([^'\\\"]+)['\\\"]",
+                        r"option\s*\(\s*['\"]([^'\"]+)['\"]",
                         contents.decode("utf-8",errors="replace"))))
 
     if not rights or not meta:raise ValueError("original license or build source absent")
