@@ -26,5 +26,5 @@ jobs:
       - name: Validate source-only original notices and typed stage manifests
         run: |
           python -m pip install pytest==8.4.2
-          PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_i3_font_dependency_recipes.py
+          PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_i3_font_dependency_recipes.py tests/test_i3_actual_source_recipe.py
 # No installation, rights or compilation authorization from archive hashes.
