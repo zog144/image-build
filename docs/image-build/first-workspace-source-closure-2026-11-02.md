@@ -121,3 +121,46 @@ and protected Host/workspace runtime acceptance.
 Do not equate the GitHub-hosted metadata pytest with Zog's native compiler
 or root-control/host-install witness. No manual generation ID, source-only
 native attestation, compiler submission or source rights permission is created.
+
+## November 2 continued closure — authored, not accepted
+
+The original-source selected library closure now includes HarfBuzz 11.5.0,
+FriBidi 1.0.16 and libXrender 0.9.12, each with source-pinned
+`stages/final`, original COPYING SHA-256 and GitHub Actions source tests.
+GLib 2.86.5, Cairo 1.18.4 and Pango 1.56.4 have source-authored
+configure/build/DESTDIR install, code-generation and output manifests.
+Cairo explicitly selects Xlib/XCB/Freetype/Fontconfig/PNG/zlib while
+disabling unselected backends, and HarfBuzz uses an isolated core
+profile to avoid circular GLib/Cairo dependencies. Meson/Host-library
+fallback is forbidden but *not yet native authenticated*.
+
+i3 4.25.1 now has a Meson stage selecting exact original release,
+`-Ddocs=false`, `-Dmans=false`, generated `config.h`,
+explicit upstream pkg-config interfaces and expected executables.
+The original i3 LICENSE member hash was verified in GitHub Actions;
+no runnable binary or legal clearance has been observed.
+
+xterm's source-only widget/font chain contains libXaw, libXmu, libXpm,
+libXft, luit, bdftopcf, mkfontscale and a minimal selected 6x13 BDF
+font conversion. Their original source notice identities were observed.
+Actual output path, font index, library lookup and terminfo integration
+must be checked on the compiler Host; `font 6x13` original member must
+also be selected and independently bound before claiming closure.
+
+The TurboVNC Xvnc CMake profile now explicitly sets
+`TVNC_DRI3=OFF` (its original 3.3.1 source defaults to ON), disables
+bundled zlib-ng and requires Zog-built Xfont2, pixman, XKB compiler,
+software OpenGL/Mesa and original X11 libraries. The bundled Xserver
+CMake source retains a distinct independently selected rights hold.
+
+PR #9 source-integration tests now traverse the **actual** package
+stage dependencies for i3, xterm and the separated TurboVNC server
+draft. The intentionally missing external leaves are `xkbcomp-final`
+and `mesa-final`; the latter remains on source-held Mesa PR #8.
+Neither is substituted by a Host binary or invented accepted generation.
+
+**Decision: SOURCE-ONLY / NO-GO for native execution, canonical package
+admission or public redistribution.** All original archive/notice
+members, compiler input roots, installed ELF and font resource paths,
+license scope, source/target generation and signed stage grants
+require their own genuine protected evidence.

@@ -37,7 +37,7 @@
       "direct_additional": [
         "libev"
       ],
-      "source_recipe_state": "catalogue-only",
+      "source_recipe_state": "authored final Meson/pkgconf/generated-header stage; native and rights HOLD",
       "build_options": [
         "-Ddocs=false",
         "-Dmans=false"
@@ -46,7 +46,7 @@
     "xterm": {
       "version": "412",
       "source_identity_status": "Source SHA-256 and original COPYING/configure/MANIFEST bytes verified in GitHub Actions 41457682657; consumer runtime chain not native accepted.",
-      "source_recipe_state": "source and notice pinned; stage and dependency closure unresolved, catalogue-only",
+      "source_recipe_state": "authored xterm/Xaw/Xmu/Xpm/Xft/luit/bitmap-font-stage graph; final native and rights HOLD",
       "dependencies": [
         "libXt",
         "libXaw",
@@ -63,7 +63,7 @@
       "version": "3.3.1",
       "source_pin": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
       "reviewed_upstream": "TurboVNC/turbovnc@3.3.1 CMakeLists.txt and unix/CMakeLists.txt",
-      "source_recipe_state": "catalogue-only",
+      "source_recipe_state": "separate authored server-only Xvnc draft, requires xkbcomp and Mesa PR #8; native and rights HOLD",
       "cmake_profile": {
         "TVNC_BUILDVIEWER": "OFF",
         "TVNC_BUILDSERVER": "ON",
@@ -72,7 +72,8 @@
         "TVNC_BUILDSYSTEMD": "OFF",
         "TVNC_STATIC_XORG_PATHS": "ON",
         "TVNC_DLOPENSSL": "OFF",
-        "TVNC_ZLIBNG": "OFF"
+        "TVNC_ZLIBNG": "OFF",
+        "TVNC_DRI3": "OFF"
       },
       "must_supply_native_paths": [
         "TJPEG_INCLUDE_DIR",
@@ -99,12 +100,27 @@
     }
   },
   "reviewed_source_present": [
+    "basic-font",
+    "bdftopcf",
+    "cairo",
+    "fribidi",
+    "glib",
+    "harfbuzz",
+    "i3",
     "libICE",
     "libSM",
+    "libXaw",
+    "libXft",
+    "libXmu",
+    "libXpm",
+    "libXrender",
     "libXt",
     "libev",
     "libjpeg-turbo",
     "libxkbcommon",
+    "luit",
+    "mkfontscale",
+    "pango",
     "pixman",
     "startup-notification",
     "xcb-util",
@@ -115,46 +131,57 @@
     "xcb-util-wm",
     "xcb-util-xrm",
     "xkeyboard-config",
+    "xterm",
     "yajl"
   ],
   "remaining_source_packages": [
-    "cairo",
-    "pango",
-    "glib",
-    "libXaw",
-    "libXmu",
-    "libXpm",
-    "libXft",
-    "xterm",
-    "luit",
-    "basic-font"
+    "xkbcomp"
   ],
   "special_unresolved": [
-    "Real libICE/libSM/libXt native-output tests (source recipes already authored)",
-    "i3 full pkgconf closure and generated sources",
-    "TurboVNC Xvnc configured feature scope/bundled-code source and license audit",
-    "xterm exact upstream SHA-256 and notice member",
-    "Mesa GLX native loader/LLVM source-derived library graph",
-    "Trusted accepted fonts/XCB/X11 generation predecessor chain",
-    "libxkbcommon 1.13.2 upstream patch from BLFS must be separately scoped, pinned and reviewed before native acceptance.",
-    "YAJL 2.1.0 legacy CMake install-output locations and static library defaults need native controlled CMake tests.",
-    "GLib/GObject, Cairo/Pango and xterm font/Xaw/Xmu/Xpm/Xft closure not source-ready.",
-    "Pango/Cairo/GLib source identities are known but HarfBuzz/FriBidi/Xrender and native code-generation/feature closure remain unavailable."
+    "Native selected features for Cairo GLib Pango and i3 Meson still require true codegen, pkgconf, compiled and installed outputs; source recipes do not establish build success.",
+    "Xterm xterm-412 native terminfo/libXaw/libXmu/libXpm/libXft/luit and 6x13.pcf.gz runtime resources still need selected source/byte evidence.",
+    "TurboVNC Xvnc uses bundled Xserver; DRI3 disabled, GLX/OpenGL requires authenticated PR #8 Mesa software generation and source-pinned xkbcomp.",
+    "Bundled Xserver/libsha1/zlib-ng feature-scoped original copyright/notice mapping and actual selected link objects remain unresolved.",
+    "Build tool and Python module origins, no Host pkgconfig/ELF fallback, and independent redistribution rights remain non-negotiable native gates.",
+    "Native producer accepted fonts -> XCB -> X11 signed authority/checkpoint service remains independently blocked.",
+    "Existing libICE/libSM/libXt and libxkbcommon patch still require genuine native acceptance.",
+    "YAJL old CMake output paths and optional static library default require native build proof."
   ],
   "build_submission_allowed": false,
   "canonical_promotion_allowed": false,
   "source_authored_native_held": [
+    "basic-font",
+    "bdftopcf",
+    "cairo",
+    "fribidi",
+    "glib",
+    "harfbuzz",
+    "i3",
+    "libXaw",
+    "libXft",
+    "libXmu",
+    "libXpm",
+    "libXrender",
     "libev",
     "libjpeg-turbo",
     "libxkbcommon",
+    "luit",
+    "mkfontscale",
+    "pango",
     "pixman",
     "startup-notification",
     "xkeyboard-config",
+    "xterm",
     "yajl"
   ],
   "source_rights_scope": "Original source/member SHA-256 checked on 2026-11-02; all newly authored license components unresolved; these do not represent independently approved redistribution or compiler outputs.",
   "source_draft_unadmitted": {
     "turbovnc": "project/graphics-first-workspace/turbovnc-draft",
     "text_stack": "project/graphics-first-workspace/text-stack-candidates.json"
-  }
+  },
+  "source_only_dag_hold": [
+    "xkbcomp-final requires exact original COPYING and source-stage admission",
+    "mesa-final remains in separate PR #8, no canonical promotion",
+    "font 6x13 original selected member and final fonts.dir inventory require genuine evidence"
+  ]
 }
