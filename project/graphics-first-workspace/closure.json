@@ -1,0 +1,142 @@
+{
+  "schema": "zog-first-workspace-source-closure-v1",
+  "status": "source-incomplete",
+  "native_accepted": false,
+  "rights_authorized": false,
+  "frozen_accepted_generations_required": [
+    "fonts",
+    "XCB",
+    "X11"
+  ],
+  "consumers": {
+    "i3": {
+      "version": "4.25.1",
+      "source_pin": "4a742bbe81b9e5ee6057f42a8e3c691d88894e93f1a5d81fe239128512ac05c0",
+      "reviewed_upstream": "i3/i3@4.25.1 meson.build",
+      "required_pkgconfig": [
+        "libstartup-notification-1.0",
+        "xcb",
+        "xcb-xkb",
+        "xcb-xinerama",
+        "xcb-randr",
+        "xcb-shape",
+        "xcb-util",
+        "xcb-cursor",
+        "xcb-keysyms",
+        "xcb-icccm",
+        "xcb-xrm",
+        "xkbcommon",
+        "xkbcommon-x11",
+        "yajl",
+        "libpcre2-8",
+        "cairo",
+        "pangocairo",
+        "glib-2.0",
+        "gobject-2.0"
+      ],
+      "direct_additional": [
+        "libev"
+      ],
+      "source_recipe_state": "catalogue-only",
+      "build_options": [
+        "-Ddocs=false",
+        "-Dmans=false"
+      ]
+    },
+    "xterm": {
+      "version": "412",
+      "source_identity_status": "exact upstream archive release identified, source digest/notice attestation pending",
+      "source_recipe_state": "missing",
+      "dependencies": [
+        "libXt",
+        "libXaw",
+        "libXmu",
+        "libXpm",
+        "libXft",
+        "ncurses",
+        "luit",
+        "basic-font"
+      ],
+      "note": "Do not infer xterm 412 checksum from filename; exact source and notice evidence required."
+    },
+    "turbovnc": {
+      "version": "3.3.1",
+      "source_pin": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
+      "reviewed_upstream": "TurboVNC/turbovnc@3.3.1 CMakeLists.txt and unix/CMakeLists.txt",
+      "source_recipe_state": "catalogue-only",
+      "cmake_profile": {
+        "TVNC_BUILDVIEWER": "OFF",
+        "TVNC_BUILDSERVER": "ON",
+        "TVNC_BUILDWEBSERVER": "OFF",
+        "TVNC_NVCONTROL": "OFF",
+        "TVNC_BUILDSYSTEMD": "OFF",
+        "TVNC_STATIC_XORG_PATHS": "ON",
+        "TVNC_DLOPENSSL": "OFF",
+        "TVNC_ZLIBNG": "OFF"
+      },
+      "must_supply_native_paths": [
+        "TJPEG_INCLUDE_DIR",
+        "TJPEG_LIBRARY",
+        "XKB_BASE_DIRECTORY",
+        "XKB_BIN_DIRECTORY",
+        "XORG_DRI_DRIVER_PATH",
+        "XORG_FONT_PATH",
+        "XORG_REGISTRY_PATH"
+      ],
+      "required_capabilities": [
+        "pixman",
+        "libjpeg-turbo",
+        "libX11",
+        "libXau",
+        "libXdmcp",
+        "libxkbfile",
+        "libXfont2",
+        "xkeyboard-config",
+        "OpenSSL",
+        "Mesa-GLX"
+      ],
+      "vendor_scope": "Review every bundled Xorg component and zlib-ng feature; no automatic import or redistribution."
+    }
+  },
+  "reviewed_source_present": [
+    "xcb-util",
+    "xcb-util-image",
+    "xcb-util-keysyms",
+    "xcb-util-wm",
+    "xcb-util-xrm",
+    "xcb-util-renderutil",
+    "xcb-util-cursor",
+    "libICE",
+    "libSM",
+    "libXt"
+  ],
+  "remaining_source_packages": [
+    "libev",
+    "yajl",
+    "startup-notification",
+    "libxkbcommon",
+    "xkeyboard-config",
+    "cairo",
+    "pango",
+    "glib",
+    "pixman",
+    "libjpeg-turbo",
+    "libXaw",
+    "libXmu",
+    "libXpm",
+    "libXft",
+    "xterm",
+    "luit",
+    "basic-font"
+  ],
+  "special_unresolved": [
+    "Real libICE/libSM/libXt native-output tests (source recipes already authored)",
+    "i3 full pkgconf closure and generated sources",
+    "TurboVNC Xvnc configured feature scope/bundled-code source and license audit",
+    "xterm exact upstream SHA-256 and notice member",
+    "Mesa GLX native loader/LLVM source-derived library graph",
+    "Trusted accepted fonts/XCB/X11 generation predecessor chain"
+  ],
+  "build_submission_allowed": false,
+  "canonical_promotion_allowed": false
+}
