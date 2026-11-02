@@ -9,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 PACKAGE=ROOT/"project/package"
 AUDIT=ROOT/"project/host/boot-a-source-prerequisite-audit.json"
 HEX64=re.compile(r"[0-9a-f]{64}")
+GIT_SHA40=re.compile(r"[0-9a-f]{40}")
 
 def literal(path):
     return ast.literal_eval(Path(path).read_text())
@@ -28,7 +29,7 @@ def inspect(record, *, stages=None, installed_check=None):
     if record.get("resident_b_status")!="DEFERRED_UNVERIFIED":
         raise ValueError("Resident B prematurely accepted")
     for key in ("reviewed_image_build_unstable_before_audit","reviewed_boot_a_source_correction","host_install_source_contract"):
-        if not isinstance(record.get(key),str) or not HEX64.fullmatch(record[key]):
+        if not isinstance(record.get(key),str) or not GIT_SHA40.fullmatch(record[key]):
             raise ValueError("unbound original source revision: "+key)
     foreign=record.get("foreign_al2023_provider",{})
     if foreign.get("status")!="historically_observed_in_failed_generation_reverify_for_successor":
