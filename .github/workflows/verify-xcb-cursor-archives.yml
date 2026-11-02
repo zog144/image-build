@@ -1,0 +1,27 @@
+name: Verify XCB renderutil and cursor original source archives
+
+on:
+  push:
+    branches: [regular/graphics-xvnc-source-closure-20261102]
+  pull_request:
+    branches: [main, unstable]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-xcb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Verify exact archive bytes and list original notices
+        run: python tools/inspect_xcb_cursor_archives.py --fetch
+# This workflow downloads exact public source archives only and does not build,
+# install, run privileged tools, attest native outputs or approve redistribution.
