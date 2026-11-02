@@ -13,8 +13,8 @@ from urllib.request import Request, urlopen
 SOURCES = {
  "libev": {"version":"4.33","url":"https://mirrors.omnios.org/libev/libev-4.33.tar.gz",
            "expected_sha256":"507eb7b8d1015fbec5b935f34ebed15bf346bed04a11ab82b8eee848c4205aea"},
- "yajl": {"version":"2.1.0","url":"https://fossies.org/linux/www/old/yajl-2.1.0.tar.gz",
-           "expected_sha256":"3fb73364a5a30efe615046d07e6db9d09fd2b41c763c5f7d3bfb121cd5c5ac5a"},
+ "yajl": {"version":"2.1.0","url":"https://github.com/lloyd/yajl/archive/refs/tags/2.1.0.tar.gz",
+           "expected_sha256":None},
  "startup-notification":{"version":"0.12","url":"https://www.freedesktop.org/software/startup-notification/releases/startup-notification-0.12.tar.gz",
            "expected_sha256":None},
  "libxkbcommon":{"version":"1.13.2","url":"https://github.com/lfs-book/libxkbcommon/archive/refs/tags/v1.13.2.tar.gz",
