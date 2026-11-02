@@ -59,7 +59,10 @@ def relative(value):
 
 
 def within(path, root):
-    resolved = path.resolve(strict=True)
+    try:
+        resolved = path.resolve(strict=True)
+    except (OSError, RuntimeError):
+        raise EvidenceError("missing or cyclic captured path: " + str(path)) from None
     require(resolved == root or root in resolved.parents, "Host path escape: " + str(path))
     return resolved
 

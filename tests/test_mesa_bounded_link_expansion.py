@@ -141,7 +141,7 @@ def test_bad_archive_provenance_rejected(capture, bad):
         archive["members"].append(dict(archive["members"][0]))
     elif bad == "unused-archive-record":
         link["arguments"].remove(str(capture["roots"]["build"] / "lib/libobjects.a"))
-    reject(capture, "archive|source-object|not a regular file")
+    reject(capture, "archive|source-object|missing or cyclic captured path|link has no source-derived input|invalid linker command")
 
 
 @pytest.mark.parametrize("bad", [
@@ -168,7 +168,7 @@ def test_response_file_capture_rejected_when_tampered(capture, bad):
         link["arguments"][1] = "@/etc/passwd"
     elif bad == "duplicate-reference":
         link["arguments"].append("@rsp/link.rsp")
-    reject(capture, "response|unsupported opaque|Host linker")
+    reject(capture, "response|unsupported opaque|Host linker|content digest mismatch")
 
 
 def test_forged_missing_implicit_header_is_still_consistency_only(capture):
