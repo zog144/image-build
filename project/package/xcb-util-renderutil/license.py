@@ -30,7 +30,7 @@
   "components": [
     {
       "scope": "Other original files, generated autotools code and vendored portions",
-      "expression": null,
+      "expression": None,
       "status": "unresolved",
       "notes": "Independent feature-scoped legal review required before redistribution."
     }

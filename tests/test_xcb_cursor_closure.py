@@ -1,9 +1,9 @@
 """Source-only XCB renderutil/cursor closure: exact archive and metadata checks."""
 import ast
+import shutil
 from pathlib import Path
 
 from zog.image_build.metadata import load_packages, order
-from zog.image_build.stages import stage_recipes
 
 ROOT = Path(__file__).resolve().parents[1] / "project"
 NOTICE = {
@@ -18,19 +18,24 @@ def lit(path):
     return ast.literal_eval(path.read_text())
 
 
-def test_consumer_order_stage_recipes_are_real(tmp_path):
-    plan = stage_recipes(ROOT / "bootstrap/graphics-xcb-i3-support.py",
-                         ROOT / "package", tmp_path / "recipes")
-    all_packages = load_packages(tmp_path / "recipes")
+def test_consumer_order_uses_real_metadata_loader_without_monthly_pin(tmp_path):
+    plan = lit(ROOT / "bootstrap/graphics-xcb-i3-support.py")
+    staged = tmp_path / "staged"
+    staged.mkdir()
+    for row in plan["stages"]:
+        destination = staged / row["id"]
+        destination.mkdir()
+        for filename in ("sources.py", "dependencies.py", "build.py", "produce-manifest.py"):
+            shutil.copyfile(ROOT / "package" / row["recipe"] / filename,
+                            destination / filename)
+    all_packages = load_packages(staged)
     names = order(all_packages, plan["targets"])
     for predecessor in ("xcb-util-final", "xcb-util-image-final",
                         "xcb-util-renderutil-final"):
         assert names.index(predecessor) < names.index("xcb-util-cursor-final")
-    assert all_packages["xcb-util-cursor-final"].build_dependencies == (
-        "xcb-util-final", "xcb-util-image-final", "xcb-util-renderutil-final")
-    assert all_packages["xcb-util-cursor-final"].runtime_dependencies == (
-        "xcb-util-final", "xcb-util-image-final", "xcb-util-renderutil-final")
-
+    expected = ("xcb-util-final", "xcb-util-image-final", "xcb-util-renderutil-final")
+    assert all_packages["xcb-util-cursor-final"].build_dependencies == expected
+    assert all_packages["xcb-util-cursor-final"].runtime_dependencies == expected
 
 def test_two_archive_source_identities_and_notice_hashes_exact():
     for name, (version, pinned_sha, copying_sha) in NOTICE.items():
