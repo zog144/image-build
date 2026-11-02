@@ -7,9 +7,9 @@ SOURCES={
 "libXmu":("1.2.1","https://www.x.org/releases/individual/lib/libXmu-1.2.1.tar.xz"),
 "libXpm":("3.5.17","https://www.x.org/releases/individual/lib/libXpm-3.5.17.tar.xz"),
 "libXft":("2.3.9","https://www.x.org/releases/individual/lib/libXft-2.3.9.tar.xz"),
-"luit":("1.1.1","https://www.x.org/releases/individual/app/luit-1.1.1.tar.xz"),
+"luit":("1.1.1","https://www.x.org/releases/individual/app/luit-1.1.1.tar.bz2"),
 "font-misc-misc":("1.1.3","https://www.x.org/releases/individual/font/font-misc-misc-1.1.3.tar.xz"),
-"bdftopcf":("1.1.2","https://www.x.org/releases/individual/app/bdftopcf-1.1.2.tar.xz"),
+"bdftopcf":("1.1.2","https://www.x.org/releases/individual/util/bdftopcf-1.1.2.tar.xz"),
 "mkfontscale":("1.2.3","https://www.x.org/releases/individual/app/mkfontscale-1.2.3.tar.xz"),
 }
 def inspect(name,content):
