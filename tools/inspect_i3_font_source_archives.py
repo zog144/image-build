@@ -11,6 +11,7 @@ SELECTED={
  "harfbuzz":("11.5.0","https://github.com/harfbuzz/harfbuzz/releases/download/11.5.0/harfbuzz-11.5.0.tar.xz"),
  "fribidi":("1.0.16","https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz"),
  "libXrender":("0.9.12","https://www.x.org/releases/individual/lib/libXrender-0.9.12.tar.xz"),
+ "i3":("4.25.1","https://i3wm.org/downloads/i3-4.25.1.tar.xz"),
 }
 def inspect(name,blob):
     version,url=SELECTED[name]
