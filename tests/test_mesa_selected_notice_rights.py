@@ -46,6 +46,11 @@ def verify_holds(rights, licenses, builds, manifests):
             raise ValueError("license notice member not bound to selected archive")
         script="\n".join(row[-1] for row in builds[name]["install"])
         expected=set(manifests[name]["required"])
+        declared = {plan["installed_path"] for plan in item["original_member_delivery_plan"]}
+        notice_outputs = {p for p in item["expected_output_paths"]
+                          if p.startswith("usr/share/licenses/" + name + "/")}
+        if declared != notice_outputs:
+            raise ValueError("original notice delivery plan omits a selected output")
         for plan in item["original_member_delivery_plan"]:
             src,dst=plan["original_member"],plan["installed_path"]
             if src not in original:
