@@ -67,3 +67,57 @@ output paths during that native review.
 The still-missing GLib/GObject/Pango/Cairo/Pixman/Harfbuzz/Fribidi
 and xterm/Xaw/font/TurboJPEG source closure is **not** solved by this
 checkpoint. See `closure.json`.
+
+## Additional Regular source passes — 2026-11-02
+
+All packages below remain outside a native accepted generation and outside
+rights-approved redistribution. Build and install commands are drafted contracts,
+**not** evidence that they ran successfully.
+
+1. **i3 event/session/keyboard:** authored `libev 4.33`, `yajl 2.1.0`,
+   `startup-notification 0.12`, `libxkbcommon 1.13.2`, and
+   `xkeyboard-config 2.48` in `project/package/` as catalogue-only
+   source stages. Original archive and notice bytes were measured in GitHub
+   Actions. Source graph and licensing parsers exercise real `*-final`
+   predecessor ordering. Confirm libxkbcommon downstream patches and YAJL
+   CMake install layout on the protected native worker.
+2. **GLib/Cairo/Pango:** pinned GLib `2.86.5`, Cairo `1.18.4`,
+   and Pango `1.56.4` exact original tarballs, upstream published hashes
+   and original multi-license members in
+   `project/graphics-first-workspace/text-stack-candidates.json`.
+   They are **candidates, not build-stage-complete recipes**:
+   HarfBuzz/FriBidi, libXrender, Python generators, feature-scoped
+   package config and real installed paths remain unresolved. GLib's
+   `COPYING` is a symlink; original `LICENSES/` members were
+   separately enumerated rather than treating a symlink as a standalone
+   byte source.
+3. **xterm:** source-authored xterm `412` configure/build/install and
+   `install-ti` commands, original-termcap/terminfo and XTerm app-defaults
+   expected outputs, and explicit dependency holds for libXaw/Xmu/Xpm/Xft,
+   luit, and the basic installed font. The exact configure options and
+   terminfo target were inspected in the pinned original archive.
+4. **Xvnc:** added pinned Pixman `0.46.4` and libjpeg-turbo `3.2.0`
+   catalogue-only build stages, with original COPYING/LICENSE source hashes.
+   A *separate* noncanonical TurboVNC `3.3.1` source server draft lives
+   in `project/graphics-first-workspace/turbovnc-draft/` to preserve
+   the old application catalogue contract. CMake explicitly excludes
+   viewer, built-in web server, NV-CONTROL, systemd unit, bundled zlib-ng
+   and speculative acceleration. The original TurboVNC, Xserver,
+   libsha1 and zlib-ng notices are hash-recorded, with native source
+   inclusion and independent distribution rights still unproved.
+5. **Cross-branch:** `verify_first_workspace_source_branches.py`
+   reads exact Mesa PR #8 commit
+   `ad35f53dac8355f86bc517357a6a88ba8bf850bd` and requires
+   that both branches remain source-only, noncanonical and rights/native
+   NO-GO. This does not build either branch or authenticate accepted
+   fonts, XCB and X11 generations.
+
+**Remain open:** HarfBuzz/FriBidi/libXrender and GLib/Cairo/Pango final stages,
+actual i3 4.25.1 Meson stage and its selected sources, xterm utility and
+basic-font predecessor packages, complete Xvnc transitive Xorg/GLX closure,
+true linker/software-view provenance, original-archive rights clearance
+and protected Host/workspace runtime acceptance.
+
+Do not equate the GitHub-hosted metadata pytest with Zog's native compiler
+or root-control/host-install witness. No manual generation ID, source-only
+native attestation, compiler submission or source rights permission is created.
