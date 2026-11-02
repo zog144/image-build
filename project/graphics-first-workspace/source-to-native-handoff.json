@@ -1,0 +1,94 @@
+{
+  "schema": "zog-first-workspace-source-to-native-handoff-v1",
+  "status": "PREPARED_NOT_SUBMITTABLE",
+  "source_revisions": {
+    "workspace_pr9": "17c4fbceabf9cc2ac2a650583bd7b0caf8972974",
+    "mesa_pr8": "9cbd652226b863a7b4bb2d6d9539722e1a262508"
+  },
+  "producer_order": [
+    "fonts",
+    "XCB",
+    "X11",
+    "Xvnc-i3-xterm",
+    "Mesa"
+  ],
+  "accepted_generation_receipts": {
+    "fonts": null,
+    "XCB": null,
+    "X11": null,
+    "zlib_native_environment": null,
+    "ncurses_temporary": null,
+    "Mesa": null
+  },
+  "inherited_stages": [
+    "zlib-native-environment",
+    "ncurses-temporary"
+  ],
+  "source_packages": {
+    "desktop": [
+      "basic-font",
+      "bdftopcf",
+      "mkfontscale",
+      "xkbcomp",
+      "xkeyboard-config",
+      "xcb-util-renderutil",
+      "xcb-util-cursor",
+      "i3",
+      "xterm",
+      "turbovnc"
+    ],
+    "mesa_draft": [
+      "llvm",
+      "libdrm",
+      "libxshmfence",
+      "libXxf86vm",
+      "mesa",
+      "mesa-demos"
+    ]
+  },
+  "required_resources": [
+    "usr/share/fonts/X11/misc/6x13.pcf.gz",
+    "usr/share/fonts/X11/misc/fonts.dir",
+    "usr/share/X11/xkb",
+    "usr/bin/xkbcomp",
+    "usr/share/X11/app-defaults/XTerm",
+    "usr/share/terminfo/x/xterm"
+  ],
+  "required_tools": [
+    "meson",
+    "ninja",
+    "cmake",
+    "pkg-config",
+    "python3",
+    "xkbcomp",
+    "bdftopcf",
+    "mkfontscale",
+    "llvm-tblgen",
+    "clang or declared GCC C/C++",
+    "lex/yacc if required by actual generator graph"
+  ],
+  "expected_outputs": [
+    "usr/bin/Xvnc",
+    "usr/bin/i3",
+    "usr/bin/xterm",
+    "usr/lib/libGL.so",
+    "usr/lib/dri/swrast_dri.so",
+    "usr/bin/glxgears",
+    "usr/bin/glxinfo"
+  ],
+  "protected_evidence": [
+    "signed selected-stage grant and immutable exact revisions",
+    "protected accepted predecessor receipts and zlib/ncurses origin",
+    "trusted compiled-source and generated-file manifest",
+    "actual compile/link commands and package-config search paths",
+    "no Host-library/header/tool fallback",
+    "installed files and ELF DT_NEEDED/RPATH/loader closure",
+    "XKB/font/terminfo bytes from selected packages",
+    "original notices mapped to compiled and installed components",
+    "separate rights authorization and signed immutable generation witness"
+  ],
+  "native_accepted": false,
+  "rights_authorized": false,
+  "build_submission_allowed": false,
+  "canonical_promotion_allowed": false
+}
