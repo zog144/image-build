@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import tarfile
 import urllib.request
+import urllib.error
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_BYTES = 4 * 1024 * 1024
@@ -55,11 +56,49 @@ def inspect(archive):
             "status": "source-observed-not-canonical-or-redistribution-approved"}
 
 
+# The author-published archive is the authoritative *identity*.  The alternate
+# is an independently listed xterm upstream mirror (Homebrew and BLFS, 2026-11-02).
+# A fallback is a transport recovery, never a release or checksum substitution.
+UPSTREAM = "https://invisible-island.net/archives/xterm/xterm-412.tgz"
+FALLBACK = "https://invisible-mirror.net/archives/xterm/xterm-412.tgz"
+
+
+def fetch_archive(opener=None):
+    opener = opener or urllib.request.urlopen
+    spec = ast.literal_eval((ROOT / "project/package/xterm/sources.py").read_text())[0]
+    if spec["url"] != UPSTREAM or spec["sha256"] != (
+        "b48bc780c1cbc14f6d89269f7e593712af6095876960d650be28b55e5dad65a6"
+    ):
+        raise ValueError("xterm 412 canonical release identity changed")
+    failures = []
+    for url in (UPSTREAM, FALLBACK):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Zog-source-evidence/1"})
+            with opener(req, timeout=90) as response:
+                payload = response.read(MAX_BYTES + 1)
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError) as exc:
+            # No fallback on identity or archive validation failures.
+            failures.append(f"{url}: {type(exc).__name__}: {getattr(exc, 'code', str(exc))}")
+            continue
+        if len(payload) > MAX_BYTES:
+            raise ValueError(f"xterm 412 archive exceeds inspection bound at {url}")
+        actual = hashlib.sha256(payload).hexdigest()
+        if actual != spec["sha256"]:
+            raise ValueError(
+                f"xterm 412 source identity mismatch at {url}: expected {spec['sha256']}, got {actual}; "
+                "refusing fallback or release substitution"
+            )
+        return payload, url
+    raise RuntimeError(
+        "xterm 412 original archive acquisition failed at the author URL and "
+        "the independently listed upstream mirror; source identity and notice "
+        "checks were NOT run. Transport failures: " + "; ".join(failures)
+    )
+
+
 if __name__ == "__main__":
-    url = "https://invisible-island.net/archives/xterm/xterm-412.tgz"
-    request = urllib.request.Request(url, headers={"User-Agent": "Zog-source-evidence/1"})
-    with urllib.request.urlopen(request, timeout=90) as stream:
-        payload = stream.read(MAX_BYTES + 1)
-    if len(payload) > MAX_BYTES:
-        raise ValueError("xterm archive exceeds inspection bound")
-    print(json.dumps(inspect(payload), sort_keys=True))
+    data, acquisition_url = fetch_archive()
+    result = inspect(data)
+    result["acquisition_url"] = acquisition_url
+    result["canonical_release_url"] = UPSTREAM
+    print(json.dumps(result, sort_keys=True))
