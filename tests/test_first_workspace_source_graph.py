@@ -43,7 +43,7 @@ def test_i3_direct_xcb_and_pango_consumer_edges_are_not_hidden():
                    "pangocairo", "cairo", "glib-2.0", "gobject-2.0",
                    "xkbcommon-x11", "yajl", "libpcre2-8"):
         assert wanted in deps
-    assert set(plan["remaining_source_packages"]) == {"xkbcomp"}
+    assert plan["remaining_source_packages"] == []
     assert set(("libev","yajl","startup-notification","libxkbcommon","xkeyboard-config")).issubset(
         set(plan["source_authored_native_held"]))
     assert {"i3", "xterm", "glib", "cairo", "pango", "harfbuzz", "fribidi", "libXrender", "basic-font", "luit"}.issubset(

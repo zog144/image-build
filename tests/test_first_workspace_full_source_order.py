@@ -12,14 +12,14 @@ PACKAGE=ROOT/"package"
 DRAFT=ROOT/"graphics-first-workspace/turbovnc-draft"
 TARGETS=("i3","xterm","turbovnc")
 EXTERNAL_GATED={"mesa"}  # Exact immutable candidate remains in PR #8 only.
-SOURCE_NOT_YET_AUTHORED={"xkbcomp"}
+SOURCE_NOT_YET_AUTHORED=set()
 SELECTED={
     "i3","xterm","turbovnc",
     "libev","yajl","startup-notification","libxkbcommon",
     "xkeyboard-config","glib","cairo","pango","harfbuzz",
     "fribidi","libXrender","libXaw","libXmu","libXpm",
     "libXft","luit","basic-font","bdftopcf","mkfontscale",
-    "pixman","libjpeg-turbo",
+    "pixman","libjpeg-turbo","xkbcomp",
 }
 def literal(path):
     return ast.literal_eval(path.read_text())
@@ -66,7 +66,7 @@ def source_order():
 
 def test_exact_graph_source_stages_are_acyclic_and_hold_unadmitted_external_inputs():
     order,missing=source_order()
-    assert missing=={"mesa","xkbcomp"}
+    assert missing=={"mesa"}
     for target in TARGETS:
         assert order.index(target)>0
     for leaf,root in (("harfbuzz","pango"),("fribidi","pango"),

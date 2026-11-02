@@ -130,13 +130,12 @@
     "xcb-util-renderutil",
     "xcb-util-wm",
     "xcb-util-xrm",
+    "xkbcomp",
     "xkeyboard-config",
     "xterm",
     "yajl"
   ],
-  "remaining_source_packages": [
-    "xkbcomp"
-  ],
+  "remaining_source_packages": [],
   "special_unresolved": [
     "Native selected features for Cairo GLib Pango and i3 Meson still require true codegen, pkgconf, compiled and installed outputs; source recipes do not establish build success.",
     "Xterm xterm-412 native terminfo/libXaw/libXmu/libXpm/libXft/luit and 6x13.pcf.gz runtime resources still need selected source/byte evidence.",
@@ -170,6 +169,7 @@
     "pango",
     "pixman",
     "startup-notification",
+    "xkbcomp",
     "xkeyboard-config",
     "xterm",
     "yajl"
@@ -180,8 +180,8 @@
     "text_stack": "project/graphics-first-workspace/text-stack-candidates.json"
   },
   "source_only_dag_hold": [
-    "xkbcomp-final requires exact original COPYING and source-stage admission",
-    "mesa-final remains in separate PR #8, no canonical promotion",
-    "font 6x13 original selected member and final fonts.dir inventory require genuine evidence"
+    "Mesa source remains isolated PR #8 and is not a canonical source package",
+    "Xvnc and font installed outputs need true native acceptance",
+    "Source-only graph and original 6x13 font hash do not authorize binary redistribution"
   ]
 }
