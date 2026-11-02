@@ -32,6 +32,7 @@ def inspect(name,blob,published):
         raise ValueError("published original-source hash doesn't bind selected archive")
     rights={}
     meta={}
+    options={}
     with tarfile.open(fileobj=io.BytesIO(blob),mode="r:xz") as tf:
         for item in tf.getmembers():
             if item.name.startswith("/") or ".." in item.name.split("/"):
@@ -42,11 +43,17 @@ def inspect(name,blob,published):
                        "LICENSE","LICENSE.md","LICENSE.txt") or (rel.startswith("LICENSES/") and rel.endswith(".txt")):
                 rights[item.name]=hashlib.sha256(tf.extractfile(item).read()).hexdigest()
             if rel in ("meson.build","meson_options.txt","meson.options"):
-                meta[item.name]=hashlib.sha256(tf.extractfile(item).read()).hexdigest()
+                contents=tf.extractfile(item).read()
+                meta[item.name]=hashlib.sha256(contents).hexdigest()
+                if rel in ("meson_options.txt","meson.options"):
+                    options[rel]=sorted(set(re.findall(
+                        r"option\\s*\\(\\s*['\\\"]([^'\\\"]+)['\\\"]",
+                        contents.decode("utf-8",errors="replace"))))
+
     if not rights or not meta:raise ValueError("original license or build source absent")
     return {"package":name,"version":spec["version"],"source_url":spec["url"],
             "sha256":digest,"original_notice_members":rights,
-            "original_build_metadata":meta,"published_digest_url":spec["digest_url"],
+            "original_build_metadata":meta,"meson_option_names":options,"published_digest_url":spec["digest_url"],
             "status":"source-identity-observed-text-closure-not-admitted"}
 
 if __name__=="__main__":
