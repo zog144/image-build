@@ -8,7 +8,9 @@ SOURCES={
            "expected_sha256":None,
            "expected_sha512":"83b133e7969ba34f883f4e08dcc5d388c4397f43ce836c191c05945fe77c16ff501d531600780c12678a0d08105828a6bdeff2156b63f9c1a84087bc7f40ae9f"},
  "libjpeg-turbo":{"version":"3.2.0","url":"https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.2.0/libjpeg-turbo-3.2.0.tar.gz",
-           "expected_sha256":"6f30092cef9fb839779646608f4ee14ae3cbac989c47fa05e841b0841f09878e"}
+           "expected_sha256":"6f30092cef9fb839779646608f4ee14ae3cbac989c47fa05e841b0841f09878e"},
+ "turbovnc":{"version":"3.3.1","url":"https://github.com/TurboVNC/turbovnc/releases/download/3.3.1/turbovnc-3.3.1.tar.gz",
+           "expected_sha256":"9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da"}
 }
 def inspect(name,data):
     spec=SOURCES[name]
@@ -26,9 +28,12 @@ def inspect(name,data):
             if not m.isfile() or m.size>1024*1024:
                 continue
             rel=m.name.partition("/")[2]
-            if rel in ("COPYING","COPYING.md","LICENSE","LICENSE.md","LICENSE.ijg","LICENSE.txt"):
+            if rel in ("COPYING","COPYING.md","LICENSE","LICENSE.md","LICENSE.ijg","LICENSE.txt",
+                        "unix/Xvnc/programs/Xserver/COPYING","unix/Xvnc/lib/libsha1/COPYING",
+                        "unix/Xvnc/lib/zlib-ng/LICENSE.md"):
                 notices[m.name]=hashlib.sha256(tar.extractfile(m).read()).hexdigest()
-            if rel in ("meson.build","meson_options.txt","CMakeLists.txt"):
+            if rel in ("meson.build","meson_options.txt","CMakeLists.txt",
+                        "unix/CMakeLists.txt","unix/Xvnc/CMakeLists.txt","BUILDING.md"):
                 build[m.name]=hashlib.sha256(tar.extractfile(m).read()).hexdigest()
     if not notices or not build:
         raise ValueError("original upstream notice/build metadata not found")
@@ -40,6 +45,6 @@ if __name__=="__main__":
     p=argparse.ArgumentParser();p.add_argument("--package",choices=sorted(SOURCES),required=True)
     name=p.parse_args().package;spec=SOURCES[name]
     with urlopen(Request(spec["url"],headers={"User-Agent":"Zog-original-source/1"}),timeout=60) as response:
-        b=response.read(9*1024*1024)
-    if len(b)>=9*1024*1024:raise ValueError("archive exceeds inspection bound")
+        b=response.read(64*1024*1024+1)
+    if len(b)>64*1024*1024:raise ValueError("archive exceeds inspection bound")
     print(json.dumps(inspect(name,b),sort_keys=True))
