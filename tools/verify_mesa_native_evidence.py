@@ -337,6 +337,134 @@ def verify_implicit_inputs(sidecars, roots):
              for r in mapped} == set(by_obj), "unmapped implicit compiler inputs")
 
 
+
+def expand_link_response_files(arguments, records, roots):
+    """Check exact captured @file bytes and tokens; no native authentication."""
+    require(isinstance(arguments, list) and arguments and
+            all(isinstance(arg, str) and arg for arg in arguments),
+            "invalid linker command")
+    require(isinstance(records, list) and len(records) <= 16,
+            "invalid linker response inventory")
+    declared = {}
+    for item in records:
+        require(isinstance(item, dict) and set(item) == {"path", "sha256", "arguments"},
+                "invalid response-file evidence")
+        name = relative(item["path"]).as_posix()
+        require(name not in declared, "duplicate response-file record")
+        file_hash(roots["build"], name, item["sha256"])
+        body = actual_file(roots["build"], name).read_bytes()
+        require(len(body) <= 1024 * 1024, "oversized linker response file")
+        try:
+            decoded = body.decode("utf-8")
+        except UnicodeDecodeError:
+            raise EvidenceError("non-UTF8 response file") from None
+        require(not any(x in decoded for x in ("\x00", "\r", "$(", "$" + "{", "\n\\"))
+                and chr(92) not in decoded and chr(96) not in decoded,
+                "unsupported linker response expansion")
+        try:
+            parsed = shlex.split(decoded, posix=True)
+        except ValueError:
+            raise EvidenceError("invalid linker response token grammar") from None
+        require(parsed and parsed == item["arguments"]
+                and all(isinstance(x, str) and x and not x.startswith("@") for x in parsed),
+                "response tokens differ from recorded bytes")
+        declared[name] = parsed
+    expanded, used = [], set()
+    for token in arguments:
+        if not token.startswith("@"):
+            expanded.append(token)
+            continue
+        require(len(token) > 1, "empty linker response reference")
+        ref = Path(token[1:])
+        if ref.is_absolute():
+            require(within_if_exists(ref, roots["build"]),
+                    "Host linker response-file path")
+            name = ref.resolve(strict=True).relative_to(roots["build"]).as_posix()
+        else:
+            name = relative(token[1:]).as_posix()
+        require(name in declared and name not in used,
+                "unsupported opaque linker input or missing response capture")
+        used.add(name)
+        expanded.extend(declared[name])
+    require(used == set(declared), "unused response-file evidence")
+    require(not any(x.startswith("@") for x in expanded),
+            "nested linker response file")
+    return expanded
+
+
+def parse_bounded_archive(path):
+    """Read classic non-thin ar members. GNU/BSD long names fail closed."""
+    raw = path.read_bytes()
+    require(len(raw) <= MAX_BYTES and raw.startswith(b"!<arch>\n"),
+            "unsupported or thin static archive")
+    position, entries, seen = 8, [], set()
+    while position < len(raw):
+        require(position + 60 <= len(raw), "truncated archive header")
+        header = raw[position:position + 60]
+        require(header[58] == 96 and header[59] == 10, "invalid ar member header")
+        try:
+            size = int(header[48:58].decode("ascii").strip())
+            name = header[:16].decode("ascii").strip()
+        except (UnicodeError, ValueError):
+            raise EvidenceError("unsupported archive metadata encoding") from None
+        require(size >= 0 and position + 60 + size <= len(raw),
+                "archive member outside captured bytes")
+        member = raw[position + 60:position + 60 + size]
+        if name == "/" and not entries:
+            pass
+        else:
+            require(name.endswith("/") and name not in ("//", "/")
+                    and not name.startswith("/"), "unsupported archive member name")
+            normalized = name[:-1]
+            require(normalized and normalized not in seen
+                    and "/" not in normalized and chr(92) not in normalized
+                    and normalized.endswith((".o", ".obj")),
+                    "duplicate or non-object archive member")
+            seen.add(normalized)
+            entries.append({"name": normalized, "sha256": digest(member)})
+        position += 60 + size + (size & 1)
+    require(position == len(raw) and entries, "empty/trailing/invalid static archive")
+    return entries
+
+
+def expand_static_archives(records, roots, source_objects):
+    """Require full archive-member inventory and source-derived object bytes."""
+    require(isinstance(records, list) and len(records) <= 128,
+            "invalid archive inventory")
+    mapped = {(roots["build"] / relative(row["object"])).resolve(strict=True):
+              row["object_sha256"] for row in source_objects}
+    claimed_archives, selected = {}, set()
+    for entry in records:
+        require(isinstance(entry, dict)
+                and set(entry) == {"path", "sha256", "members"},
+                "incomplete archive evidence")
+        name = relative(entry["path"]).as_posix()
+        require(name.endswith(".a") and name not in claimed_archives,
+                "duplicate or unsupported archive")
+        file_hash(roots["build"], name, entry["sha256"])
+        actual = parse_bounded_archive(actual_file(roots["build"], name))
+        members = entry["members"]
+        require(isinstance(members, list) and len(actual) == len(members),
+                "incomplete archive member inventory")
+        expected = []
+        for member in members:
+            require(isinstance(member, dict)
+                    and set(member) == {"name", "sha256", "object",
+                                       "object_sha256", "selected"}
+                    and isinstance(member["selected"], bool),
+                    "incomplete archive-member provenance")
+            obj = actual_file(roots["build"], member["object"])
+            require(mapped.get(obj) == member["object_sha256"]
+                    and member["sha256"] == member["object_sha256"],
+                    "archive member lacks source-object provenance")
+            expected.append({"name": member["name"], "sha256": member["sha256"]})
+            if member["selected"]:
+                selected.add((name, member["name"]))
+        require(actual == expected, "static archive contents differ from recorded members")
+        claimed_archives[name] = entry
+    return claimed_archives, selected
+
+
 def verify_link_commands(sidecars, roots, envelope):
     """Require explicit link input and output bytes; reject opaque link stages."""
     links = sidecars["link_commands"]
