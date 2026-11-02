@@ -45,8 +45,8 @@
     },
     "xterm": {
       "version": "412",
-      "source_identity_status": "Pinned SHA-256 from published 2026 xterm 412 source archive; exact archive-member inspection pending.",
-      "source_recipe_state": "catalogue-only source pin, no build stage",
+      "source_identity_status": "Source SHA-256 and original COPYING/configure/MANIFEST bytes verified in GitHub Actions 41457682657; consumer runtime chain not native accepted.",
+      "source_recipe_state": "source and notice pinned; stage and dependency closure unresolved, catalogue-only",
       "dependencies": [
         "libXt",
         "libXaw",
