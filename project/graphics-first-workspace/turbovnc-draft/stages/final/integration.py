@@ -12,7 +12,7 @@
     "-DTVNC_NVCONTROL=OFF",
     "-DTVNC_BUILDSYSTEMD=OFF",
     "-DTVNC_STATIC_XORG_PATHS=ON",
-    "-DTVNC_USETLS=1",
+    "-DTVNC_USETLS=OpenSSL",
     "-DTVNC_DLOPENSSL=OFF",
     "-DTVNC_ZLIBNG=OFF",
     "-DTJPEG_INCLUDE_DIR=/usr/include",
@@ -22,7 +22,8 @@
     "-DXORG_DRI_DRIVER_PATH=/usr/lib/dri",
     "-DXORG_FONT_PATH=/usr/share/fonts",
     "-DXORG_REGISTRY_PATH=/usr/share/X11/xserver",
-    "-DTVNC_DRI3=OFF"
+    "-DTVNC_DRI3=OFF",
+    "-DTVNC_USEPAM=OFF"
   ],
   "source_original_run": "41500603254",
   "test_scope": "Build options authored from tagged CMake. No compiled Xvnc executable, running server or notice delivery accepted.",
@@ -42,8 +43,16 @@
     "zlib-ng/LICENSE.md": "6c9f0d975b41afaa34d22f55bb8986ce69e5cb7ad327cb2b28820cd425edf5ee"
   },
   "selected_cmake_sources_sha256": {
-    "unix/Xvnc/programs/Xserver/CMakeLists.txt": "upstream selected archive currently requires source member SHA independently; native emission is hold",
+    "unix/Xvnc/programs/Xserver/CMakeLists.txt": "4e52b66d996039bb1450690cc694691670c8f5c4cad387d8f057eeaa28feede4",
     "unix/Xvnc/CMakeLists.txt": "54444d6b340213218d358bec0d10d4633b9683431567f39e3e089200e515d4a3"
   },
-  "missing_native_predecessor": "xkbcomp source package and authenticated installed executable; GLX opengl headers and software Mesa accepted generation"
+  "missing_native_predecessor": "Source-pinned xkbcomp now authored, but requires authenticated native installed executable; Mesa GLX software loader and signed generation remain separate HOLD",
+  "source_exclusion_observations": {
+    "DRI3": "option ON upstream; excluded by explicit OFF, requires native link/ELF confirmation",
+    "PAM": "option ON upstream; disable server PAM integration with explicit OFF",
+    "bundled_zlib_ng": "ExternalProject_Add guarded by TVNC_ZLIBNG; disable and require protected Zog zlib",
+    "NVCONTROL": "non-essential XNVCtrl disabled; source-only flag",
+    "device_access": "GLX swrast DRI driver directory is not authority to access /dev/dri; selected linked objects and open syscalls unobserved",
+    "TLS": "OpenSSL selected explicitly; no implicit '1' fallback"
+  }
 }

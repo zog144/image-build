@@ -49,3 +49,22 @@ def test_xvnc_selected_xserver_linker_profile_excludes_hardware_dri3():
     assert "xkbcomp" in integration["missing_native_predecessor"]
     assert integration["selected_bundled_originals"]["Xserver/COPYING"] == (
         "4cc0447a22635c7b2f1a93fec4aa94f1970fadeb72a063de006b51cf4963a06f")
+
+
+def test_cmake_auth_and_feature_scope_reject_default_pam_and_ambiguous_tls():
+    configure=lit("stages/final/build.py")["configure"][0][-1]
+    assert "-DTVNC_USETLS=OpenSSL" in configure
+    assert "-DTVNC_USETLS=1" not in configure
+    assert "-DTVNC_USEPAM=OFF" in configure
+    assert "-DTVNC_DRI3=OFF" in configure
+    assert "-DTVNC_ZLIBNG=OFF" in configure
+    assert "-DTVNC_NVCONTROL=OFF" in configure
+    assert "-DTVNC_BUILDVIEWER=OFF" in configure
+    assert "-DTVNC_BUILDWEBSERVER=OFF" in configure
+    assert "-DTVNC_BUILDSYSTEMD=OFF" in configure
+    assert "-DTVNC_DLOPENSSL=OFF" in configure
+    assert "pkgconf --exists" in configure
+    integ=lit("stages/final/integration.py")
+    assert integ["selected_cmake_sources_sha256"]["unix/Xvnc/programs/Xserver/CMakeLists.txt"] == (
+        "4e52b66d996039bb1450690cc694691670c8f5c4cad387d8f057eeaa28feede4")
+    assert integ["source_exclusion_observations"]["device_access"].startswith("GLX swrast")

@@ -22,6 +22,24 @@ def inspect(name,data):
     notices={}
     build={}
     source_feature_checks={}
+    expected_original_cmake={
+        "CMakeLists.txt":"9588094f823e86b8e3182522e0cfbaa3f473fb11e970d389e8c62c3dd8ab2338",
+        "unix/CMakeLists.txt":"993d560352f43e04a916d1a3ca48b1a633689d4254abc4891f3be420bcdf2caf",
+        "unix/Xvnc/CMakeLists.txt":"54444d6b340213218d358bec0d10d4633b9683431567f39e3e089200e515d4a3",
+        "unix/Xvnc/programs/Xserver/CMakeLists.txt":"4e52b66d996039bb1450690cc694691670c8f5c4cad387d8f057eeaa28feede4",
+    }
+    expected_notices={
+        "LICENSE.txt":"8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+        "unix/Xvnc/programs/Xserver/COPYING":"4cc0447a22635c7b2f1a93fec4aa94f1970fadeb72a063de006b51cf4963a06f",
+        "unix/Xvnc/lib/libsha1/COPYING":"4c387926596bfeacc5b72ebeb96ab36c299a07568e18592c727a6c11dd512c20",
+        "unix/Xvnc/lib/zlib-ng/LICENSE.md":"6c9f0d975b41afaa34d22f55bb8986ce69e5cb7ad327cb2b28820cd425edf5ee",
+    }
+    review_paths={
+        "unix/Xvnc/lib/CMakeLists.txt": (b"if(TVNC_ZLIBNG)",b"ExternalProject_Add(zlib-ng",b"add_subdirectory(libsha1)"),
+        "unix/Xvnc/programs/Xserver/hw/vnc/CMakeLists.txt": (b"option(TVNC_USEPAM",b"if(TVNC_DRI3)",b"set(DRI3SRC dri3.c)",b"if(TVNC_USETLS STREQUAL",b"if(TVNC_NVCONTROL)"),
+        "unix/Xvnc/programs/Xserver/glx/CMakeLists.txt": (b"glxdriswrast.c",b"target_link_libraries(glx-server OpenGL::GL)"),
+    }
+    review_seen=set()
     with tarfile.open(fileobj=io.BytesIO(data),mode="r:*") as tar:
         for m in tar.getmembers():
             if m.name.startswith("/") or ".." in m.name.split("/"):
@@ -32,11 +50,23 @@ def inspect(name,data):
             if rel in ("COPYING","COPYING.md","LICENSE","LICENSE.md","LICENSE.ijg","LICENSE.txt",
                         "unix/Xvnc/programs/Xserver/COPYING","unix/Xvnc/lib/libsha1/COPYING",
                         "unix/Xvnc/lib/zlib-ng/LICENSE.md"):
-                notices[m.name]=hashlib.sha256(tar.extractfile(m).read()).hexdigest()
+                notice=hashlib.sha256(tar.extractfile(m).read()).hexdigest()
+                if name=="turbovnc" and rel in expected_notices and expected_notices[rel]!=notice:
+                    raise ValueError("changed exact original bundled notice: "+rel)
+                notices[m.name]=notice
             if rel in ("meson.build","meson_options.txt","CMakeLists.txt",
-                        "unix/CMakeLists.txt","unix/Xvnc/CMakeLists.txt","unix/Xvnc/programs/Xserver/CMakeLists.txt","BUILDING.md"):
+                        "unix/CMakeLists.txt","unix/Xvnc/CMakeLists.txt","unix/Xvnc/programs/Xserver/CMakeLists.txt","BUILDING.md",
+                        "unix/Xvnc/lib/CMakeLists.txt","unix/Xvnc/programs/Xserver/hw/vnc/CMakeLists.txt",
+                        "unix/Xvnc/programs/Xserver/glx/CMakeLists.txt"):
                 cmake_source=tar.extractfile(m).read()
-                build[m.name]=hashlib.sha256(cmake_source).hexdigest()
+                actual=hashlib.sha256(cmake_source).hexdigest()
+                if name=="turbovnc" and rel in expected_original_cmake and actual!=expected_original_cmake[rel]:
+                    raise ValueError("changed original Xvnc CMake graph: "+rel)
+                build[m.name]=actual
+                if name=="turbovnc" and rel in review_paths:
+                    if any(marker not in cmake_source for marker in review_paths[rel]):
+                        raise ValueError("missing upstream feature guard: "+rel)
+                    review_seen.add(rel)
                 if name=="turbovnc" and rel=="unix/Xvnc/CMakeLists.txt":
                     if b"option(TVNC_DRI3" not in cmake_source:
                         raise ValueError("DRI3 optional feature lost from original TurboVNC source")
@@ -45,6 +75,12 @@ def inspect(name,data):
                     for marker in (b"if(TVNC_DRI3)",b"add_subdirectory(dri3)",b"glx-server",b"install(TARGETS Xvnc"):
                         if marker not in cmake_source:raise ValueError("original Xvnc CMake graph changed")
                     source_feature_checks["DRI3_requires_explicit_disable"]=True
+    if name=="turbovnc" and (set(review_paths)!=review_seen
+                           or any(not any(key.endswith("/"+rel) for key in notices)
+                                  for rel in expected_notices)
+                           or any(not any(key.endswith("/"+rel) for key in build)
+                                  for rel in expected_original_cmake)):
+        raise ValueError("original selected/bundled source map incomplete")
     if name=="turbovnc" and set(source_feature_checks)!={"TVNC_DRI3_option_original","DRI3_requires_explicit_disable"}:
         raise ValueError("missing selected Xvnc original CMake evidence")
     if not notices or not build:

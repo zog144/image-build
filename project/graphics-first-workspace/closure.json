@@ -73,7 +73,9 @@
         "TVNC_STATIC_XORG_PATHS": "ON",
         "TVNC_DLOPENSSL": "OFF",
         "TVNC_ZLIBNG": "OFF",
-        "TVNC_DRI3": "OFF"
+        "TVNC_DRI3": "OFF",
+        "TVNC_USEPAM": "OFF",
+        "TVNC_USETLS": "OpenSSL"
       },
       "must_supply_native_paths": [
         "TJPEG_INCLUDE_DIR",
@@ -144,7 +146,8 @@
     "Build tool and Python module origins, no Host pkgconfig/ELF fallback, and independent redistribution rights remain non-negotiable native gates.",
     "Native producer accepted fonts -> XCB -> X11 signed authority/checkpoint service remains independently blocked.",
     "Existing libICE/libSM/libXt and libxkbcommon patch still require genuine native acceptance.",
-    "YAJL old CMake output paths and optional static library default require native build proof."
+    "YAJL old CMake output paths and optional static library default require native build proof.",
+    "TurboVNC PAM and DRI3 are explicitly OFF, TLS OpenSSL and Zog zlib selected; CMake configuration flags do not prove native compiled/link object exclusions or absence of hardware device access."
   ],
   "build_submission_allowed": false,
   "canonical_promotion_allowed": false,
