@@ -68,3 +68,35 @@ def test_cmake_auth_and_feature_scope_reject_default_pam_and_ambiguous_tls():
     assert integ["selected_cmake_sources_sha256"]["unix/Xvnc/programs/Xserver/CMakeLists.txt"] == (
         "4e52b66d996039bb1450690cc694691670c8f5c4cad387d8f057eeaa28feede4")
     assert integ["source_exclusion_observations"]["device_access"].startswith("GLX swrast")
+
+
+EXPECTED_TVNC={
+ "TVNC_BUILDVIEWER":"OFF","TVNC_BUILDSERVER":"ON",
+ "TVNC_BUILDWEBSERVER":"OFF","TVNC_NVCONTROL":"OFF",
+ "TVNC_BUILDSYSTEMD":"OFF","TVNC_STATIC_XORG_PATHS":"ON",
+ "TVNC_ZLIBNG":"OFF","TVNC_DRI3":"OFF","TVNC_USEPAM":"OFF",
+ "TVNC_DLOPENSSL":"OFF","TVNC_USETLS":"OpenSSL",
+}
+def exact_turbovnc_features(source):
+    import re
+    options=re.findall(r"(?:^|\s)-D(TVNC_[A-Z0-9_]+)=([^\s]+)",source)
+    if len(options)!=len(EXPECTED_TVNC) or dict(options)!=EXPECTED_TVNC:
+        raise ValueError("unreviewed TurboVNC CMake feature expansion")
+    if "/dev/dri" in source:
+        raise ValueError("unreviewed DRM device path")
+    return True
+
+def test_exact_turbovnc_server_profile_and_adversarial_option_mutations():
+    import pytest
+    script=lit("stages/final/build.py")["configure"][0][-1]
+    assert exact_turbovnc_features(script)
+    for key,value in EXPECTED_TVNC.items():
+        wrong=script.replace("-D"+key+"="+value,"-D"+key+"=auto")
+        with pytest.raises(ValueError,match="feature expansion"):
+            exact_turbovnc_features(wrong)
+    with pytest.raises(ValueError,match="feature expansion"):
+        exact_turbovnc_features(script+" -DTVNC_DRI3=ON")
+    with pytest.raises(ValueError,match="feature expansion"):
+        exact_turbovnc_features(script+" -DTVNC_UNREVIEWED=ON")
+    with pytest.raises(ValueError,match="device path"):
+        exact_turbovnc_features(script+" /dev/dri/renderD128")

@@ -53,10 +53,50 @@ def test_exact_selected_review_blob_binding_rejects_substituted_bytes():
 
 
 def test_selected_review_artifacts_are_newer_but_cannot_change_native_holds():
-    assert mod.MESA_HEAD == "9da9ee74b0bceeb5104fe079fd8b48a9e74ce2d4"
+    assert mod.MESA_HEAD == "9cbd652226b863a7b4bb2d6d9539722e1a262508"
     assert set(mod.REVIEW_BLOBS) == {
         "tests/test_mesa_selected_notice_rights.py",
         "docs/image-build/mesa-selected-notice-re-review-2026-11-02.md",
         ".github/workflows/public-source-ci.yml",
+        "tests/test_mesa_original_rights_questions.py",
+        "docs/image-build/mesa-original-rights-questions-2026-11-02.md",
+        ".github/workflows/inspect-mesa-original-rights-questions.yml",
+        "tools/inspect_mesa_original_rights_questions.py",
+        "project/graphics-drafts/llvm/stages/final/dependencies.py",
+        "project/graphics-drafts/mesa/stages/final/dependencies.py",
+        "docs/image-build/mesa-inherited-zlib-stage-2026-11-02.md",
     }
     mod.guard(*valid())
+
+
+def sample_graph():
+    mesa={"build":["llvm-final","libX11-final","libXext-final","libxcb-final",
+                  "libdrm-final","libxshmfence-final","libXxf86vm-final",
+                  "zlib-native-environment"]}
+    llvm={"build":["zlib-native-environment"]}
+    xvnc={"build":["mesa-final","libX11-final","libXfont2-final","xkbcomp-final",
+                  "zlib-native-environment","pixman-final","libjpeg-turbo-final"]}
+    local={"frozen_accepted_generations_required":["fonts","XCB","X11"],
+           "consumers":{"turbovnc":{"cmake_profile":{
+               "TVNC_DRI3":"OFF","TVNC_ZLIBNG":"OFF","TVNC_USEPAM":"OFF",
+               "TVNC_BUILDVIEWER":"OFF","TVNC_NVCONTROL":"OFF",
+               "TVNC_USETLS":"OpenSSL"}}}}
+    return mesa,llvm,xvnc,local
+
+def test_software_glx_cross_branch_holds_source_only():
+    mod.verify_x11_glx_dependency_intersection(*sample_graph())
+
+@pytest.mark.parametrize("bad",["fake-zlib","no-x11","no-mesa","no-xkb","dri3",
+                                 "pam","wrong-tls","wrong-generation"])
+def test_negative_x11_glx_and_inherited_provenance(bad):
+    mesa,llvm,xvnc,local=sample_graph()
+    if bad=="fake-zlib": llvm["build"]=["zlib-final"]
+    if bad=="no-x11": mesa["build"].remove("libX11-final")
+    if bad=="no-mesa": xvnc["build"].remove("mesa-final")
+    if bad=="no-xkb": xvnc["build"].remove("xkbcomp-final")
+    if bad=="dri3": local["consumers"]["turbovnc"]["cmake_profile"]["TVNC_DRI3"]="ON"
+    if bad=="pam": local["consumers"]["turbovnc"]["cmake_profile"]["TVNC_USEPAM"]="ON"
+    if bad=="wrong-tls": local["consumers"]["turbovnc"]["cmake_profile"]["TVNC_USETLS"]="1"
+    if bad=="wrong-generation": local["frozen_accepted_generations_required"]=["X11","XCB","fonts"]
+    with pytest.raises(ValueError):
+        mod.verify_x11_glx_dependency_intersection(mesa,llvm,xvnc,local)
