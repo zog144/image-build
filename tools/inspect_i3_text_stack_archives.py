@@ -39,7 +39,7 @@ def inspect(name,blob,published):
             if not item.isfile() or item.size>2*1024*1024:continue
             rel=item.name.partition("/")[2]
             if rel in ("COPYING","COPYING.LIB","COPYING.LGPL","COPYING.LGPL-2.1",
-                       "LICENSE","LICENSE.md","LICENSE.txt"):
+                       "LICENSE","LICENSE.md","LICENSE.txt") or (rel.startswith("LICENSES/") and rel.endswith(".txt")):
                 rights[item.name]=hashlib.sha256(tf.extractfile(item).read()).hexdigest()
             if rel in ("meson.build","meson_options.txt","meson.options"):
                 meta[item.name]=hashlib.sha256(tf.extractfile(item).read()).hexdigest()
