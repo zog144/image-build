@@ -15,8 +15,9 @@ dependency obligations of i3 4.25.1, xterm patch 412 and TurboVNC 3.3.1.
 The i3 required pkg-config names were read from the tagged upstream
 `meson.build`. A relevant XCB cursor chain must resolve image + renderutil
 and their XCB/transitive dependencies; libICE/libSM/libXt must remain
-native-unaccepted until compiler evidence. xterm is not source-pinned by a
-verified checksum yet, so it is explicitly NOT package-ready.
+native-unaccepted until compiler evidence. xterm patch 412 is source-pinned from the independently published archive SHA-256,
+but its build-stage, inherited X11 dependencies, luit and fonts, original
+notice inventory and native acceptance are not yet package-ready.
 
 The TurboVNC source 3.3.1 server-only profile is drawn from upstream
 `CMakeLists.txt`, `unix/CMakeLists.txt` and `BUILDING.md`. It disables

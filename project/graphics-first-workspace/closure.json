@@ -45,8 +45,8 @@
     },
     "xterm": {
       "version": "412",
-      "source_identity_status": "exact upstream archive release identified, source digest/notice attestation pending",
-      "source_recipe_state": "missing",
+      "source_identity_status": "Pinned SHA-256 from published 2026 xterm 412 source archive; exact archive-member inspection pending.",
+      "source_recipe_state": "catalogue-only source pin, no build stage",
       "dependencies": [
         "libXt",
         "libXaw",
