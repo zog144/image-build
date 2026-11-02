@@ -1,0 +1,179 @@
+{
+  "schema": "zog-graphics-selected-component-rights-handoff-v1",
+  "source_revisions": {
+    "workspace_pr9_reviewed_input": "db13d73a45f8a3be579226656442c331a9f701ea",
+    "mesa_pr8": "9cbd652226b863a7b4bb2d6d9539722e1a262508"
+  },
+  "evidence_scope": "Original archive member bytes as already SHA-256 checked by retained PR9/PR8 inspection workflows; not an independently approved rights grant or selected compiler-object map",
+  "native_compiled_selection_observed": false,
+  "independent_redistribution_approved": false,
+  "installed_notice_bytes_observed": false,
+  "components": [
+    {
+      "id": "turbovnc-xserver",
+      "package": "turbovnc",
+      "source_sha256": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
+      "member": "unix/Xvnc/programs/Xserver/COPYING",
+      "member_sha256": "4cc0447a22635c7b2f1a93fec4aa94f1970fadeb72a063de006b51cf4963a06f",
+      "proposed_scope": "selected Xserver and software GLX; per-file mapping unresolved",
+      "exclusion_claim": "DRI3 OFF configured, not proved excluded at object/ELF level",
+      "remaining": [
+        "selected subdir/file copyright map",
+        "glxdriswrast and generated Xorg sources",
+        "native link and object provenance",
+        "exact installed notice equality"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "turbovnc-libsha1",
+      "package": "turbovnc",
+      "source_sha256": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
+      "member": "unix/Xvnc/lib/libsha1/COPYING",
+      "member_sha256": "4c387926596bfeacc5b72ebeb96ab36c299a07568e18592c727a6c11dd512c20",
+      "proposed_scope": "bundled libsha1 CMake selected",
+      "exclusion_claim": "none",
+      "remaining": [
+        "per-file notice review",
+        "exact source-to-compiled-object map",
+        "installed COPYING hash equality"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "turbovnc-zlib-ng-excluded",
+      "package": "turbovnc",
+      "source_sha256": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
+      "member": "unix/Xvnc/lib/zlib-ng/LICENSE.md",
+      "member_sha256": "6c9f0d975b41afaa34d22f55bb8986ce69e5cb7ad327cb2b28820cd425edf5ee",
+      "proposed_scope": "unselected bundled source, present in upstream archive",
+      "exclusion_claim": "TVNC_ZLIBNG=OFF source policy only",
+      "remaining": [
+        "native object exclusion",
+        "inherited Zog zlib origin/ELF closure",
+        "avoid asserting bundled-source omission"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "llvm-generated-blake3",
+      "package": "llvm",
+      "source_sha256": "908bce97be0275943414b45af2e2b20e8f6d5d9266fdc120bd59f096ebc547ad",
+      "member": "lib/Support/BLAKE3/LICENSE",
+      "member_sha256": "6a94bedb8b707ed97f6e310d0d015ab14e0683ffa0a612b02958581b9cc9fc0e",
+      "proposed_scope": "X86 LLVM shared RTTI, TableGen and BLAKE3 inclusion unresolved",
+      "exclusion_claim": "none",
+      "remaining": [
+        "actual BLAKE3 linkage",
+        "TableGen input/output provenance",
+        "generated table notices",
+        "installed LLVM and BLAKE3 notices"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "mesa-glapi-generated",
+      "package": "mesa",
+      "source_sha256": "0fd54fea7dbbddb154df05ac752b18621f26d97e27863db3be951417c6abe8ae",
+      "member": "src/mesa/glapi/glapi/gen/license.py",
+      "member_sha256": "9f11bc368fa08ad8a0fed990e5d54235425e4d1908625a4b06e860bb9aa1352a",
+      "proposed_scope": "GLAPI generation from source-pinned scripts and templates",
+      "exclusion_claim": "none",
+      "remaining": [
+        "generator scripts and templates origin",
+        "generated C sources/headers and notices",
+        "actual compile linkage",
+        "installed notice equality"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "mesa-llvmpipe",
+      "package": "mesa",
+      "source_sha256": "0fd54fea7dbbddb154df05ac752b18621f26d97e27863db3be951417c6abe8ae",
+      "member": "src/gallium/drivers/llvmpipe/lp_screen.c",
+      "member_sha256": "77005dfcb7ad695a8ea508a82c87f383ef117d66d4170d553239fabb6ed4ddc5",
+      "proposed_scope": "llvmpipe swrast and GLX OpenGL software rendering",
+      "exclusion_claim": "Vulkan/GBM/EGL/imgui excluded in declared profile only",
+      "remaining": [
+        "native lp_screen object linkage",
+        "swrast_dri.so loader",
+        "LLVM ABI",
+        "Vulkan/imgui exclusion from objects",
+        "linked dependency/notice delivery"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "libdrm-common",
+      "package": "libdrm",
+      "source_sha256": "3bb35db8700c2a0b569f2c6729a53f5495786856b310854c8de57782a22bddac",
+      "member": "xf86drm.c",
+      "member_sha256": "676845942ab8b9bc5759b295528fce0f32b28ca7765c17d4546e253caaba62c4",
+      "proposed_scope": "libdrm common userspace library",
+      "exclusion_claim": "vendor/udev/tests and hardware access not proven excluded",
+      "remaining": [
+        "object-to-file and header rights inventory",
+        "xf86drmMode.c inclusion",
+        "actual native build options and device behavior",
+        "notice delivery"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "mesa-demos-glxgears",
+      "package": "mesa-demos",
+      "source_sha256": "3046a3d26a7b051af7ebdd257a5f23bfeb160cad6ed952329cdff1e9f1ed496b",
+      "member": "src/xdemos/glxgears.c",
+      "member_sha256": "344a03aff01708350d90603fd6b841bccd295157670f519b459bbf3874acf847",
+      "proposed_scope": "glxgears test binary only",
+      "exclusion_claim": "other mesa-demos unselected, no native object evidence",
+      "remaining": [
+        "per-file attribution/public-domain review",
+        "only selected compile commands",
+        "binary and license-byte mapping"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    },
+    {
+      "id": "mesa-demos-glxinfo",
+      "package": "mesa-demos",
+      "source_sha256": "3046a3d26a7b051af7ebdd257a5f23bfeb160cad6ed952329cdff1e9f1ed496b",
+      "member": "src/xdemos/glxinfo.c",
+      "member_sha256": "54844ad4d57d65ae2041467f52035f3f4f8d299467a5790a0b6f6d56e6a2a4f7",
+      "proposed_scope": "glxinfo diagnostic binary only",
+      "exclusion_claim": "other mesa-demos unselected, no native object evidence",
+      "remaining": [
+        "per-file attribution/public-domain review",
+        "only selected compile commands",
+        "binary and license-byte mapping"
+      ],
+      "source_bytes_status": "pinned_original_archive_member_sha256_observed",
+      "native_selection_status": "unobserved",
+      "redistribution_status": "HOLD"
+    }
+  ],
+  "independent_next_evidence": [
+    "native compiler/GLAPI/LLVM TableGen generator input/output manifests",
+    "exact object archive and link commands with complete transitive closure",
+    "installed paths and notice SHA-256 map",
+    "device-access and enabled/excluded feature evidence",
+    "independently signed component-rights acceptance distinct from source archive hashes"
+  ]
+}
