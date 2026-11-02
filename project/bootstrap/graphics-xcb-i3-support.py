@@ -14,6 +14,12 @@
              'project': 'xcb-util-wm',
              'stage': 'final',
              'recipe': 'xcb-util-wm/stages/final'},
+            {'id': 'xcb-util-renderutil-final',
+             'project': 'xcb-util-renderutil', 'stage': 'final',
+             'recipe': 'xcb-util-renderutil/stages/final'},
+            {'id': 'xcb-util-cursor-final',
+             'project': 'xcb-util-cursor', 'stage': 'final',
+             'recipe': 'xcb-util-cursor/stages/final'},
             {'id': 'xcb-util-xrm-final',
              'project': 'xcb-util-xrm',
              'stage': 'final',
@@ -22,4 +28,4 @@
              'xcb-util-image-final',
              'xcb-util-keysyms-final',
              'xcb-util-wm-final',
-             'xcb-util-xrm-final']}
+             'xcb-util-xrm-final', 'xcb-util-renderutil-final', 'xcb-util-cursor-final']}
