@@ -1,0 +1,16 @@
+# Held Resident B Python 3.12 source candidate; no native compilation or admission.
+{
+  "schema": 1,
+  "package": "resident312-setuptools",
+  "version": "82.0.1",
+  "source": {
+    "url": "https://files.pythonhosted.org/packages/4f/db/cfac1baf10650ab4d1c111714410d2fbb77ac5a616db26775db562c8fab2/setuptools-82.0.1.tar.gz",
+    "sha256": "7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9"
+  },
+  "status": "unresolved",
+  "evidence": [],
+  "notes": [
+    "Exact pinned original archive; original LICENSE and generated-vendored source/member notice inventory still requires independent rights review.",
+    "No native compilation, selected generation, redistribution authorization or ownership transfer."
+  ]
+}

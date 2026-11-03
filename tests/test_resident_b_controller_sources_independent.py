@@ -19,8 +19,9 @@ def test_real_original_archive_source_and_held_package_stages():
     assert result["source_stages"]=="PINNED_AND_HELD"
     assert result["native_generation"] is None
     assert result["authorization"]=="NO_GO"
-    assert "image-build-python-final" in result["unresolved_transitive_stage_producers"]
-    assert "dbus-next-final" in result["unresolved_transitive_stage_producers"]
+    assert result["unresolved_transitive_stage_producers"]==[]
+    assert "resident312-image-build-final" in result["native_unaccepted_transitive_stage_producers"]
+    assert "resident312-dbus-next-final" in result["native_unaccepted_transitive_stage_producers"]
 
 @pytest.mark.parametrize("name",["box-control","root-control"])
 def test_catalogue_only_and_archive_sha_not_fabricated(name):
@@ -55,7 +56,7 @@ def test_synthetic_substitution_stage_permission_or_privilege_is_denied(name,fie
         overrides[name,"stages/final/build.py"]=s
     elif field=="deps":
         s=item(name,"stages/final/dependencies.py")
-        s["runtime"].remove("image-build-python-final")
+        s["runtime"].remove("resident312-image-build-final")
         overrides[name,"stages/final/dependencies.py"]=s
     elif field=="install":
         s=item(name,"stages/final/produce-manifest.py")

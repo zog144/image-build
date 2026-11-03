@@ -1,0 +1,22 @@
+name: Observe immutable image-build interface source for Resident B
+on:
+  push:
+    branches: [review/resident-b-controller-wheel-output-20261103]
+    paths:
+      - tools/observe_resident312_image_build_source.py
+      - .github/workflows/resident312-image-build-original.yml
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Observe pinned public source archive and members
+        run: python tools/observe_resident312_image_build_source.py
+      - name: Source only
+        if: always()
+        run: echo 'No native compilation, package admission, authority, credentials or installation.' >> "$GITHUB_STEP_SUMMARY"
