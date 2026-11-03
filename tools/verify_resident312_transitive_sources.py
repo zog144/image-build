@@ -24,6 +24,10 @@ URLS={
 "dbus-next":"https://files.pythonhosted.org/packages/ce/45/6a40fbe886d60a8c26f480e7d12535502b5ba123814b3b9a0b002ebca198/dbus_next-0.2.3.tar.gz",
 "image-build":"https://api.github.com/repos/zog144/image-build/tarball/1f07e83dbd80dacb9bed0d6494c697375f0e26cd",
 }
+FOLDERS={"flit-core":"flit_core-3.12.0","installer":"installer-1.0.1",
+"packaging":"packaging-26.3","wheel":"wheel-0.48.0",
+"setuptools":"setuptools-82.0.1","dbus-next":"dbus_next-0.2.3",
+"image-build":"zog144-image-build-1f07e83"}
 MODULE={"flit-core":"flit_core","dbus-next":"dbus_next","image-build":"zog/image_build"}
 CONTROLLERS={
  "box-control":{"build":["python-resident312-final","resident312-setuptools-final","resident312-packaging-final","resident312-installer-final","resident312-wheel-final"],
@@ -97,6 +101,8 @@ def verify(*, overrides=None, controllers=None):
                 deny("uncontrolled build phase: "+name+"/"+phase)
             script=steps[0][5]
             scripts[phase]=script
+            if "cd upstream/"+FOLDERS[key] not in script:
+                deny("unreviewed original-source extraction root: "+name+"/"+phase)
             if "/usr/bin/python3.12 -I" not in script or any(
                  bad in script for bad in ("python3.15", "pip install", "PYTHONPATH=")):
                 deny("Host Python fallback: "+name+"/"+phase)
