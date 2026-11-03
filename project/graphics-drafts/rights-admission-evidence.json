@@ -31,7 +31,7 @@
         "compiled/bundled BLAKE3 linkage",
         "generated-code license origins",
         "install-time notices",
-        "Source declares explicit /usr/bin/llvm-tblgen production; native binary/origin/ELF closure and generated-table attribution unverified"
+        "Source declares explicit /usr/bin/llvm-tblgen production; native binary/origin/ELF closure and generated-table attribution unverified; TableGen original generator and result mapping not yet natively attested"
       ],
       "expected_output_paths": [
         "usr/bin/llvm-config",
