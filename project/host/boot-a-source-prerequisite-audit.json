@@ -79,7 +79,7 @@
     "regular_file": "usr/lib/os-release",
     "symlink": "etc/os-release",
     "target": "../usr/lib/os-release",
-    "identity": "NAME=\"Zog\"\\nID=zog\\nPRETTY_NAME=\"Zog\"\\n",
+    "identity": "NAME=\"Zog\"\nID=zog\nPRETTY_NAME=\"Zog\"\n",
     "required_by": "initrd switch-root safety check with /usr/lib/systemd/systemd"
   },
   "mountpoints": {
@@ -123,5 +123,15 @@
   "boot_admission_authorized": false,
   "boot_native_pass": false,
   "successor_build_submission_authorized": false,
-  "certificate_dependency": false
+  "certificate_dependency": false,
+  "early_userspace_evidence_status": "HISTORICAL_PARTUUID_RO_EXT4_SWITCH_ROOT_REACHED_BUT_RESIDENT_PID1_NOT_REACHED",
+  "protected_successor_requirements": [
+    "independently authenticated new generation ID distinct from rejected 5af34ec6…",
+    "trusted export manifest and exact installed os-release bytes and symlink",
+    "EFI SBAT and EFI installed image hash bound to successor provenance",
+    "early userspace kernel/initramfs/modules exact re-verification before device writes",
+    "canonical installed inventory confirms root-owned empty mode-0000 STATE and APPLICATIONS",
+    "source-verified login, kmod, fsck, journald, udevd and serial/getty",
+    "source audit is not permission to submit or boot"
+  ]
 }
