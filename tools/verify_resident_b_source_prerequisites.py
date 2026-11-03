@@ -38,9 +38,6 @@ FINDING_STATUS = {
 MISSING_REQUIRED_OUTPUTS = {
     "python-final": frozenset((
         "usr/bin/python3.12", "usr/lib/libpython3.12.so.1.0")),
-    "systemd-final": frozenset(("usr/bin/networkctl", "usr/bin/resolvectl")),
-    "host-install-final": frozenset(("usr/bin/host-install",)),
-    "host-discover-final": frozenset(("usr/bin/host-discover",)),
 }
 REQUIRED_PYTHON_MODULES = frozenset((
     "MODULE__SSL_STATE=yes", "MODULE__SQLITE3_STATE=yes",
@@ -126,6 +123,15 @@ def inspect(record, *, stages=None, dependencies=None, upstream=None,
             raise ValueError("direct declared runtime stage dependencies drifted: " + key)
         if type(dependencies[key].get("build")) is not list:
             raise ValueError("missing recorded build edges: " + key)
+    required_source_closure = {
+        'systemd-final': {'usr/bin/networkctl', 'usr/bin/resolvectl'},
+        'host-install-final': {'usr/bin/host-install'},
+        'host-discover-final': {'usr/bin/host-discover', 'usr/bin/host-discover-recovery',
+                                'usr/bin/host-discover-supervisor'},
+    }
+    for key, required in required_source_closure.items():
+        if not required.issubset(stages[key]['required']):
+            raise ValueError('Resident B controller/network output contract missing: ' + key)
     for key, missing in MISSING_REQUIRED_OUTPUTS.items():
         if not missing.isdisjoint(stages[key]["required"]):
             raise ValueError("unreviewed Resident B source output was added: " + key)
@@ -166,7 +172,7 @@ def inspect(record, *, stages=None, dependencies=None, upstream=None,
                    for x in findings)):
         raise ValueError("known Resident B source gaps were concealed or approved")
     return {
-        "inventory": "PASS_EXACT_SOURCE_GAPS_RETAINED",
+        "inventory": "PASS_REVIEWED_OUTPUT_CONTRACTS_NATIVE_UNVERIFIED",
         "authored_python": source_upstream["version"],
         "requested_python": record["requested_python_version"],
         "unresolved": len(FINDING_STATUS),
