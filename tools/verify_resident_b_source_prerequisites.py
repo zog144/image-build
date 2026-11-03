@@ -26,8 +26,8 @@ FINDING_STATUS = {
     "PYTHON_VERSION_DECISION": "HOLD",
     "PYTHON_SSL_SQLITE_STAGE_EDGES": "GAP",
     "PYTHON_SSL_SQLITE_INSTALLED": "GAP",
-    "SYSTEMD_NETWORK_UTILITIES": "GAP",
-    "CONTROL_CLI_OUTPUTS": "GAP",
+    "SYSTEMD_NETWORK_UTILITIES": "SOURCE_OUTPUT_DECLARED_NATIVE_UNVERIFIED",
+    "CONTROL_CLI_OUTPUTS": "SOURCE_OUTPUT_DECLARED_NATIVE_UNVERIFIED",
     "ROOT_BOX_CONTROL_PACKAGES": "GAP",
     "CREDENTIAL_RUNTIME_EDGES": "GAP",
     "DBUS_RUNTIME_IDENTITY": "NATIVE_UNVERIFIED",
@@ -38,9 +38,13 @@ FINDING_STATUS = {
 MISSING_REQUIRED_OUTPUTS = {
     "python-final": frozenset((
         "usr/bin/python3.12", "usr/lib/libpython3.12.so.1.0")),
+}
+FIXED_REQUIRED_OUTPUTS = {
     "systemd-final": frozenset(("usr/bin/networkctl", "usr/bin/resolvectl")),
     "host-install-final": frozenset(("usr/bin/host-install",)),
-    "host-discover-final": frozenset(("usr/bin/host-discover",)),
+    "host-discover-final": frozenset((
+        "usr/bin/host-discover", "usr/bin/host-discover-recovery",
+        "usr/bin/host-discover-supervisor")),
 }
 REQUIRED_PYTHON_MODULES = frozenset((
     "MODULE__SSL_STATE=yes", "MODULE__SQLITE3_STATE=yes",
@@ -126,6 +130,11 @@ def inspect(record, *, stages=None, dependencies=None, upstream=None,
             raise ValueError("direct declared runtime stage dependencies drifted: " + key)
         if type(dependencies[key].get("build")) is not list:
             raise ValueError("missing recorded build edges: " + key)
+    for key, fixed in FIXED_REQUIRED_OUTPUTS.items():
+        if not fixed.issubset(set(stages[key]["required"])):
+            raise ValueError("required Resident B CLI output removed: " + key)
+        if not fixed.issubset(set(expected_manifest[key])):
+            raise ValueError("reviewed Resident B CLI source record omitted output: " + key)
     for key, missing in MISSING_REQUIRED_OUTPUTS.items():
         if not missing.isdisjoint(stages[key]["required"]):
             raise ValueError("unreviewed Resident B source output was added: " + key)
