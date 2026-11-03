@@ -15,4 +15,4 @@ ExecStart=/usr/bin/root-control
 Restart=no
 RuntimeDirectory=zog
 RuntimeDirectoryMode=0750
-# No [Install] section; activation and trusted GID/STATE are external.
+# No enable target; activation and trusted GID/STATE are external.
