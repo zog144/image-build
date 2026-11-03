@@ -1,6 +1,6 @@
 {
   "schema": "zog-resident-b-controller-stage-design-v1",
-  "status": "DESIGN_ONLY_NOT_CATALOGUE_NOT_NATIVE_AUTHORITY",
+  "status": "CATALOGUE_ONLY_SOURCE_STAGES_AUTHORED_NATIVE_NO_GO",
   "reviewed_against": "host-install #4 Resident B; source audit image-build PR #12",
   "source_selected": false,
   "compilation_allowed": false,
@@ -14,56 +14,64 @@
   "controllers": [
     {
       "id": "box-control",
-      "source_revision": null,
+      "source_revision": "b513a9bde79135c7569adc7cadb4d45a163c7841",
       "package_stage": "box-control-final",
       "proposed_path": "project/package/box-control/stages/final",
-      "status": "UNAUTHORED_SOURCE_HOLD",
+      "status": "CATALOGUE_ONLY_SOURCE_STAGE_AUTHORED",
       "executable": "usr/bin/box-control",
       "python_import": "zog.box_control",
       "required_runtime": [
         "python-resident312-final",
-        "host-identify-final"
+        "image-build-python-final",
+        "dbus-next-final"
       ],
-      "runtime_services": [
-        "usr/lib/systemd/system/zog-box-control.service"
-      ],
+      "runtime_services": [],
       "installation": {
-        "uid": "dedicated-nonroot-app",
-        "state": "root-control-selected State access only",
-        "invocation": "Type=exec; selection/identity must be authorized"
+        "uid": "explicit non-root project user selected at install/evaluation",
+        "state": "authorized owned project strictly inside caller HOME; no guessed global project STATE",
+        "invocation": "one-shot CLI; no systemd unit or auto start",
+        "socket": "protected root-control group assigned separately; default root-only"
       },
       "known_gaps": [
-        "No independently selected source/revision or original notices",
-        "No selected installed byte/ELF/shebang provenance",
-        "No final stage tested against root-control protocol"
-      ]
+        "selected accepted source and installed generation/ELF/shebang/wheel RECORD absent",
+        "setuptools/packaging/installer/wheel/dbus-next and image-build Python interface stage producers not authored or independently accepted",
+        "no global evaluator service: operator-selected per-home Project required",
+        "independent rights and original source notices require native installed-byte verification"
+      ],
+      "archive_sha256": "60b95ae7842dd1a81f0e5891858e4a9035c629dbbc59c06f7793d4d1499bcf05"
     },
     {
       "id": "root-control",
-      "source_revision": null,
+      "source_revision": "0c217182d25f05b9cc0f7528ee614bb5669370d3",
       "package_stage": "root-control-final",
       "proposed_path": "project/package/root-control/stages/final",
-      "status": "UNAUTHORED_SOURCE_HOLD",
+      "status": "CATALOGUE_ONLY_SOURCE_STAGE_AUTHORED",
       "executable": "usr/bin/root-control",
       "python_import": "zog.root_control",
       "required_runtime": [
         "python-resident312-final",
-        "python-cryptography-final",
-        "host-identify-final"
+        "image-build-python-final",
+        "dbus-next-final",
+        "box-control-final",
+        "systemd-final"
       ],
       "runtime_services": [
         "usr/lib/systemd/system/zog-root-control.service"
       ],
       "installation": {
         "uid": "root",
-        "state": "STATE mounted/verified prior to authority and key use",
-        "invocation": "Type=exec with protected policies, cannot auto grant"
+        "state": "requires authenticated STATE mount before daemon starts",
+        "invocation": "Type=exec; root-control service installed but no [Install] auto enable",
+        "socket": "root:root by default; numeric controller group and process credentials require separate protected admission"
       },
       "known_gaps": [
-        "No independently selected source/revision or original notices",
-        "Privileged code and installation authority must be reviewed independently",
-        "No selected installed byte/ELF/shebang provenance"
-      ]
+        "selected accepted source and installed generation/ELF/shebang/wheel RECORD absent",
+        "setuptools/packaging/installer/wheel/dbus-next and image-build Python interface stage producers not authored or independently accepted",
+        "static /usr/libexec/zog/journal-wait native helper not built; opt-in journal barrier remains disabled",
+        "protected group/UID/STATE install and privileged service activation pending",
+        "independent rights and original source notices require native installed-byte verification"
+      ],
+      "archive_sha256": "ecd2e33416b56c8e1124db4604af4128e77bee36175c49ebfd6671bbbb488d0f"
     }
   ],
   "rootfs_privacy": [
@@ -72,9 +80,11 @@
     "no automatic certificate activation"
   ],
   "holds": [
-    "SOURCE_PIN_ABSENT",
+    "SOURCE_PIN_REVIEWED_BUT_UNSELECTED",
+    "MISSING_TRANSITIVE_STAGE_PRODUCERS",
     "NATIVE_INSTALLED_PROOF_ABSENT",
     "PYTHON312_NOT_SELECTED",
-    "SERVICE_UID_STATE_AUTHORITY_PENDING"
+    "SERVICE_UID_STATE_AUTHORITY_PENDING",
+    "JOURNAL_STATIC_HELPER_UNVERIFIED"
   ]
 }
