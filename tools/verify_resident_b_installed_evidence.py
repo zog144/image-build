@@ -176,7 +176,8 @@ def verify(root, receipt, trusted_public_key, *, expected_generation, expected_s
                        expected_generation=expected_generation,expected_state=expected_state)
     _verified_generation_selection(selected_generation_receipt,
         trusted_generation_public_key, trusted_public_key, expected_generation,
-        claim["native_observation"]["source_generation_receipt_sha256"])\n    source=json.loads(SOURCE_EXPECTED.read_text())
+        claim["native_observation"]["source_generation_receipt_sha256"])
+    source=json.loads(SOURCE_EXPECTED.read_text())
     expected=set(sum(source["expected_installed_outputs"].values(),[]))
     records=claim["files"]
     if type(records) is not list or len(records)!=len(expected) or len(records)!=len(set(expected)):
