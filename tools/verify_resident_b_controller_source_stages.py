@@ -18,7 +18,7 @@ SOURCES={
  "license":"aaf3d5919ea7f2720b7649d4f1e4fd28a54c58425a45dfd736d040a56480578f",
  "notice":"b6636714adafd8c7c8e9ab1db2d07e3c7efe3b312fa10268bc393b83e1db7036",
  "runtime":{"python-resident312-final","image-build-python-final","dbus-next-final"},
- "required":{"usr/bin/box-control","usr/lib/python3.12/site-packages/zog/box_control/__init__.py",
+ "required":{"usr/bin/box-control","usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/METADATA","usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/RECORD","usr/lib/python3.12/site-packages/zog/box_control/__init__.py",
              "usr/share/licenses/box-control/LICENSE",
              "usr/share/licenses/box-control/THIRD-PARTY-NOTICES.md"},
 },
@@ -33,7 +33,7 @@ SOURCES={
  "notice":"b3aa6c652c70db0faecdd42d35723c62bc61282dc53d73f637f26e",
  "runtime":{"python-resident312-final","image-build-python-final","dbus-next-final",
             "box-control-final","systemd-final"},
- "required":{"usr/bin/root-control","usr/lib/python3.12/site-packages/zog/root_control/__init__.py",
+ "required":{"usr/bin/root-control","usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/METADATA","usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/RECORD","usr/lib/python3.12/site-packages/zog/root_control/__init__.py",
             "usr/share/licenses/root-control/LICENSE","usr/share/licenses/root-control/THIRD-PARTY-NOTICES.md",
             "usr/lib/python3.12/site-packages/zog/root_control/native/journal-wait.c",
             "usr/lib/systemd/system/zog-root-control.service"},
@@ -112,7 +112,8 @@ def verify(*, records=None, overrides=None):
         combined="\n".join(build[phase][0][-1] for phase in ("configure","build","test","install"))
         for required in (expected["project"],expected["pyproject_sha256"],expected["license"],
                          expected["notice"],"python3.12 -I","python3.12 -I -m installer",
-                         "source" if False else "ZOG_CONTROLLER_WHEEL_SOURCE_TEST_PASS"):
+                         "ZOG_CONTROLLER_WHEEL_SOURCE_TEST_PASS", "Requires-Dist", "METADATA",
+                         "entry_points.txt", "unreviewed build backend"):
             if required not in combined:
                 deny("original/pinned build or wheel contract missing: "+name)
         if name=="box-control":

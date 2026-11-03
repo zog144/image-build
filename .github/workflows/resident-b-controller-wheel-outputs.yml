@@ -1,0 +1,39 @@
+name: Resident B controller installed wheel metadata source gate
+on:
+  push:
+    branches: [review/resident-b-controller-wheel-output-20261103]
+  pull_request:
+    paths:
+      - 'project/package/box-control/**'
+      - 'project/package/root-control/**'
+      - 'tools/verify_resident_b_controller_source_stages.py'
+      - 'tests/test_resident_b_controller_wheel_outputs.py'
+permissions:
+  contents: read
+jobs:
+  source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12','3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify original source, held stage revisions, and v1 contract
+        run: |
+          python tools/verify_resident_b_controller_source_stages.py
+          python tools/verify_resident_b_source_prerequisites.py
+      - name: Source-only required wheel output and substitution regressions
+        run: |
+          python -m pip install 'pytest>=8,<10'
+          python -m pytest -q -rs tests/test_resident_b_controller_wheel_outputs.py tests/test_resident_b_controller_sources_independent.py tests/test_resident_b_controller_stage_contracts.py
+          python tools/verify_boot_a_source_prerequisites.py
+      - name: No resident build or service activation
+        if: always()
+        run: echo 'No source/native dependency closure, compiler submission, signed installation, private STATE or controller daemon.' >> "$GITHUB_STEP_SUMMARY"
