@@ -32,14 +32,14 @@ def test_actual_frozen_contract_remains_non_submittable():
 @pytest.mark.parametrize("candidate,required_blocker",[
     ({"accepted_x11":False},"x11-accepted-generation-missing"),
     ({"accepted_x11":{"generation_id":"a"*64,"accepted":True,
-                      "issuer":"forged"}},"protected-native-admission-not-available"),
+                      "issuer":"forged"}},"protected-native-admission-not-available-to-source-ci"),
     ({"source_revision":"b"*40},"task-source-revision-mismatch"),
     ({"mesa_source":"c"*40},"mesa-source-pin-mismatch"),
     ({"task":"mesa-final"},"task-not-in-protected-host-deploy-allowlist"),
     ({"task":"turbovnc-final"},"task-not-in-protected-host-deploy-allowlist"),
     ({"checkpoint_protected_verified":False},"independent-checkpoint-unverified"),
     ({"checkpoint_protected_verified":{"signed":True,"epoch":2}},
-     "protected-native-admission-not-available"),
+     "protected-native-admission-not-available-to-source-ci"),
 ])
 def test_synthetic_unaccepted_predecessor_stale_source_or_unsupported_task(candidate,required_blocker):
     reasons=mod.synthetic_blockers(HANDOFF,AUDIT,proposal(**candidate))
