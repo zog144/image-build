@@ -126,7 +126,7 @@ def _verified_generation_selection(selection, key, witness_key, generation, sour
         signature=base64.b64decode(selection["signature"],validate=True)
         if len(signature)!=64 or base64.b64encode(signature).decode()!=selection["signature"]:
             deny("invalid independent selection signature")
-        key.verify(signature,b"zog-resident-b-selected-input-generation-v1\\0"+canonical(proof))
+        key.verify(signature,b"zog-resident-b-selected-input-generation-v1\0"+canonical(proof))
     except (ValueError,InvalidSignature,TypeError,AttributeError) as exc:
         raise EvidenceDenied("unverified selected generation signature") from exc
 
