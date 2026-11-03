@@ -10,20 +10,24 @@ RECORD=json.loads((P/"host/resident-b-controller-stage-contracts-v1.json").read_
 
 def test_both_root_and_box_controller_designs_are_held_not_installable():
     assert RECORD["schema"]=="zog-resident-b-controller-stage-design-v1"
-    assert RECORD["status"]=="DESIGN_ONLY_NOT_CATALOGUE_NOT_NATIVE_AUTHORITY"
+    assert RECORD["status"]=="CATALOGUE_ONLY_SOURCE_STAGES_AUTHORED_NATIVE_NO_GO"
     assert RECORD["source_selected"] is False
     assert RECORD["compilation_allowed"] is False
     assert RECORD["native_generation"] is None
     assert {entry["id"] for entry in RECORD["controllers"]}=={"root-control","box-control"}
     for entry in RECORD["controllers"]:
-        assert entry["source_revision"] is None
-        assert entry["status"]=="UNAUTHORED_SOURCE_HOLD"
+        assert len(entry["source_revision"])==40
+        assert entry["status"]=="CATALOGUE_ONLY_SOURCE_STAGE_AUTHORED"
         assert entry["executable"]=="usr/bin/"+entry["id"]
         assert entry["package_stage"]==entry["id"]+"-final"
         assert "python-resident312-final" in entry["required_runtime"]
-        assert entry["runtime_services"]
-        assert not (P/"package"/entry["id"]/"stages/final/build.py").exists()
-    assert "STATE" in RECORD["controllers"][1]["installation"]["state"]
+        assert (P/"package"/entry["id"]/"stages/final/build.py").exists()
+        assert entry["source_revision"] == ast.literal_eval((P/"package"/entry["id"]/"package.py").read_text())["source_revision"]
+    root=next(e for e in RECORD["controllers"] if e["id"]=="root-control")
+    box=next(e for e in RECORD["controllers"] if e["id"]=="box-control")
+    assert "STATE" in root["installation"]["state"]
+    assert root["runtime_services"]==["usr/lib/systemd/system/zog-root-control.service"]
+    assert box["runtime_services"]==[]
 
 @pytest.mark.parametrize("package,paths",[
     ("systemd",["usr/bin/networkctl","usr/bin/resolvectl"]),
