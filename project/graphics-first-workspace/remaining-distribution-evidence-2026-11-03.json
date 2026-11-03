@@ -1,0 +1,288 @@
+{
+  "schema": "zog-graphics-unresolved-distribution-evidence-v1",
+  "reviewed_workspace_source": "6b64a7e1b6f9842554bd3b9eee5599e24ca2402c",
+  "reviewed_mesa_source": "9cbd652226b863a7b4bb2d6d9539722e1a262508",
+  "base_matrix_path": "project/graphics-first-workspace/selected-component-rights-handoff.json",
+  "scope": "supplemental exact-component source-review handoff; no original archive inspection repeated",
+  "installed_generation_receipt": null,
+  "actual_native_compile_map": null,
+  "independent_copyright_holder_approval": false,
+  "redistribution_authorized": false,
+  "components": [
+    {
+      "id": "turbovnc-xserver",
+      "package": "turbovnc",
+      "original_member": "unix/Xvnc/programs/Xserver/COPYING",
+      "original_member_sha256": "4cc0447a22635c7b2f1a93fec4aa94f1970fadeb72a063de006b51cf4963a06f",
+      "source_archive_sha256": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
+      "original_member_role": "original-notice-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/turbovnc/Xserver-COPYING"
+      ],
+      "generated_attribution_questions": [
+        "Enumerate Xorg/Xserver generated protocol headers and files produced by selected CMake/Xvnc generators; record original input templates and generator tool hash",
+        "Prove selected GLX glxdriswrast.c code path/notice attribution without declaring all device-related Xserver code excluded"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Compile/link original Xvnc and Xserver object source map; inspect actual CMake and link records",
+        "Prove DRI3 and device-facing subprojects disabled at compile/link level, not only TVNC_DRI3=OFF",
+        "Bind selected Xserver file-level notices beyond top-level COPYING"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/bin/Xvnc"
+      ],
+      "negative_evidence_cases": [
+        "missing GLX source object",
+        "unrecorded generated header",
+        "DRI3/device source included contrary to declared profile",
+        "missing installed Xserver-COPYING"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "turbovnc-libsha1",
+      "package": "turbovnc",
+      "original_member": "unix/Xvnc/lib/libsha1/COPYING",
+      "original_member_sha256": "4c387926596bfeacc5b72ebeb96ab36c299a07568e18592c727a6c11dd512c20",
+      "source_archive_sha256": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
+      "original_member_role": "original-notice-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/turbovnc/libsha1-COPYING"
+      ],
+      "generated_attribution_questions": [
+        "Show original bundled libsha1 selected CMake sources; record whether generated files exist or explicitly prove none"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Map every libsha1 object and static member into Xvnc link",
+        "Check per-file attribution against original libsha1 COPYING"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/bin/Xvnc"
+      ],
+      "negative_evidence_cases": [
+        "missing bundled libsha1 object map",
+        "original libsha1 COPYING mismatch"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "turbovnc-zlib-ng-excluded",
+      "package": "turbovnc",
+      "original_member": "unix/Xvnc/lib/zlib-ng/LICENSE.md",
+      "original_member_sha256": "6c9f0d975b41afaa34d22f55bb8986ce69e5cb7ad327cb2b28820cd425edf5ee",
+      "source_archive_sha256": "9be0a0764d89f1a234cad7775ea142a01c0efe198523456899883bd6466691da",
+      "original_member_role": "original-notice-file-excluded-in-draft",
+      "planned_notice_output_paths": [],
+      "generated_attribution_questions": [
+        "Prove no generated bundled zlib-ng inputs consumed by selected Xvnc build; do not infer from archive presence"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Show TVNC_ZLIBNG=OFF in selected CMake flags and actual absence of bundled zlib-ng compiled/link inputs",
+        "Bind external selected Zog zlib-native-environment and loader provenance"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/bin/Xvnc"
+      ],
+      "negative_evidence_cases": [
+        "bundled zlib-ng object included",
+        "host or unpinned zlib substituted",
+        "archive-only exclusion treated as native proof"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "llvm-generated-blake3",
+      "package": "llvm",
+      "original_member": "lib/Support/BLAKE3/LICENSE",
+      "original_member_sha256": "6a94bedb8b707ed97f6e310d0d015ab14e0683ffa0a612b02958581b9cc9fc0e",
+      "source_archive_sha256": "908bce97be0275943414b45af2e2b20e8f6d5d9266fdc120bd59f096ebc547ad",
+      "original_member_role": "original-notice-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/llvm/BLAKE3-LICENSE",
+        "usr/share/licenses/llvm/LICENSE.TXT"
+      ],
+      "generated_attribution_questions": [
+        "Enumerate exact llvm-tblgen generator binary provenance, X86 TableGen *.td inputs and produced X86Gen*.inc bytes",
+        "Bind generated-table copyright/notice scope and selected LLVM package output"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Identify whether lib/Support/BLAKE3 objects are actually linked, by object/archive-member proof",
+        "Reconcile LLVM LICENSE.TXT, third-party BLAKE3 and native installed notice bytes"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/lib/libLLVM.so"
+      ],
+      "negative_evidence_cases": [
+        "missing TableGen input/output map",
+        "BLAKE3 linked without per-file rights",
+        "original BLAKE3 notice omitted"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "mesa-glapi-generated",
+      "package": "mesa",
+      "original_member": "src/mesa/glapi/glapi/gen/license.py",
+      "original_member_sha256": "9f11bc368fa08ad8a0fed990e5d54235425e4d1908625a4b06e860bb9aa1352a",
+      "source_archive_sha256": "0fd54fea7dbbddb154df05ac752b18621f26d97e27863db3be951417c6abe8ae",
+      "original_member_role": "original-generator-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa/glapi-generator-license.py",
+        "usr/share/licenses/mesa/license.rst"
+      ],
+      "generated_attribution_questions": [
+        "Record Mesa GLAPI Python generator and templates, including src/mesa/glapi/glapi/gen/license.py, with selected interpreter/module origins",
+        "Bind every emitted GLAPI C/header byte digest and attribution to source templates and native compile commands"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Trace generated GLAPI objects through libGL/GLX native link",
+        "Distinguish delivered license.py original source from full generated-code redistribution terms"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/lib/libGL.so"
+      ],
+      "negative_evidence_cases": [
+        "generated GLAPI C not linked to generator input",
+        "unapproved Host Python template module used",
+        "glapi-generator-license.py output missing"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "mesa-llvmpipe",
+      "package": "mesa",
+      "original_member": "src/gallium/drivers/llvmpipe/lp_screen.c",
+      "original_member_sha256": "77005dfcb7ad695a8ea508a82c87f383ef117d66d4170d553239fabb6ed4ddc5",
+      "source_archive_sha256": "0fd54fea7dbbddb154df05ac752b18621f26d97e27863db3be951417c6abe8ae",
+      "original_member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa/license.rst"
+      ],
+      "generated_attribution_questions": [
+        "Trace generated Gallium dispatch and llvmpipe/LLVM target headers to actual generators and template inputs",
+        "Do not presume absence of GPU/hardware support from Meson options without full native source/object proof"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Prove actual lp_screen.c and swrast loader link into swrast_dri.so and resolve LLVM ABI",
+        "Confirm excluded Vulkan/EGL/GBM/imgui sources absent from build objects and installed outputs"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/lib/dri/swrast_dri.so",
+        "usr/lib/libGL.so"
+      ],
+      "negative_evidence_cases": [
+        "swrast library path absent",
+        "Vulkan/GBM/EGL object present contrary to profile",
+        "missing Mesa original license"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "libdrm-common",
+      "package": "libdrm",
+      "original_member": "xf86drm.c",
+      "original_member_sha256": "676845942ab8b9bc5759b295528fce0f32b28ca7765c17d4546e253caaba62c4",
+      "source_archive_sha256": "3bb35db8700c2a0b569f2c6729a53f5495786856b310854c8de57782a22bddac",
+      "original_member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/libdrm/xf86drm.c",
+        "usr/share/licenses/libdrm/xf86drm.h"
+      ],
+      "generated_attribution_questions": [
+        "Enumerate generated libdrm headers/meson configuration outputs and their original-input attribution"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Verify xf86drm.c and xf86drmMode.c native object inclusion rather than conflating archive hashes",
+        "Prove vendor, udev, device access boundaries from actual compiled/runtime evidence"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/lib/libdrm.so"
+      ],
+      "negative_evidence_cases": [
+        "xf86drmMode.c attribution omitted",
+        "vendor/device object selected without review"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "mesa-demos-glxgears",
+      "package": "mesa-demos",
+      "original_member": "src/xdemos/glxgears.c",
+      "original_member_sha256": "344a03aff01708350d90603fd6b841bccd295157670f519b459bbf3874acf847",
+      "source_archive_sha256": "3046a3d26a7b051af7ebdd257a5f23bfeb160cad6ed952329cdff1e9f1ed496b",
+      "original_member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa-demos/glxgears.c"
+      ],
+      "generated_attribution_questions": [
+        "Show no generated code incorporated into glxgears selected compile plan, or trace any actual generated input"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Prove only selected glxgears.c and justified dependencies are compiled and linked",
+        "Independently review per-file copyright/public-domain declaration; copying C file is not a blanket redistribution grant"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/bin/glxgears"
+      ],
+      "negative_evidence_cases": [
+        "glxgears.c attribution omitted",
+        "other demo accidentally included",
+        "source file copy treated as copyright approval"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    },
+    {
+      "id": "mesa-demos-glxinfo",
+      "package": "mesa-demos",
+      "original_member": "src/xdemos/glxinfo.c",
+      "original_member_sha256": "54844ad4d57d65ae2041467f52035f3f4f8d299467a5790a0b6f6d56e6a2a4f7",
+      "source_archive_sha256": "3046a3d26a7b051af7ebdd257a5f23bfeb160cad6ed952329cdff1e9f1ed496b",
+      "original_member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa-demos/glxinfo.c"
+      ],
+      "generated_attribution_questions": [
+        "Show no generated code incorporated into glxinfo selected compile plan, or trace any actual generated input"
+      ],
+      "native_inclusion_exclusion_questions": [
+        "Prove only selected glxinfo.c and justified dependencies are compiled and linked",
+        "Independently review per-file copyright/public-domain declaration and notices"
+      ],
+      "native_outputs_to_reconcile": [
+        "usr/bin/glxinfo"
+      ],
+      "negative_evidence_cases": [
+        "glxinfo.c attribution omitted",
+        "new unreviewed demo linked",
+        "original notice path not delivered"
+      ],
+      "compiled_inclusion_evidence": null,
+      "installed_notice_sha256_evidence": null,
+      "rights_decision": "HOLD_ORIGINAL_NOTICE_NOT_AUTHORITY"
+    }
+  ],
+  "required_independent_reviewer_evidence": [
+    "Protected actual compile_commands and linker-selected archive-member source/object map for selected generation",
+    "Native generator executable and complete templates/input/output digests including implicit headers",
+    "Original selected-source component and linked/excluded feature provenance against exact source snapshots",
+    "Installed licensed files and notice byte identity against original archive members and selected package outputs",
+    "Independently authorized copyright and third-party rights determination distinct from source tests"
+  ],
+  "review_status": "SOURCE_GAPS_EXPLICIT_NATIVE_RIGHTS_NO_GO"
+}
