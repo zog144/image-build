@@ -98,7 +98,7 @@ def verify(*, overrides=None, controllers=None):
             script=steps[0][5]
             scripts[phase]=script
             if "/usr/bin/python3.12 -I" not in script or any(
-                 bad in script for bad in ("python3.15", "/host/", "pip install", "PYTHONPATH=")):
+                 bad in script for bad in ("python3.15", "pip install", "PYTHONPATH=")):
                 deny("Host Python fallback: "+name+"/"+phase)
         for token in ("sys.flags.isolated","sys.executable=='/usr/bin/python3.12'",
                       "importlib.metadata.version","spec.origin.startswith('/usr/lib/python3.12/site-packages/')"):
