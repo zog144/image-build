@@ -285,7 +285,7 @@ def wheel_record(root,receipt):
 
 def verify_external_signatures(receipt,protected_policy):
     """Pins originate OUTSIDE receipt from independently protected host-install."""
-    exact(protected_policy,("schema","binding","state_device",
+    exact(protected_policy,("schema","binding","state_device","rootfs_device",
          "native_worker_key","generation_owner_key","native_worker_key_id",
          "generation_owner_key_id"),"protected policy")
     if protected_policy["schema"]!="zog-host-install-protected-resident-b-pins-v1" or protected_policy["binding"]!=receipt["binding"]:
@@ -293,6 +293,8 @@ def verify_external_signatures(receipt,protected_policy):
     if (type(protected_policy["state_device"]) is not int or
         protected_policy["state_device"]!=receipt["installation_probe"]["state_device"]):
         reject("STATE mount identity differs from installed protected policy")
+    if type(protected_policy["rootfs_device"]) is not int or protected_policy["rootfs_device"]<1:
+        reject("missing selected immutable rootfs mount identity")
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
     from cryptography.exceptions import InvalidSignature
     payload={k:v for k,v in receipt.items() if k!="witnesses"}
@@ -317,6 +319,10 @@ def inspect(rootfs,state_mount,receipt,protected_policy,*,synthetic=False):
     file_bytes(rootfs,receipt,synthetic=synthetic)
     wheel_record(rootfs,receipt)
     if not synthetic:
+        selected_root=Path(rootfs)
+        if (selected_root.is_symlink() or not selected_root.is_mount() or
+            selected_root.stat().st_dev!=protected_policy["rootfs_device"]):
+            reject("rootfs must be a real selected protected installed-generation mount")
         state=Path(state_mount)
         if state.is_symlink() or not state.is_mount():
             reject("STATE was not independently mounted")
