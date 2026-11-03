@@ -31,7 +31,7 @@ def builds():
 def test_resident_b_is_a_read_only_gap_inventory_not_native_acceptance():
     report = audit.inspect(RECORD)
     assert report == {
-        "inventory":"PASS_EXACT_SOURCE_GAPS_RETAINED",
+        "inventory":"PASS_REVIEWED_OUTPUT_CONTRACTS_NATIVE_UNVERIFIED",
         "authored_python":"3.15.0rc2", "requested_python":"3.12",
         "unresolved":11, "resident_b":"NO_GO",
         "native_generation":"UNVERIFIED",
@@ -91,9 +91,6 @@ def test_missing_source_stage_outputs_cannot_pass_inventory(stage,path):
 
 @pytest.mark.parametrize("stage,path",[
     ("python-final","usr/bin/python3.12"),
-    ("systemd-final","usr/bin/networkctl"),
-    ("host-install-final","usr/bin/host-install"),
-    ("host-discover-final","usr/bin/host-discover"),
 ])
 def test_newly_added_required_outputs_must_trigger_exact_fresh_review(stage,path):
     source=copies()
@@ -126,6 +123,21 @@ def test_known_unresolved_gaps_cannot_be_marked_accepted(field,value):
          if x["code"]==field)["status"]=value
     with pytest.raises(ValueError,match="gaps were concealed"):
         audit.inspect(row)
+
+
+@pytest.mark.parametrize("stage,path",[
+    ("systemd-final","usr/bin/networkctl"),
+    ("systemd-final","usr/bin/resolvectl"),
+    ("host-install-final","usr/bin/host-install"),
+    ("host-discover-final","usr/bin/host-discover"),
+    ("host-discover-final","usr/bin/host-discover-recovery"),
+    ("host-discover-final","usr/bin/host-discover-supervisor"),
+])
+def test_corrected_output_contract_is_required(stage,path):
+    source=copies()
+    source[stage]["required"].remove(path)
+    with pytest.raises(ValueError,match="controller/network output contract missing"):
+        audit.inspect(RECORD,stages=source)
 
 
 def test_unknown_or_omitted_finding_fails_closed():
