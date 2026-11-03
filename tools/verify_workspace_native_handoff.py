@@ -47,6 +47,29 @@ STAGE_PATHS = {
     "xkbcomp": ROOT/"project/package/xkbcomp/stages/final",
     "xkeyboard-config": ROOT/"project/package/xkeyboard-config/stages/final",
 }
+
+# An omitted source manifest output must fail even if the handoff still
+# mentions that output. The selected files are frozen independent obligations.
+EXPECTED_STAGE_OUTPUTS = {
+    "i3": frozenset((
+        "usr/bin/i3","usr/bin/i3bar","usr/bin/i3-msg","usr/bin/i3-nagbar",
+        "usr/share/licenses/i3/LICENSE")),
+    "xterm": frozenset((
+        "usr/bin/xterm","usr/share/X11/app-defaults/XTerm",
+        "usr/share/terminfo/x/xterm","usr/share/licenses/xterm/COPYING")),
+    "turbovnc": frozenset((
+        "usr/bin/Xvnc","usr/bin/vncserver","usr/bin/vncpasswd",
+        "usr/share/licenses/turbovnc/LICENSE.txt",
+        "usr/share/licenses/turbovnc/Xserver-COPYING",
+        "usr/share/licenses/turbovnc/libsha1-COPYING")),
+    "basic-font": frozenset((
+        "usr/share/fonts/X11/misc/6x13.pcf.gz",
+        "usr/share/fonts/X11/misc/fonts.dir",
+        "usr/share/licenses/basic-font/COPYING")),
+    "xkbcomp": frozenset(("usr/bin/xkbcomp","usr/share/licenses/xkbcomp/COPYING")),
+    "xkeyboard-config": frozenset(("usr/share/X11/xkb",)),
+}
+
 REQUIRED_RESOURCES = frozenset((
     "usr/share/fonts/X11/misc/6x13.pcf.gz", "usr/share/fonts/X11/misc/fonts.dir",
     "usr/share/X11/xkb", "usr/bin/xkbcomp", "usr/share/X11/app-defaults/XTerm",
@@ -79,6 +102,8 @@ def review_local_stage_closure(record, *, dependency_overrides=None, manifest_ov
         if not isinstance(manifest,dict) or not isinstance(manifest.get("required"),list):
             raise ValueError("missing actual output manifest: "+name)
         required=set(manifest["required"])
+        if not EXPECTED_STAGE_OUTPUTS[name].issubset(required):
+            raise ValueError("actual stage manifest omits reviewed installed resource: "+name)
         if not required.issubset(declared_outputs):
             raise ValueError("handoff omits actual package output: "+name)
     packages = record.get("source_packages",{})
