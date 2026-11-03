@@ -17,7 +17,8 @@
     "systemd": "project/package/systemd/stages/final",
     "host-install": "project/package/host-install/stages/final",
     "host-discover": "project/package/host-discover/stages/final",
-    "host-identify": "project/package/host-identify/stages/final"
+    "host-identify": "project/package/host-identify/stages/final",
+    "e2fsprogs": "project/package/e2fsprogs/stages/final"
   },
   "declared_existing_contracts": {
     "python": [
@@ -64,6 +65,11 @@
     ],
     "host-identify": [
       "usr/lib/python3.15/site-packages/zog/host_identify/__init__.py"
+    ],
+    "e2fsprogs": [
+      "usr/sbin/mkfs.ext4",
+      "usr/sbin/e2fsck",
+      "usr/sbin/fsck.ext4"
     ]
   },
   "resident_b_host_install_required": [
