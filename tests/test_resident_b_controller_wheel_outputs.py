@@ -43,9 +43,13 @@ def test_metadata_and_record_cannot_be_removed_as_required_outputs(name):
 @pytest.mark.parametrize("name",["box-control","root-control"])
 def test_exact_upstream_wheel_assertions_cannot_be_weakened(name):
  original=stage(name,"build.py")
- for source in ('"Requires-Dist"', '"unreviewed build backend"','"entry_points.txt"'):
+ for source in ('"Requires-Dist"', '"unreviewed build backend"','entry_points.txt'):
   changed=copy.deepcopy(original)
+  replacements=0
   for key in ("configure","test"):
-   changed[key][0][-1]=changed[key][0][-1].replace(source,'"removed-assertion"')
+   original_text=changed[key][0][-1]
+   changed[key][0][-1]=original_text.replace(source,"removed-assertion")
+   replacements+=int(changed[key][0][-1]!=original_text)
+  assert replacements>0,("synthetic mutation did not touch selected source",source)
   with pytest.raises(ValueError,match="NOT READY"):
    verify.verify(overrides={(name,"stages/final/build.py"):changed})
