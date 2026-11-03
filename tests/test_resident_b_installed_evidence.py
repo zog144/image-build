@@ -21,7 +21,7 @@ def record_line(path,data):
     return (path,"sha256="+h,str(len(data)))
 
 def fixture(tmp_path):
-    root=tmp_path/"image";root.mkdir()
+    root=tmp_path/"image";root.mkdir(parents=True)
     src=json.loads(v.SOURCE_EXPECTED.read_text())
     paths=set(sum(src["expected_installed_outputs"].values(),[]))
     source={}
