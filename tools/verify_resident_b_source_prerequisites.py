@@ -28,7 +28,7 @@ FINDING_STATUS = {
     "PYTHON_SSL_SQLITE_INSTALLED": "GAP",
     "SYSTEMD_NETWORK_UTILITIES": "SOURCE_OUTPUT_DECLARED_NATIVE_UNVERIFIED",
     "CONTROL_CLI_OUTPUTS": "SOURCE_OUTPUT_DECLARED_NATIVE_UNVERIFIED",
-    "ROOT_BOX_CONTROL_PACKAGES": "GAP",
+    "ROOT_BOX_CONTROL_PACKAGES": "SOURCE_RECIPES_AUTHORED_NATIVE_UNVERIFIED",
     "CREDENTIAL_RUNTIME_EDGES": "GAP",
     "DBUS_RUNTIME_IDENTITY": "NATIVE_UNVERIFIED",
     "IPROUTE2_RUNTIME_LINKAGE": "NATIVE_UNVERIFIED",
@@ -148,8 +148,8 @@ def inspect(record, *, stages=None, dependencies=None, upstream=None,
             raise ValueError("reviewed controller source edges changed: " + key)
     existing_packages = (existing_packages if existing_packages is not None
                          else {p.name for p in PKG.iterdir() if p.is_dir()})
-    if "root-control" in existing_packages or "box-control" in existing_packages:
-        raise ValueError("reviewed controller packaging gap changed; re-audit required")
+    if not {"root-control", "box-control"}.issubset(existing_packages):
+        raise ValueError("authored controller source stages missing; re-audit required")
 
     build_scripts = build_scripts if build_scripts is not None else {
         name: (PKG / name / "stages/final/build.py").read_text()

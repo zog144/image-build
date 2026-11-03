@@ -145,11 +145,13 @@ def test_unknown_or_omitted_finding_fails_closed():
         audit.inspect(row)
 
 
-def test_runtime_controller_package_stage_inventory_is_not_invented():
+def test_controller_source_packages_are_authored_but_never_native_authority():
     packages={p.name for p in audit.PKG.iterdir() if p.is_dir()}
-    for invented in ("box-control","root-control"):
-        with pytest.raises(ValueError,match="controller packaging gap"):
-            audit.inspect(RECORD,existing_packages=packages|{invented})
+    assert {"box-control","root-control"}.issubset(packages)
+    assert audit.inspect(RECORD,existing_packages=packages)["resident_b"]=="NO_GO"
+    for missing in ("box-control","root-control"):
+        with pytest.raises(ValueError,match="controller source stages missing"):
+            audit.inspect(RECORD,existing_packages=packages-{missing})
 
 
 @pytest.mark.parametrize("package,flag",[

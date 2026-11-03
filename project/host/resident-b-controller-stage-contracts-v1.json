@@ -1,6 +1,6 @@
 {
-  "schema": "zog-resident-b-controller-stage-design-v1",
-  "status": "DESIGN_ONLY_NOT_CATALOGUE_NOT_NATIVE_AUTHORITY",
+  "schema": "zog-resident-b-controller-stage-design-v2",
+  "status": "AUTHORED_SOURCE_STAGES_UNSELECTED_NATIVE_HOLD",
   "reviewed_against": "host-install #4 Resident B; source audit image-build PR #12",
   "source_selected": false,
   "compilation_allowed": false,
@@ -9,41 +9,44 @@
     "abi": "cpython-312-x86_64-linux-gnu",
     "stage": "python-resident312-final",
     "selected_generation_receipt": null,
-    "python_cryptography": "exact source/wheel RECORD to be independently pinned"
+    "python_cryptography": "Existing wheel targets Python 3.15; independent cp312 closure required if imported"
   },
   "controllers": [
     {
       "id": "box-control",
-      "source_revision": null,
+      "source_revision": "b513a9bde79135c7569adc7cadb4d45a163c7841",
       "package_stage": "box-control-final",
       "proposed_path": "project/package/box-control/stages/final",
-      "status": "UNAUTHORED_SOURCE_HOLD",
+      "status": "AUTHORED_SOURCE_STAGE_HELD",
       "executable": "usr/bin/box-control",
       "python_import": "zog.box_control",
       "required_runtime": [
         "python-resident312-final",
         "host-identify-final"
       ],
-      "runtime_services": [
-        "usr/lib/systemd/system/zog-box-control.service"
-      ],
+      "runtime_services": [],
       "installation": {
-        "uid": "dedicated-nonroot-app",
-        "state": "root-control-selected State access only",
-        "invocation": "Type=exec; selection/identity must be authorized"
+        "uid": "non-root authorized caller",
+        "state": "no private STATE or root socket authority issued by immutable image",
+        "invocation": "one-shot CLI; no systemd service"
       },
       "known_gaps": [
-        "No independently selected source/revision or original notices",
-        "No selected installed byte/ELF/shebang provenance",
-        "No final stage tested against root-control protocol"
-      ]
+        "Source notices/rights and archive-internal file hashes require independent review",
+        "No accepted Python 3.12 wheel/installer/RECORD and dbus-next/image-build Python dependency closure",
+        "No native installed CLI/shebang/library audit or image generation",
+        "No protected root-control service/STATE/socket GID native admission"
+      ],
+      "source_sha256": "60b95ae7842dd1a81f0e5891858e4a9035c629dbbc59c06f7793d4d1499bcf05",
+      "version": "0.1.0",
+      "source_archive": "https://api.github.com/repos/zog144/box-control/tarball/b513a9bde79135c7569adc7cadb4d45a163c7841",
+      "python_site": "usr/lib/python3.12/site-packages/zog/box_control/__init__.py"
     },
     {
       "id": "root-control",
-      "source_revision": null,
+      "source_revision": "0c217182d25f05b9cc0f7528ee614bb5669370d3",
       "package_stage": "root-control-final",
       "proposed_path": "project/package/root-control/stages/final",
-      "status": "UNAUTHORED_SOURCE_HOLD",
+      "status": "AUTHORED_SOURCE_STAGE_HELD",
       "executable": "usr/bin/root-control",
       "python_import": "zog.root_control",
       "required_runtime": [
@@ -56,14 +59,22 @@
       ],
       "installation": {
         "uid": "root",
-        "state": "STATE mounted/verified prior to authority and key use",
-        "invocation": "Type=exec with protected policies, cannot auto grant"
+        "gid": "root",
+        "runtime_socket": "/run/zog/root-control.sock",
+        "socket_gid": "separate protected root-only installer binding",
+        "state": "/state verified before service; /state/zog/root-control/controller.env must be separately provisioned",
+        "invocation": "Type=exec; disabled by default; no automatic root authority"
       },
       "known_gaps": [
-        "No independently selected source/revision or original notices",
-        "Privileged code and installation authority must be reviewed independently",
-        "No selected installed byte/ELF/shebang provenance"
-      ]
+        "Source notices/rights and archive-internal file hashes require independent review",
+        "No accepted Python 3.12 wheel/installer/RECORD and dbus-next/image-build Python dependency closure",
+        "No native installed CLI/shebang/library audit or image generation",
+        "No protected root-control service/STATE/socket GID native admission"
+      ],
+      "source_sha256": "ecd2e33416b56c8e1124db4604af4128e77bee36175c49ebfd6671bbbb488d0f",
+      "version": "0.1.0",
+      "source_archive": "https://api.github.com/repos/zog144/root-control/tarball/0c217182d25f05b9cc0f7528ee614bb5669370d3",
+      "python_site": "usr/lib/python3.12/site-packages/zog/root_control/__init__.py"
     }
   ],
   "rootfs_privacy": [
@@ -72,7 +83,8 @@
     "no automatic certificate activation"
   ],
   "holds": [
-    "SOURCE_PIN_ABSENT",
+    "DEPENDENCY_GRAPH_INCOMPLETE_CP312",
+    "SOURCE_RIGHTS_REVIEW_PENDING",
     "NATIVE_INSTALLED_PROOF_ABSENT",
     "PYTHON312_NOT_SELECTED",
     "SERVICE_UID_STATE_AUTHORITY_PENDING"

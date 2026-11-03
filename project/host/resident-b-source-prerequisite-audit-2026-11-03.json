@@ -128,8 +128,8 @@
     },
     {
       "code": "ROOT_BOX_CONTROL_PACKAGES",
-      "finding": "No authored project/package/box-control or root-control stages in reviewed image-build tree; cannot infer controller source/install/runtime closure",
-      "status": "GAP"
+      "finding": "Exact root-control and box-control source-only stages, Python 3.12 required output and held service contracts are authored; Python dbus-next/image-build package closure, rights, installed bytes, protected root daemon and native generation remain unverified.",
+      "status": "SOURCE_RECIPES_AUTHORED_NATIVE_UNVERIFIED"
     },
     {
       "code": "CREDENTIAL_RUNTIME_EDGES",
