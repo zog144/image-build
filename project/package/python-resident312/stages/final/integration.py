@@ -1,0 +1,13 @@
+{'schema': 1, 'status': 'source-candidate-native-NO-GO',
+ 'source_version': '3.12.16', 'target_architecture': 'x86_64',
+ 'soabi': 'cpython-312-x86_64-linux-gnu',
+ 'required_selected_predecessors': ['openssl-final', 'sqlite-final'],
+ 'accepted_generation_receipts': None,
+ 'native_execution_root': 'independently-authenticated-pivot-root-no-host-fallback',
+ 'tool_provenance': 'selected GCC/linker/pkgconf/binutils and installed OpenSSL/SQLite headers/libs',
+ 'no_host_fallback': True,
+ 'ssl_sqlite_linkage': 'protected ELF DT_NEEDED/SONAME + rootfs origin, not host /usr',
+ 'installed_probe': '/usr/bin/python3.12 -I -S: import ssl,_ssl,sqlite3,_sqlite3,_hashlib; assert exact sysconfig SOABI; SQLite WAL; public CA trust',
+ 'package_collision': 'altinstall: /usr/bin/python3 remains selected separately; conflicting Python libs forbidden',
+ 'rights_status': 'unreviewed-python312-original-archive-members-and-generated-files',
+ 'native_compiled': False, 'submission_allowed': False}
