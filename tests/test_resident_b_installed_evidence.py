@@ -143,6 +143,7 @@ def make_claim(root):
             format=serialization.PublicFormat.Raw).hex()
     policy={"schema":"zog-host-install-protected-resident-b-pins-v1",
         "binding":copy.deepcopy(bindings),"state_device":1,
+        "rootfs_device":root.stat().st_dev,
         "native_worker_key":raw_pub(worker),"generation_owner_key":raw_pub(issuer),
         "native_worker_key_id":"synthetic-worker",
         "generation_owner_key_id":"synthetic-issuer"}
