@@ -118,3 +118,17 @@ def test_forged_receipt_object_not_accepted_even_with_authentic_looking_fields()
         mod.verify(record)
     with pytest.raises(ValueError,match="native-readiness DENIED"):
         mod.refuse_native_readiness(record)
+
+@pytest.mark.parametrize("stage,expected",[
+    ("i3","usr/bin/i3"), ("xterm","usr/share/terminfo/x/xterm"),
+    ("turbovnc","usr/share/licenses/turbovnc/Xserver-COPYING"),
+    ("basic-font","usr/share/fonts/X11/misc/fonts.dir"),
+    ("xkbcomp","usr/bin/xkbcomp"),
+    ("xkeyboard-config","usr/share/X11/xkb"),
+])
+def test_producer_cannot_remove_manifest_output_even_if_handoff_mentions_it(stage,expected):
+    import ast
+    manifest=ast.literal_eval((mod.STAGE_PATHS[stage]/"produce-manifest.py").read_text())
+    altered={**manifest,"required":[x for x in manifest["required"] if x!=expected]}
+    with pytest.raises(ValueError,match="actual stage manifest omits reviewed"):
+        mod.review_local_stage_closure(original,manifest_overrides={stage:altered})
