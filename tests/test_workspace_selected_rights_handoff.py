@@ -112,3 +112,62 @@ def test_notice_matrix_is_not_reclassified_as_native_rights_permission():
         assert row["native_selection_status"]=="unobserved"
     assert RECORD["independent_redistribution_approved"] is False
     assert RECORD["installed_notice_bytes_observed"] is False
+
+def _synthetic_pinned_pr8_review_fixtures():
+    """Negative-unit fixtures only; real immutable PR8 bytes checked by cross-branch CI."""
+    import copy
+    licenses={}
+    manifests={}
+    for row in RECORD["components"]:
+        package=row["package"]
+        prefix={"turbovnc":"turbovnc-3.3.1/",
+                "llvm":"llvm-21.1.6.src/",
+                "mesa":"mesa-25.3.0/",
+                "libdrm":"libdrm-2.4.128/",
+                "mesa-demos":"mesa-demos-9.0.0/"}[package]
+        license=licenses.setdefault(package,{
+            "status":"unresolved","source":{"sha256":row["source_sha256"]},"evidence":[]})
+        if row["id"]!="mesa-llvmpipe":
+            license["evidence"].append({
+                "path":prefix+row["member"],"sha256":row["member_sha256"],
+                "source_sha256":row["source_sha256"]})
+        manifest=manifests.setdefault(package,{"required":[]})
+        manifest["required"].extend(row["planned_notice_output_paths"])
+    rights={
+        "status":"independent-rights-and-native-output-NO-GO",
+        "components":{"mesa":{"original_scoped_source_candidates":[{
+            "relative_member":"src/gallium/drivers/llvmpipe/lp_screen.c",
+            "sha256":FROZEN_MEMBERS["mesa-llvmpipe"]}]}}}
+    return copy.deepcopy(RECORD),licenses,manifests,rights
+
+
+@pytest.mark.parametrize("failure",[
+    "source_hash","member_hash","notice_output","source_role",
+    "notice_claim","rights_claim","missing_linked_notice","rights_approved"
+])
+def test_cross_branch_rights_validator_fails_closed_on_contradictory_evidence(failure):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location(
+        "rights_review",ROOT/"tools/verify_first_workspace_source_branches.py")
+    m=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    matrix,licenses,manifests,rights=_synthetic_pinned_pr8_review_fixtures()
+    row=next(r for r in matrix["components"] if r["id"]=="mesa-glapi-generated")
+    if failure=="source_hash":
+        row["source_sha256"]="a"*64
+    elif failure=="member_hash":
+        row["member_sha256"]="b"*64
+    elif failure=="notice_output":
+        row["planned_notice_output_paths"]=["usr/share/licenses/mesa/missing"]
+    elif failure=="source_role":
+        row["member_role"]="copyright-permission-approved"
+    elif failure=="notice_claim":
+        row["delivery_proof_status"]="approved"
+    elif failure=="rights_claim":
+        matrix["independent_redistribution_approved"]=True
+    elif failure=="missing_linked_notice":
+        manifests["mesa"]["required"].remove("usr/share/licenses/mesa/glapi-generator-license.py")
+    elif failure=="rights_approved":
+        rights["status"]="approved"
+    with pytest.raises(ValueError):
+        m.verify_selected_rights_matrix(matrix,licenses,manifests,rights)
