@@ -71,3 +71,78 @@ def test_mode_0000_mounts_not_relaxed():
     altered["mountpoints"]["state"]["mode"]="0755"
     with pytest.raises(ValueError,match="non-restrictive"):
         mod.inspect(altered)
+
+@pytest.mark.parametrize("field,value",[
+    ("native_ready",True),
+    ("accepted_successor_generation",AUDIT["historical_rejected_generation"]),
+    ("certificate_ready",True),
+    ("source_contract","native-accepted"),
+])
+def test_hidden_or_premature_boot_authority_fields_are_denied(field,value):
+    changed=copy.deepcopy(AUDIT)
+    changed[field]=value
+    with pytest.raises(ValueError):
+        mod.inspect(changed)
+
+
+def test_historical_rejected_generation_is_not_a_valid_successor_receipt():
+    changed=copy.deepcopy(AUDIT)
+    changed["selected_successor_generation_id"]=AUDIT["historical_rejected_generation"]
+    changed["installed_generation_verification"]={"approved":True}
+    with pytest.raises(ValueError,match="cannot authenticate"):
+        mod.inspect(changed)
+
+
+@pytest.mark.parametrize("part,field,bad",[
+    ("efi","required_build_options",["-Defi=true"]),
+    ("efi","native_verified",True),
+    ("efi","required_stage_output","usr/bin/systemd-bootx64.efi"),
+    ("os_tree","symlink","etc/missing-release"),
+    ("os_tree","target","../../etc/os-release"),
+    ("os_tree","identity",'NAME="Foreign Host"\\nID=foreign\\n'),
+])
+def test_record_cannot_weaken_efi_or_immutable_os_identity(part,field,bad):
+    changed=copy.deepcopy(AUDIT)
+    changed[part][field]=bad
+    with pytest.raises(ValueError,match="EFI/SBAT|OS-tree"):
+        mod.inspect(changed)
+
+
+@pytest.mark.parametrize("pkg,required",[
+    ("systemd-final","usr/lib/systemd/systemd-journald"),
+    ("systemd-final","usr/lib/systemd/systemd-udevd"),
+    ("systemd-final","usr/lib/systemd/system/serial-getty@.service"),
+    ("shadow-login","usr/bin/login"),
+    ("kmod-final","usr/bin/kmod"),
+    ("e2fsprogs-final","usr/sbin/fsck.ext4"),
+])
+def test_source_record_cannot_omit_required_early_userspace_program(pkg,required):
+    changed=copy.deepcopy(AUDIT)
+    changed["boot_a_required"][pkg].remove(required)
+    with pytest.raises(ValueError,match="missing required Boot A"):
+        mod.inspect(changed)
+
+
+def test_historical_kernel_digest_substitution_even_well_formed_is_denied():
+    changed=copy.deepcopy(AUDIT)
+    changed["foreign_al2023_provider"]["kernel_sha256"]="c"*64
+    with pytest.raises(ValueError,match="historical foreign boot-bundle"):
+        mod.inspect(changed)
+
+
+def test_resident_b_and_rootfs_identity_exclusions_cannot_be_truncated():
+    changed=copy.deepcopy(AUDIT)
+    changed["expected_resident_b_paths"].remove("usr/bin/python3")
+    with pytest.raises(ValueError,match="Resident B"):
+        mod.inspect(changed)
+    changed=copy.deepcopy(AUDIT)
+    changed["immutable_generation_forbids"].remove("station credentials")
+    with pytest.raises(ValueError,match="installation identity"):
+        mod.inspect(changed)
+
+
+def test_early_userspace_native_failure_not_misrepresented_as_pid1_pass():
+    changed=copy.deepcopy(AUDIT)
+    changed["early_userspace_evidence_status"]="PID1_PASS"
+    with pytest.raises(ValueError,match="early userspace"):
+        mod.inspect(changed)
