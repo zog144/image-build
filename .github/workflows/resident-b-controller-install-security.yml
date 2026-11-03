@@ -6,6 +6,8 @@ on:
     paths:
       - 'tools/verify_resident_b_controller_install_security.py'
       - 'tests/test_resident_b_controller_install_security.py'
+      - 'tools/verify_resident_b_installed_evidence.py'
+      - 'tests/test_resident_b_installed_evidence.py'
       - '.github/workflows/resident-b-controller-install-security.yml'
 permissions:
   contents: read
@@ -57,14 +59,15 @@ jobs:
           ZOG_REVIEW_ROOT_DAEMON: ${{ github.workspace }}/companions/root-control/src/zog/root_control/daemon.py
           ZOG_REVIEW_BOX_CLI: ${{ github.workspace }}/companions/box-control/box-control/src/zog/box_control/cli.py
         run: |
-          python -m pip install 'pytest>=8,<10'
+          python -m pip install 'pytest>=8,<10' 'cryptography>=44,<47'
           python -m pytest -q -rs \
             tests/test_resident_b_controller_install_security.py \
             tests/test_resident_b_controller_wheel_outputs.py \
             tests/test_resident_b_controller_sources_independent.py \
             tests/test_resident_b_controller_stage_contracts.py \
             tests/test_resident312_transitive_source_closure.py \
-            tests/test_resident_b_combined_source_reconciliation.py
+            tests/test_resident_b_combined_source_reconciliation.py \
+            tests/test_resident_b_installed_evidence.py
           python tools/verify_resident_b_source_prerequisites.py
           python tools/verify_boot_a_source_prerequisites.py
       - name: Never confer resident installation or root service authority
