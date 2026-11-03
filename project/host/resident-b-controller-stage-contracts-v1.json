@@ -1,0 +1,80 @@
+{
+  "schema": "zog-resident-b-controller-stage-design-v1",
+  "status": "DESIGN_ONLY_NOT_CATALOGUE_NOT_NATIVE_AUTHORITY",
+  "reviewed_against": "host-install #4 Resident B; source audit image-build PR #12",
+  "source_selected": false,
+  "compilation_allowed": false,
+  "native_generation": null,
+  "required_python_runtime": {
+    "abi": "cpython-312-x86_64-linux-gnu",
+    "stage": "python-resident312-final",
+    "selected_generation_receipt": null,
+    "python_cryptography": "exact source/wheel RECORD to be independently pinned"
+  },
+  "controllers": [
+    {
+      "id": "box-control",
+      "source_revision": null,
+      "package_stage": "box-control-final",
+      "proposed_path": "project/package/box-control/stages/final",
+      "status": "UNAUTHORED_SOURCE_HOLD",
+      "executable": "usr/bin/box-control",
+      "python_import": "zog.box_control",
+      "required_runtime": [
+        "python-resident312-final",
+        "host-identify-final"
+      ],
+      "runtime_services": [
+        "usr/lib/systemd/system/zog-box-control.service"
+      ],
+      "installation": {
+        "uid": "dedicated-nonroot-app",
+        "state": "root-control-selected State access only",
+        "invocation": "Type=exec; selection/identity must be authorized"
+      },
+      "known_gaps": [
+        "No independently selected source/revision or original notices",
+        "No selected installed byte/ELF/shebang provenance",
+        "No final stage tested against root-control protocol"
+      ]
+    },
+    {
+      "id": "root-control",
+      "source_revision": null,
+      "package_stage": "root-control-final",
+      "proposed_path": "project/package/root-control/stages/final",
+      "status": "UNAUTHORED_SOURCE_HOLD",
+      "executable": "usr/bin/root-control",
+      "python_import": "zog.root_control",
+      "required_runtime": [
+        "python-resident312-final",
+        "python-cryptography-final",
+        "host-identify-final"
+      ],
+      "runtime_services": [
+        "usr/lib/systemd/system/zog-root-control.service"
+      ],
+      "installation": {
+        "uid": "root",
+        "state": "STATE mounted/verified prior to authority and key use",
+        "invocation": "Type=exec with protected policies, cannot auto grant"
+      },
+      "known_gaps": [
+        "No independently selected source/revision or original notices",
+        "Privileged code and installation authority must be reviewed independently",
+        "No selected installed byte/ELF/shebang provenance"
+      ]
+    }
+  ],
+  "rootfs_privacy": [
+    "no host private identity in image",
+    "no installation-specific STATE",
+    "no automatic certificate activation"
+  ],
+  "holds": [
+    "SOURCE_PIN_ABSENT",
+    "NATIVE_INSTALLED_PROOF_ABSENT",
+    "PYTHON312_NOT_SELECTED",
+    "SERVICE_UID_STATE_AUTHORITY_PENDING"
+  ]
+}
