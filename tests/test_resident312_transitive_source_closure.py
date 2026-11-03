@@ -70,10 +70,9 @@ def test_incompatible_previous_setuptools_84_is_rejected():
     with pytest.raises(ValueError,match="package or source version"):
         m.verify(overrides=change(stage,"package.py",pkg))
     build=load(stage,"stages/final/build.py")
-    build["configure"][0][-1]=build["configure"][0][-1].replace('"82.0.1"','"84.0.0"')
-    # Any unreviewed version is forbidden by the exact source record and tool version.
-    assert '"84.0.0"' in build["configure"][0][-1]
-    assert m.verify()["native_generation"] is None
+    build["configure"][0][-1]=build["configure"][0][-1].replace("setuptools-82.0.1","setuptools-84.0.0")
+    with pytest.raises(ValueError,match="unreviewed original-source extraction root"):
+        m.verify(overrides=change(stage,"stages/final/build.py",build))
 
 def test_controller_must_reference_exact_cp312_runtime_and_build_sources():
     for name in ("box-control","root-control"):
