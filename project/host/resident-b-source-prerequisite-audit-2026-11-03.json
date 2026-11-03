@@ -1,0 +1,165 @@
+{
+  "schema": "zog-resident-b-source-prerequisites-v1",
+  "reviewed_boot_a_pr10_head": "e982c61df1a31e650dae2b40ba9d8758ece7913b",
+  "reviewed_host_install_boot_contract": "cf3ca569d6109ab75e5082dd4109698680155984",
+  "scope": "resident-b-only-no-boot-a-contract-change",
+  "source_status": "GAPS_RECORDED_NOT_READY",
+  "native_generation_id": null,
+  "installed_artifact_receipts": null,
+  "build_submitted": false,
+  "credential_delivery_enabled": false,
+  "certificate_dependency": false,
+  "production_source_selection_changed": false,
+  "requested_python_version": "3.12",
+  "authored_python_upstream_version": "3.15.0rc2",
+  "authored_python_source_package_path": "project/package/python/stages/final/upstream.py",
+  "python_build_checks": [
+    "MODULE__SSL_STATE=yes",
+    "MODULE__SQLITE3_STATE=yes",
+    "test_ssl",
+    "test_sqlite3"
+  ],
+  "source_manifest_observed": {
+    "python-final": [
+      "usr/bin/python3",
+      "usr/bin/python3.15",
+      "usr/lib/libpython3.15.so.1.0"
+    ],
+    "openssl-final": [
+      "usr/bin/openssl",
+      "usr/include/openssl/ssl.h",
+      "usr/lib/libssl.so",
+      "usr/lib/libcrypto.so",
+      "etc/ssl/openssl.cnf"
+    ],
+    "sqlite-final": [
+      "usr/bin/sqlite3",
+      "usr/include/sqlite3.h",
+      "usr/lib/libsqlite3.so"
+    ],
+    "dbus-final": [
+      "usr/bin/dbus-daemon",
+      "usr/bin/dbus-run-session",
+      "usr/lib/libdbus-1.so",
+      "usr/lib/systemd/system/dbus.service"
+    ],
+    "iproute2-final": [
+      "usr/sbin/ip",
+      "usr/sbin/ss",
+      "usr/sbin/tc"
+    ],
+    "systemd-final": [
+      "usr/lib/systemd/systemd-networkd",
+      "usr/lib/systemd/systemd-resolved",
+      "usr/lib/systemd/systemd-timesyncd"
+    ],
+    "host-install-final": [
+      "usr/lib/python3.15/site-packages/zog/host_install/__init__.py"
+    ],
+    "host-discover-final": [
+      "usr/lib/python3.15/site-packages/zog/host_discover/__init__.py"
+    ],
+    "host-identify-final": [
+      "usr/lib/python3.15/site-packages/zog/host_identify/__init__.py"
+    ],
+    "python-cryptography-final": [
+      "usr/lib/python3.15/site-packages/cryptography/__init__.py"
+    ],
+    "ca-certificates-final": [
+      "etc/ssl/cert.pem",
+      "etc/ssl/certs/ca-certificates.crt"
+    ]
+  },
+  "direct_runtime_dependencies_observed": {
+    "python-final": [
+      "libffi-final",
+      "expat-final",
+      "gdbm-final"
+    ],
+    "openssl-final": [],
+    "sqlite-final": [
+      "readline-final"
+    ],
+    "dbus-final": [],
+    "iproute2-final": [],
+    "systemd-final": [
+      "tzdata-final"
+    ],
+    "host-install-final": [],
+    "host-discover-final": [
+      "host-identify-final",
+      "host-install-final"
+    ],
+    "host-identify-final": [],
+    "python-cryptography-final": [],
+    "ca-certificates-final": []
+  },
+  "uncovered_stage_requirements": [
+    {
+      "code": "PYTHON_VERSION_DECISION",
+      "finding": "Python final selects 3.15.0rc2 while requested Resident B target is 3.12; requires explicit version/ABI decision, not an automatic downgrade",
+      "status": "HOLD"
+    },
+    {
+      "code": "PYTHON_SSL_SQLITE_STAGE_EDGES",
+      "finding": "Python final probes OpenSSL/SQLite and configure tests yet its declared build/runtime dependency lists do not name openssl-final or sqlite-final; accepted-base inherited bindings need exact provenance or explicit stage edges",
+      "status": "GAP"
+    },
+    {
+      "code": "PYTHON_SSL_SQLITE_INSTALLED",
+      "finding": "Python final required-output list has Python executable and libpython3.15 but does not require _ssl/_sqlite3 extension modules or an installed-runtime import/link/HTTPS/SQLite verification receipt",
+      "status": "GAP"
+    },
+    {
+      "code": "SYSTEMD_NETWORK_UTILITIES",
+      "finding": "networkd/resolved/timesyncd are required outputs, but networkctl and resolvectl are absent from systemd required-output manifest",
+      "status": "GAP"
+    },
+    {
+      "code": "CONTROL_CLI_OUTPUTS",
+      "finding": "host-install and host-discover package manifests only require 3.15 site-package __init__.py, not CLI executables, wheel RECORD/dependency closure or native selected-program receipts",
+      "status": "GAP"
+    },
+    {
+      "code": "ROOT_BOX_CONTROL_PACKAGES",
+      "finding": "No authored project/package/box-control or root-control stages in reviewed image-build tree; cannot infer controller source/install/runtime closure",
+      "status": "GAP"
+    },
+    {
+      "code": "CREDENTIAL_RUNTIME_EDGES",
+      "finding": "host-identify/host-install/python-cryptography direct runtime stage edges are empty despite source runtime requiring crypto/HTTP/module closure; imported dependencies need artifact-bounded ownership and link verification",
+      "status": "GAP"
+    },
+    {
+      "code": "DBUS_RUNTIME_IDENTITY",
+      "finding": "dbus.service and dbus-daemon are declared; runtime messagebus identity, machine-id and system bus readiness are not accepted by source manifests",
+      "status": "NATIVE_UNVERIFIED"
+    },
+    {
+      "code": "IPROUTE2_RUNTIME_LINKAGE",
+      "finding": "ip/ss/tc are source required outputs but executable ABI/library and networking runtime checks remain native-unverified",
+      "status": "NATIVE_UNVERIFIED"
+    },
+    {
+      "code": "OPENSSL_SQLITE_RUNTIME_LINKAGE",
+      "finding": "libssl, libcrypto and sqlite link-name outputs are required but exact SONAME/ABI, actual Python _ssl/_sqlite3 linking and executable receipt checks are not proved by these manifests",
+      "status": "NATIVE_UNVERIFIED"
+    },
+    {
+      "code": "RESIDENT_B_GENERATION",
+      "finding": "No authenticated successor generation inventory or installed owner/permissions/runtime witness; Boot A independently remains unapproved native",
+      "status": "NATIVE_UNVERIFIED"
+    }
+  ],
+  "admission": "NO_GO_RESIDENT_B",
+  "boot_a_audit_unchanged": true,
+  "required_future_evidence": [
+    "explicit Python 3.12 versus selected 3.15 source/ABI decision",
+    "reviewed source-stage dependency closure and accepted-base inheritance receipts",
+    "immutable installed rootfs inventory of all Resident B executables, Python extensions, controllers and CA paths",
+    "wheel/RECORD and runtime linker/SONAME dependency closure; Python ssl/sqlite import and HTTPS/SQLite WAL tests",
+    "DBus system messagebus identity and runtime service readiness with no immutable machine-id",
+    "root-control and box-control selected-program/runtime source and protected installation receipts",
+    "native host reboot/cold start/recovery and authentic generation/STATE bindings"
+  ]
+}
