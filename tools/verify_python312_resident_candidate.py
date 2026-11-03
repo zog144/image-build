@@ -2,6 +2,7 @@
 """Read-only version/ABI/source-contract verifier for held Python 3.12.16."""
 import ast
 import json
+import re
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -80,6 +81,12 @@ def check(*, package=None,sources=None,deps=None,outputs=None,build=None,
                  "selected strict build phase changed: "+phase)
         return steps[0][5]
     configure=script("configure"); test=script("test"); install=script("install")
+    _require(all(re.search(r"(?m)^test -s " + re.escape(header) + r"$", configure)
+             for header in ("/usr/include/openssl/ssl.h", "/usr/include/sqlite3.h"))
+             and all(re.search(r"(?m)^test -e " + re.escape(lib) + r"$", configure)
+                     for lib in ("/usr/lib/libssl.so", "/usr/lib/libcrypto.so",
+                                 "/usr/lib/libsqlite3.so")),
+             "selected-root OpenSSL/SQLite header or ELF paths modified")
     _require(all(term in configure for term in (
         "Python-3.12.16", "/usr/include/openssl/ssl.h", "/usr/include/sqlite3.h",
         "/usr/lib/libssl.so","/usr/lib/libsqlite3.so",
@@ -99,7 +106,9 @@ def check(*, package=None,sources=None,deps=None,outputs=None,build=None,
              and env.get("PKG_CONFIG_SYSROOT_DIR")=="/"
              and env.get("PYTHONNOUSERSITE")=="1" and env.get("PIP_NO_INDEX")=="1",
              "uncontrolled host pkg-config/python fallback")
-    _require("/usr/local" not in "\n".join((configure,test,install)) and
+    _require(not any(unsafe in "\\n".join((configure,test,install)) for unsafe in
+                     ("/host/", "/usr/local", "LD_PRELOAD=", "PKG_CONFIG_PATH="))
+             and
              "HOST_LIB" not in json.dumps(build) and
              "PYTHONPATH" not in env,
              "host library/header/module fallback allowed")
