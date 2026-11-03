@@ -7,6 +7,8 @@
               'usr/lib/systemd/systemd-resolved',
               'usr/lib/systemd/systemd-timesyncd',
               'usr/bin/systemctl',
+              'usr/bin/networkctl',
+              'usr/bin/resolvectl',
               'usr/bin/journalctl',
               'usr/bin/udevadm',
               'usr/lib/systemd/system/getty@.service',
