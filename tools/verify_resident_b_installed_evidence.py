@@ -295,7 +295,7 @@ def verify_external_signatures(receipt,protected_policy):
             signature=base64.b64decode(witness["signature"],validate=True)
             Ed25519PublicKey.from_public_bytes(pub).verify(signature,domain+canonical)
         except (ValueError,InvalidSignature,base64.binascii.Error) as exc:
-            reject("unsigned or substituted installed-generation evidence: "+role)
+            reject("signature failed for unsigned or substituted installed-generation evidence: "+role)
     return "PROTECTED_KEYS_SIGNATURES_MATCH_EXTERNAL_POLICY"
 
 def inspect(rootfs,state_mount,receipt,protected_policy,*,synthetic=False):
