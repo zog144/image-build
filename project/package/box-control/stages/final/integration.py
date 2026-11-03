@@ -7,7 +7,7 @@
   "source_pyproject": "box-control/pyproject.toml",
   "runtime_python": "python-resident312-final",
   "service_mode": "one-shot-project-evaluator",
-  "unit_installed": false,
+  "unit_installed": False,
   "runtime_uid": "selected non-root project owner, authorized by host-install",
   "working_directory": "operator-selected owned project under that UID HOME; no shared /state fallback",
   "root_control_socket": "/run/zog/root-control.sock",
@@ -19,8 +19,8 @@
     "no production Host private state in image",
     "independently authorized project state and workspace source"
   ],
-  "source_grant": false,
-  "native_accepted": false,
-  "rights_approved": false,
-  "auto_enable": false
+  "source_grant": False,
+  "native_accepted": False,
+  "rights_approved": False,
+  "auto_enable": False
 }
