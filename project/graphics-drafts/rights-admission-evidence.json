@@ -30,10 +30,12 @@
       "outstanding": [
         "compiled/bundled BLAKE3 linkage",
         "generated-code license origins",
-        "install-time notices"
+        "install-time notices",
+        "Source declares explicit /usr/bin/llvm-tblgen production; native binary/origin/ELF closure and generated-table attribution unverified"
       ],
       "expected_output_paths": [
         "usr/bin/llvm-config",
+        "usr/bin/llvm-tblgen",
         "usr/lib/libLLVM.so",
         "usr/share/licenses/llvm/LICENSE.TXT",
         "usr/share/licenses/llvm/BLAKE3-LICENSE"

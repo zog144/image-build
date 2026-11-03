@@ -17,7 +17,7 @@
       "-o",
       "pipefail",
       "-c",
-      "cmake --build build-llvm --parallel 2"
+      "cmake --build build-llvm --target llvm-tblgen --parallel 2\ncmake --build build-llvm --parallel 2"
     ]
   ],
   "test": [
@@ -27,7 +27,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -x build-llvm/bin/llvm-config\nbuild-llvm/bin/llvm-config --version | grep -Fx 21.1.6\nbuild-llvm/bin/llvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86\ntest \"$(build-llvm/bin/llvm-config --has-rtti)\" = YES\nbuild-llvm/bin/llvm-config --shared-mode | grep -Fx shared\n# The shared LLVM JIT linker ABI must also be checked after install."
+      "test -x build-llvm/bin/llvm-tblgen\ntest -x build-llvm/bin/llvm-config\nbuild-llvm/bin/llvm-config --version | grep -Fx 21.1.6\nbuild-llvm/bin/llvm-config --targets-built | tr ' ' '\\n' | grep -Fx X86\ntest \"$(build-llvm/bin/llvm-config --has-rtti)\" = YES\nbuild-llvm/bin/llvm-config --shared-mode | grep -Fx shared\n# The shared LLVM JIT linker ABI must also be checked after install."
     ]
   ],
   "install": [
@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" cmake --install build-llvm --prefix /usr\ntest -x \"$DESTDIR/usr/bin/llvm-config\"\n# Verify libLLVM runtime output and its ELF closure before native admission.\ninstall -Dm644 \"upstream/llvm-21.1.6.src/LICENSE.TXT\" \"$DESTDIR/usr/share/licenses/llvm/LICENSE.TXT\"\ninstall -Dm644 \"upstream/llvm-21.1.6.src/lib/Support/BLAKE3/LICENSE\" \"$DESTDIR/usr/share/licenses/llvm/BLAKE3-LICENSE\""
+      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" cmake --install build-llvm --prefix /usr\ntest -x build-llvm/bin/llvm-tblgen\ninstall -Dm755 build-llvm/bin/llvm-tblgen \"$DESTDIR/usr/bin/llvm-tblgen\"\ntest -x \"$DESTDIR/usr/bin/llvm-tblgen\"\ntest -x \"$DESTDIR/usr/bin/llvm-config\"\n# Verify libLLVM runtime output and its ELF closure before native admission.\ninstall -Dm644 \"upstream/llvm-21.1.6.src/LICENSE.TXT\" \"$DESTDIR/usr/share/licenses/llvm/LICENSE.TXT\"\ninstall -Dm644 \"upstream/llvm-21.1.6.src/lib/Support/BLAKE3/LICENSE\" \"$DESTDIR/usr/share/licenses/llvm/BLAKE3-LICENSE\""
     ]
   ]
 }
