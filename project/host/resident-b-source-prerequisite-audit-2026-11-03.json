@@ -51,13 +51,19 @@
     "systemd-final": [
       "usr/lib/systemd/systemd-networkd",
       "usr/lib/systemd/systemd-resolved",
-      "usr/lib/systemd/systemd-timesyncd"
+      "usr/lib/systemd/systemd-timesyncd",
+      "usr/bin/networkctl",
+      "usr/bin/resolvectl"
     ],
     "host-install-final": [
-      "usr/lib/python3.15/site-packages/zog/host_install/__init__.py"
+      "usr/lib/python3.15/site-packages/zog/host_install/__init__.py",
+      "usr/bin/host-install"
     ],
     "host-discover-final": [
-      "usr/lib/python3.15/site-packages/zog/host_discover/__init__.py"
+      "usr/lib/python3.15/site-packages/zog/host_discover/__init__.py",
+      "usr/bin/host-discover",
+      "usr/bin/host-discover-recovery",
+      "usr/bin/host-discover-supervisor"
     ],
     "host-identify-final": [
       "usr/lib/python3.15/site-packages/zog/host_identify/__init__.py"
@@ -112,12 +118,12 @@
     },
     {
       "code": "SYSTEMD_NETWORK_UTILITIES",
-      "finding": "networkd/resolved/timesyncd are required outputs, but networkctl and resolvectl are absent from systemd required-output manifest",
+      "finding": "Required-output source contract now includes networkctl and resolvectl, but actual installed bytes, linker closure and native networkd/resolved operation remain unverified",
       "status": "GAP"
     },
     {
       "code": "CONTROL_CLI_OUTPUTS",
-      "finding": "host-install and host-discover package manifests only require 3.15 site-package __init__.py, not CLI executables, wheel RECORD/dependency closure or native selected-program receipts",
+      "finding": "Required-output source contract now includes host-install and all three host-discover scripts, but wheel RECORD, interpreter binding, ABI/dependency closure and executable native invocation remain unverified",
       "status": "GAP"
     },
     {
