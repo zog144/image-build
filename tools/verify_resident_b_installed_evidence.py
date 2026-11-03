@@ -280,3 +280,52 @@ def verify(root, receipt, trusted_public_key, *, expected_generation, expected_s
     # SOURCE/RECEIPT consistency only. No native authority or acceptance.
     return {"status":"EVIDENCE_COHERENT_UNACCEPTED","accepted_generation":None,
             "native_install_authorized":False,"service_activation_authorized":False}
+
+
+def verify_protected_mounts(rootfs, state_mount, *, protected_context):
+    """Additional native-only check; policy must be independently host-install-authenticated.
+
+    This helper does not authenticate a caller's protected_context or issue
+    rootfs acceptance, but prevents using signed-looking mount claims as an
+    equivalent of actual kernel mount/device/ownership observations.
+    """
+    _keys(protected_context,("schema","rootfs_device","state_device",
+                             "state_volume_id","rootfs_generation_id",
+                             "socket_gid"),"protected native mount context")
+    if protected_context["schema"]!="zog-host-install-resident-b-native-mount-v1":
+        deny("unreviewed protected native mount schema")
+    for field in ("rootfs_device","state_device","socket_gid"):
+        if type(protected_context[field]) is not int or protected_context[field]<=0:
+            deny("missing host-install selected device or socket numeric group")
+    if (type(protected_context["rootfs_generation_id"]) is not str or
+        not SHA.fullmatch(protected_context["rootfs_generation_id"]) or
+        type(protected_context["state_volume_id"]) is not str or
+        len(protected_context["state_volume_id"])<16):
+        deny("native mount does not bind accepted generation and STATE")
+    rootfs=Path(rootfs)
+    state_mount=Path(state_mount)
+    if (rootfs.is_symlink() or not rootfs.is_mount() or
+        state_mount.is_symlink() or not state_mount.is_mount()):
+        deny("rootfs and STATE must both be actual distinct mounted volumes")
+    rstat=rootfs.stat()
+    sstat=state_mount.stat()
+    if (rstat.st_dev!=protected_context["rootfs_device"] or
+        sstat.st_dev!=protected_context["state_device"] or
+        rstat.st_dev==sstat.st_dev):
+        deny("selected rootfs/STATE device identity does not match protected owner")
+    if (sstat.st_uid!=0 or sstat.st_gid!=0 or
+        stat.S_IMODE(sstat.st_mode) not in (0o700,0o750)):
+        deny("STATE mount must have protected root ownership and mode")
+    source=json.loads(SOURCE_EXPECTED.read_text())
+    python=ast.literal_eval((SOURCE_EXPECTED.parents[2]/
+        "project/package/python-resident312/stages/final/produce-manifest.py").read_text())
+    for name in set(sum(source["expected_installed_outputs"].values(),[]))|set(python["required"]):
+        installed,info=_file(rootfs,name)
+        if info.st_uid!=0 or info.st_gid!=0:
+            deny("native installed immutable rootfs output not root-owned")
+    # A source-installed unit is not authorization to create an activation symlink.
+    if (rootfs/"etc/systemd/system/multi-user.target.wants/zog-root-control.service").exists():
+        deny("root-control service was enabled without protected installer action")
+    return {"physical_mounts":"MATCH_INDEPENDENT_PROTECTED_CONTEXT",
+            "rootfs_generation_accepted":None,
+            "controller_activation_authorized":False}
