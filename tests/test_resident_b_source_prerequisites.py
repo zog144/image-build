@@ -90,14 +90,24 @@ def test_missing_source_stage_outputs_cannot_pass_inventory(stage,path):
 
 
 @pytest.mark.parametrize("stage,path",[
-    ("python-final","usr/bin/python3.12"),
     ("systemd-final","usr/bin/networkctl"),
+    ("systemd-final","usr/bin/resolvectl"),
     ("host-install-final","usr/bin/host-install"),
     ("host-discover-final","usr/bin/host-discover"),
+    ("host-discover-final","usr/bin/host-discover-recovery"),
+    ("host-discover-final","usr/bin/host-discover-supervisor"),
 ])
-def test_newly_added_required_outputs_must_trigger_exact_fresh_review(stage,path):
+def test_selected_controller_and_network_cli_outputs_cannot_disappear(stage,path):
     source=copies()
-    source[stage]["required"].append(path)
+    assert path in source[stage]["required"]
+    source[stage]["required"].remove(path)
+    with pytest.raises(ValueError,match="observed source output missing|required Resident B CLI"):
+        audit.inspect(RECORD,stages=source)
+
+
+def test_existing_python315_must_not_be_silently_replaced_with_312():
+    source=copies()
+    source["python-final"]["required"].append("usr/bin/python3.12")
     with pytest.raises(ValueError,match="unreviewed Resident B source output"):
         audit.inspect(RECORD,stages=source)
 
