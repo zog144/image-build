@@ -52,7 +52,7 @@ def test_host_python_package_origin_or_unpinned_build_tool_cannot_pass(key):
     build["configure"][0][-1]=build["configure"][0][-1].replace(
         "spec.origin.startswith('/usr/lib/python3.12/site-packages/')",
         "spec.origin.startswith('/usr/local/lib/python3.12/site-packages/')")
-    with pytest.raises(ValueError,match="Host Python fallback"):
+    with pytest.raises(ValueError,match="selected source tool/module origin unverified|Host Python fallback"):
         m.verify(overrides=change(stage,"stages/final/build.py",build))
     build=load(stage,"stages/final/build.py")
     build["environment"]["PATH"]="/usr/local/bin:/usr/bin"
