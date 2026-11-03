@@ -17,7 +17,7 @@ SOURCES={
  "pyproject_sha256":"a099487955e9b42e90aed4103cb32e76f7dae0535692534c25b7be2f09a4eb47",
  "license":"aaf3d5919ea7f2720b7649d4f1e4fd28a54c58425a45dfd736d040a56480578f",
  "notice":"b6636714adafd8c7c8e9ab1db2d07e3c7efe3b312fa10268bc393b83e1db7036",
- "runtime":{"python-resident312-final","image-build-python-final","dbus-next-final"},
+ "runtime":{"python-resident312-final","resident312-image-build-final","resident312-dbus-next-final"},
  "required":{"usr/bin/box-control","usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/METADATA","usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/RECORD","usr/lib/python3.12/site-packages/zog/box_control/__init__.py",
              "usr/share/licenses/box-control/LICENSE",
              "usr/share/licenses/box-control/THIRD-PARTY-NOTICES.md"},
@@ -31,7 +31,7 @@ SOURCES={
  "pyproject_sha256":"f42d1b9458536b4b20aef183d438267b0790bb8fc9238afcc10b9a1bc62b1c96",
  "license":"421a457ded4d2bf4b853c5ce211f74797292b2ef2f82bc7245304956fb7cf68f",
  "notice":"b3aa6c652c70db0faecdd42d35723c62bc61282dc53d73f637f26e",
- "runtime":{"python-resident312-final","image-build-python-final","dbus-next-final",
+ "runtime":{"python-resident312-final","resident312-image-build-final","resident312-dbus-next-final",
             "box-control-final","systemd-final"},
  "required":{"usr/bin/root-control","usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/METADATA","usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/RECORD","usr/lib/python3.12/site-packages/zog/root_control/__init__.py",
             "usr/share/licenses/root-control/LICENSE","usr/share/licenses/root-control/THIRD-PARTY-NOTICES.md",
@@ -39,9 +39,10 @@ SOURCES={
             "usr/lib/systemd/system/zog-root-control.service"},
 },
 }
-BUILD_TOOLS={"python-resident312-final","setuptools-final","packaging-final","installer-final","wheel-final"}
-UNRESOLVED={"setuptools-final","packaging-final","installer-final","wheel-final",
-            "image-build-python-final","dbus-next-final"}
+BUILD_TOOLS={"python-resident312-final","resident312-setuptools-final","resident312-packaging-final","resident312-installer-final","resident312-wheel-final"}
+UNACCEPTED={"resident312-setuptools-final","resident312-packaging-final",
+            "resident312-installer-final","resident312-wheel-final","resident312-flit-core-final",
+            "resident312-image-build-final","resident312-dbus-next-final"}
 def data(path):
     return ast.literal_eval(path.read_text())
 def deny(message):
@@ -131,8 +132,13 @@ def verify(*, records=None, overrides=None):
             if ("[Install]" in unit or integration.get("unit_auto_enabled") is not False or
                 integration.get("service_mode")!="privileged systemd daemon"):
                 deny("root-control service unexpectedly auto-enabled")
+    from importlib.util import spec_from_file_location, module_from_spec
+    spec=spec_from_file_location("resident312_sources",ROOT/"tools/verify_resident312_transitive_sources.py")
+    dep_module=module_from_spec(spec);spec.loader.exec_module(dep_module)
+    dep_module.verify()
     return {"source_stages":"PINNED_AND_HELD","archive_member_provenance":"EXACT_SHA256",
-            "unresolved_transitive_stage_producers":sorted(UNRESOLVED),
+            "unresolved_transitive_stage_producers":[],
+            "native_unaccepted_transitive_stage_producers":sorted(UNACCEPTED),
             "native_generation":None,"authorization":"NO_GO"}
 
 if __name__=="__main__":
