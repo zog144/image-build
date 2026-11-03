@@ -1,0 +1,1 @@
+{'trees': ['usr'], 'required': ["usr/bin/root-control","usr/lib/python3.12/site-packages/zog/root_control/__init__.py","usr/share/licenses/root-control/LICENSE","usr/share/licenses/root-control/THIRD-PARTY-NOTICES.md","usr/lib/systemd/system/zog-root-control.service","usr/lib/python3.12/site-packages/zog/root_control/native/journal-wait.c"]}
