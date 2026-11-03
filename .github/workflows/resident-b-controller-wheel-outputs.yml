@@ -29,6 +29,11 @@ jobs:
         run: |
           python tools/verify_resident_b_controller_source_stages.py
           python tools/verify_resident_b_source_prerequisites.py
+      - name: Verify source-pinned Python 3.12 tool/runtime graph (no Host fallback)
+        run: |
+          python tools/verify_resident312_transitive_sources.py
+          python -m pip install 'pytest>=8,<10'
+          python -m pytest -q tests/test_resident312_transitive_source_closure.py
       - name: Source-only required wheel output and substitution regressions
         run: |
           python -m pip install 'pytest>=8,<10'
@@ -36,4 +41,4 @@ jobs:
           python tools/verify_boot_a_source_prerequisites.py
       - name: No resident build or service activation
         if: always()
-        run: echo 'No source/native dependency closure, compiler submission, signed installation, private STATE or controller daemon.' >> "$GITHUB_STEP_SUMMARY"
+        run: echo 'Pinned source-stage graph only; no authenticated native dependency closure, compiler submission, signed installation, private STATE or controller daemon.' >> "$GITHUB_STEP_SUMMARY"
