@@ -1,0 +1,18 @@
+[Unit]
+Description=Zog privileged root controller (protected installer activation only)
+After=systemd-journald.service dbus.service
+RequiresMountsFor=/state
+ConditionPathIsMountPoint=/state
+ConditionPathExists=/state/zog/root-control/controller.env
+
+[Service]
+Type=exec
+User=root
+Group=root
+UMask=0077
+EnvironmentFile=/state/zog/root-control/controller.env
+ExecStart=/usr/bin/root-control
+Restart=no
+RuntimeDirectory=zog
+RuntimeDirectoryMode=0750
+# No [Install] section; activation and trusted GID/STATE are external.
