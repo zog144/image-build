@@ -208,7 +208,17 @@ def file_bytes(root,receipt,*,synthetic=False):
         if name in ("usr/bin/box-control","usr/bin/root-control"):
             if meta["kind"]!="script" or not p.read_bytes().startswith(b"#!/usr/bin/python3.12"):
                 reject("controller console entry point selects Host Python")
-            if not (meta["mode"] & 0o111):reject("controller entry point not executable")
+            if meta["mode"]!=0o755:reject("controller entry point permissions changed")
+        if name=="usr/lib/systemd/system/zog-root-control.service":
+            if meta["mode"]!=0o644 or meta["kind"]!="data":
+                reject("privileged root service file permissions changed")
+            selected=literal(PKG/"root-control/stages/final/build.py")["install"][0][-1]
+            sentinel="<<'ZOG_ROOT_CONTROL_UNIT'\\n"
+            if selected.count(sentinel)!=1:
+                reject("root-control service source cannot be authenticated")
+            original=selected.split(sentinel,1)[1].split("\\nZOG_ROOT_CONTROL_UNIT",1)
+            if len(original)!=2 or p.read_bytes()!=(original[0]+"\\n").encode():
+                reject("installed privileged root service not equal to approved source")
     return "INSTALLED_BYTES_MATCH_RECEIPT_NOT_ACCEPTED"
 
 def wheel_record(root,receipt):
@@ -255,7 +265,7 @@ def wheel_record(root,receipt):
             if encoded!="sha256="+digest or int(sz)!=len(data):
                 reject("wheel RECORD byte hash or size mismatch")
         if not {str(prefix/"METADATA"),str(prefix/"RECORD"),
-                str(prefix/"entry_points.txt"),
+                str(prefix/"entry_points.txt"),"usr/bin/"+name,
                 f"usr/lib/python3.12/site-packages/zog/{name.replace('-','_')}/__init__.py"}.issubset(listed):
             reject("wheel RECORD missing installed namespace/module metadata")
     return "WHEEL_RECORD_BYTES_MATCH_NOT_ACCEPTED"
