@@ -1,0 +1,37 @@
+name: Resident B source prerequisite inventory review
+on:
+  push:
+    branches: [review/resident-b-source-prerequisites-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  resident-b-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12','3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Read-only authored source inventory (never submit a build)
+        run: python tools/verify_resident_b_source_prerequisites.py
+      - name: Negative source, path, ABI and native-promotion regressions
+        run: |
+          python -m pip install 'pytest>=8,<10'
+          python -m pytest -q -rs tests/test_resident_b_source_prerequisites.py
+      - name: Preserve independent Boot A audit and review gates
+        run: |
+          python tools/verify_boot_a_source_prerequisites.py
+          test "$(git diff -- project/host/boot-a-source-prerequisite-audit.json tools/verify_boot_a_source_prerequisites.py tests/test_boot_a_source_prerequisite_audit.py | wc -c)" -eq 0
+      - name: Native acceptance withheld
+        if: always()
+        run: |
+          echo 'Resident B source inventory only. Python 3.12 request vs authored 3.15, missing installed SSL/SQLite and controller outputs remain HOLD.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No submitted image-build generation, accepted rootfs, native boot, installed credential, STATE or certificate authorization.' >> "$GITHUB_STEP_SUMMARY"
