@@ -7,9 +7,9 @@
   "source_pyproject": "pyproject.toml",
   "runtime_python": "python-resident312-final",
   "service_mode": "privileged systemd daemon",
-  "unit_installed": true,
+  "unit_installed": True,
   "unit_path": "usr/lib/systemd/system/zog-root-control.service",
-  "unit_auto_enabled": false,
+  "unit_auto_enabled": False,
   "runtime_uid": "root",
   "runtime_gid": "root",
   "socket_path": "/run/zog/root-control.sock",
@@ -23,8 +23,8 @@
     "compiled wheel RECORD and root-service installed bytes",
     "native systemd journal and separate nonroot caller tests"
   ],
-  "source_grant": false,
-  "native_accepted": false,
-  "rights_approved": false,
-  "auto_enable": false
+  "source_grant": False,
+  "native_accepted": False,
+  "rights_approved": False,
+  "auto_enable": False
 }
