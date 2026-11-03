@@ -1,0 +1,53 @@
+{
+  "schema": "zog-resident-b-combined-source-review-v1",
+  "status": "SOURCE_ONLY_NATIVE_NOT_READY",
+  "pr14_source_head": "e64e682f2fb2df8f590737683b99188c16fc51c0",
+  "pr15_original_source_head": "bc5a93b18fd8ce39f3e72cd67d05dc0534f98b88",
+  "reconciliation_strategy": "non-destructive-two-parent-merge",
+  "py312_candidate": "python-resident312-final",
+  "source_tool_stages": [
+    "resident312-flit-core-final",
+    "resident312-installer-final",
+    "resident312-packaging-final",
+    "resident312-wheel-final",
+    "resident312-setuptools-final",
+    "resident312-dbus-next-final",
+    "resident312-image-build-final"
+  ],
+  "controllers": [
+    "box-control-final",
+    "root-control-final"
+  ],
+  "expected_installed_outputs": {
+    "box-control": [
+      "usr/bin/box-control",
+      "usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/METADATA",
+      "usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/RECORD",
+      "usr/lib/python3.12/site-packages/zog/box_control/__init__.py",
+      "usr/share/licenses/box-control/LICENSE",
+      "usr/share/licenses/box-control/THIRD-PARTY-NOTICES.md"
+    ],
+    "root-control": [
+      "usr/bin/root-control",
+      "usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/METADATA",
+      "usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/RECORD",
+      "usr/lib/python3.12/site-packages/zog/root_control/__init__.py",
+      "usr/share/licenses/root-control/LICENSE",
+      "usr/share/licenses/root-control/THIRD-PARTY-NOTICES.md",
+      "usr/lib/systemd/system/zog-root-control.service",
+      "usr/lib/python3.12/site-packages/zog/root_control/native/journal-wait.c"
+    ]
+  },
+  "required_native_holds": [
+    "No independently authenticated selected prerequisite generation IDs",
+    "No native wheel RECORD/shebang/module byte or OpenSSL/SQLite loader proof",
+    "No independently provisioned privileged socket GID or verified STATE identity",
+    "No root-control service activation, no box-control shared HOME/service",
+    "No separately authorized redistribution rights, including setuptools bundled dependencies"
+  ],
+  "trusted_native_witness": null,
+  "accepted_generation": null,
+  "compiler_submission_allowed": false,
+  "service_activation_allowed": false,
+  "redistribution_authorized": false
+}

@@ -1,0 +1,76 @@
+name: Resident B controller installation security review (source-only)
+on:
+  push:
+    branches: [review/resident-b-controller-installation-boundary-20261103]
+  pull_request:
+    paths:
+      - 'tools/verify_resident_b_controller_install_security.py'
+      - 'tests/test_resident_b_controller_install_security.py'
+      - 'tools/verify_resident_b_installed_evidence.py'
+      - 'tests/test_resident_b_installed_evidence.py'
+      - '.github/workflows/resident-b-controller-install-security.yml'
+permissions:
+  contents: read
+jobs:
+  exact-source-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12','3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: zog144/box-control
+          ref: b513a9bde79135c7569adc7cadb4d45a163c7841
+          path: companions/box-control
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: zog144/root-control
+          ref: 0c217182d25f05b9cc0f7528ee614bb5669370d3
+          path: companions/root-control
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Bind both independently reviewed source-history inputs
+        run: |
+          git merge-base --is-ancestor e64e682f2fb2df8f590737683b99188c16fc51c0 HEAD
+          git merge-base --is-ancestor bc5a93b18fd8ce39f3e72cd67d05dc0534f98b88 HEAD
+          python tools/verify_resident312_transitive_sources.py
+          python tools/verify_resident_b_combined_source.py
+      - name: Verify exact selected upstream source and service contract without importing controllers
+        run: |
+          test "$(git -C companions/box-control rev-parse HEAD)" = b513a9bde79135c7569adc7cadb4d45a163c7841
+          test "$(git -C companions/root-control rev-parse HEAD)" = 0c217182d25f05b9cc0f7528ee614bb5669370d3
+          python tools/verify_resident_b_controller_install_security.py \
+            --root-daemon companions/root-control/src/zog/root_control/daemon.py \
+            --box-cli companions/box-control/box-control/src/zog/box_control/cli.py \
+            --root-pyproject companions/root-control/pyproject.toml \
+            --box-pyproject companions/box-control/box-control/pyproject.toml
+      - name: Exercise positive and adversarial root/box source security contracts
+        env:
+          ZOG_REVIEW_ROOT_DAEMON: ${{ github.workspace }}/companions/root-control/src/zog/root_control/daemon.py
+          ZOG_REVIEW_BOX_CLI: ${{ github.workspace }}/companions/box-control/box-control/src/zog/box_control/cli.py
+        run: |
+          python -m pip install 'pytest>=8,<10' 'cryptography>=44,<47'
+          python -m pytest -q -rs \
+            tests/test_resident_b_controller_install_security.py \
+            tests/test_resident_b_controller_wheel_outputs.py \
+            tests/test_resident_b_controller_sources_independent.py \
+            tests/test_resident_b_controller_stage_contracts.py \
+            tests/test_resident312_transitive_source_closure.py \
+            tests/test_resident_b_combined_source_reconciliation.py \
+            tests/test_resident_b_installed_evidence.py
+          python tools/verify_resident_b_source_prerequisites.py
+          python tools/verify_boot_a_source_prerequisites.py
+      - name: Never confer resident installation or root service authority
+        if: always()
+        run: |
+          echo 'Source-only root/box service and daemon contract. No installed image, verified STATE, authorized socket GID, service activation, real group or Host.' >> "$GITHUB_STEP_SUMMARY"
