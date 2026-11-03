@@ -51,13 +51,19 @@
     "systemd-final": [
       "usr/lib/systemd/systemd-networkd",
       "usr/lib/systemd/systemd-resolved",
-      "usr/lib/systemd/systemd-timesyncd"
+      "usr/lib/systemd/systemd-timesyncd",
+      "usr/bin/networkctl",
+      "usr/bin/resolvectl"
     ],
     "host-install-final": [
-      "usr/lib/python3.15/site-packages/zog/host_install/__init__.py"
+      "usr/lib/python3.15/site-packages/zog/host_install/__init__.py",
+      "usr/bin/host-install"
     ],
     "host-discover-final": [
-      "usr/lib/python3.15/site-packages/zog/host_discover/__init__.py"
+      "usr/lib/python3.15/site-packages/zog/host_discover/__init__.py",
+      "usr/bin/host-discover",
+      "usr/bin/host-discover-recovery",
+      "usr/bin/host-discover-supervisor"
     ],
     "host-identify-final": [
       "usr/lib/python3.15/site-packages/zog/host_identify/__init__.py"
@@ -112,13 +118,13 @@
     },
     {
       "code": "SYSTEMD_NETWORK_UTILITIES",
-      "finding": "networkd/resolved/timesyncd are required outputs, but networkctl and resolvectl are absent from systemd required-output manifest",
-      "status": "GAP"
+      "finding": "systemd final now explicitly requires installed networkctl/resolvectl beside daemon binaries. Native installed path, ELF dependency closure and network management evidence are still unverified.",
+      "status": "SOURCE_OUTPUT_DECLARED_NATIVE_UNVERIFIED"
     },
     {
       "code": "CONTROL_CLI_OUTPUTS",
-      "finding": "host-install and host-discover package manifests only require 3.15 site-package __init__.py, not CLI executables, wheel RECORD/dependency closure or native selected-program receipts",
-      "status": "GAP"
+      "finding": "Pinned host-install and host-discover pyproject scripts are now required manifest outputs, including recovery/supervisor entrypoints. Wheel RECORD, shebang/python ABI, installed runtime and authorized host controller execution remain unverified.",
+      "status": "SOURCE_OUTPUT_DECLARED_NATIVE_UNVERIFIED"
     },
     {
       "code": "ROOT_BOX_CONTROL_PACKAGES",
@@ -154,7 +160,7 @@
   "admission": "NO_GO_RESIDENT_B",
   "boot_a_audit_unchanged": true,
   "required_future_evidence": [
-    "explicit Python 3.12 versus selected 3.15 source/ABI decision",
+    "Separately source-pinned Python 3.12.16 candidate with exact ABI; incumbent Python 3.15 selection unchanged and native compatibility unverified",
     "reviewed source-stage dependency closure and accepted-base inheritance receipts",
     "immutable installed rootfs inventory of all Resident B executables, Python extensions, controllers and CA paths",
     "wheel/RECORD and runtime linker/SONAME dependency closure; Python ssl/sqlite import and HTTPS/SQLite WAL tests",
