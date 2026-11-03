@@ -75,11 +75,15 @@ jobs:
             tests/test_host_boot_packages.py \
             tests/test_systemd_core.py \
             tests/test_resident_boot_source.py \
+            tests/test_resident_b_source_prerequisites.py \
             tests/test_resident_boot_targeted.py \
             tests/test_targeted_publication_binding.py \
             tests/test_staging_durability.py \
             tests/test_worker_identity.py \
             tests/test_toolchain_contract.py
+
+      - name: Refuse Resident B source-to-native admission while source gaps remain
+        run: python tools/verify_resident_b_source_prerequisites.py
 
       - name: Validate exact pyelftools source and supplementary notice acquisition
         run: |
