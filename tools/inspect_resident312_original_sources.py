@@ -20,7 +20,7 @@ def observe(key,opener=urllib.request.urlopen):
     src=ast.literal_eval((stage/"sources.py").read_text())[0]
     expected=ast.literal_eval((ROOT/"project/package"/pkg/"package.py").read_text())
     req=urllib.request.Request(src["url"],headers={
-        "User-Agent":"Zog-ResidentB-source-inspection/1","Accept":"application/octet-stream"})
+        "User-Agent":"Zog-ResidentB-source-inspection/1","Accept":("application/vnd.github+json" if src["url"].startswith("https://api.github.com/") else "application/octet-stream")})
     try:
         with opener(req,timeout=50) as f:
             raw=f.read(LIMIT+1)
