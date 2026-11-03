@@ -230,10 +230,23 @@ def wheel_record(root,receipt):
         info=root / prefix / "METADATA"
         record=root / prefix / "RECORD"
         ep=root / prefix / "entry_points.txt"
-        if not ep.is_file() or ep.is_symlink():reject("missing/forged console entry metadata")
+        wheel=root / prefix / "WHEEL"
+        if (not ep.is_file() or ep.is_symlink() or
+            not wheel.is_file() or wheel.is_symlink()):
+            reject("missing/forged console entry or WHEEL metadata")
+        wheel_info=BytesParser().parsebytes(wheel.read_bytes())
+        if ("py3-none-any" not in wheel_info.get_all("Tag",[]) or
+            wheel_info.get("Root-Is-Purelib","").lower()!="true"):
+            reject("unexpected controller wheel ABI/tag")
         metadata=BytesParser().parsebytes(info.read_bytes())
         if metadata.get("Name","").lower().replace("_","-")!=name or metadata.get("Version")!="0.1.0":
             reject("wheel Name/Version differs from pinned source")
+        expected_requires=["image-build==0.2.0.dev5","dbus-next==0.2.3"]
+        if name=="root-control":
+            expected_requires.append("box-control==0.1.0")
+        observed=metadata.get_all("Requires-Dist",[]) or []
+        if sorted(x.lower().replace(" ","") for x in observed)!=sorted(expected_requires):
+            reject("installed Requires-Dist is not the selected controller source graph")
         cfg=configparser.ConfigParser(interpolation=None)
         cfg.read_string(ep.read_text())
         if set(cfg.sections())!={"console_scripts"} or dict(cfg.items("console_scripts"))!={name:entry}:
@@ -264,7 +277,7 @@ def wheel_record(root,receipt):
             digest=base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
             if encoded!="sha256="+digest or int(sz)!=len(data):
                 reject("wheel RECORD byte hash or size mismatch")
-        if not {str(prefix/"METADATA"),str(prefix/"RECORD"),
+        if not {str(prefix/"METADATA"),str(prefix/"RECORD"),str(prefix/"WHEEL"),
                 str(prefix/"entry_points.txt"),"usr/bin/"+name,
                 f"usr/lib/python3.12/site-packages/zog/{name.replace('-','_')}/__init__.py"}.issubset(listed):
             reject("wheel RECORD missing installed namespace/module metadata")
