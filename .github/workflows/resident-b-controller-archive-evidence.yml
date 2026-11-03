@@ -1,0 +1,37 @@
+name: Resident B exact controller source archives (source-only)
+on:
+  push:
+    branches: [review/resident-b-controller-packages-20261103]
+permissions:
+  contents: read
+jobs:
+  source-archive-identities:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify exact immutable tarball hashes without building or executing controllers
+        run: |
+          python - <<'PY'
+          import hashlib,urllib.request,io,tarfile,json,subprocess
+          for repository, revision in (
+              ("box-control","b513a9bde79135c7569adc7cadb4d45a163c7841"),
+              ("root-control","0c217182d25f05b9cc0f7528ee614bb5669370d3"),
+          ):
+              url=f"https://api.github.com/repos/zog144/{repository}/tarball/{revision}"
+              request=urllib.request.Request(url,headers={"User-Agent":"zog-source-stage-only/1", "Accept":"application/vnd.github+json"})
+              with urllib.request.urlopen(request,timeout=45) as response:
+                  content=response.read(32*1024*1024+1)
+              assert len(content)<32*1024*1024 and len(content)>1000
+              with tarfile.open(fileobj=io.BytesIO(content),mode="r:gz") as archive:
+                  members=archive.getmembers()
+                  roots={m.name.split("/")[0] for m in members}
+                  assert len(roots)==1 and next(iter(roots)).startswith("zog144-"+repository+"-")
+                  assert all(not m.name.startswith("/") and ".." not in m.name.split("/") for m in members)
+              print("SOURCE_ARCHIVE",json.dumps({"repository":repository,"revision":revision,
+                     "sha256":hashlib.sha256(content).hexdigest(),"length":len(content),
+                     "directory":next(iter(roots))}),flush=True)
+          PY
+      - run: echo 'Hash-only source recipe research. No native build or accepted image.' >> "$GITHUB_STEP_SUMMARY"
