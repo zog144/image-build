@@ -31,7 +31,7 @@ REQUIRED_ROOT_FIELDS = frozenset((
 ))
 PACKAGE_NAMES = frozenset((
     "python","openssl","sqlite","ca-certificates","dbus",
-    "iproute2","systemd","host-install","host-discover","host-identify",
+    "iproute2","systemd","e2fsprogs","host-install","host-discover","host-identify",
 ))
 DEFERRALS = frozenset(("box-control","root-control"))
 MISSING_RESIDENT_B_OUTPUTS = frozenset((
