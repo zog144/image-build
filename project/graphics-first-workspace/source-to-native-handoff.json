@@ -44,7 +44,6 @@
       "libXt",
       "xcb-util",
       "xcb-util-image",
-      "xcb-util-renderutil",
       "xcb-util-keysyms",
       "xcb-util-wm",
       "xcb-util-xrm",
@@ -114,7 +113,14 @@
     "usr/share/X11/app-defaults/XTerm",
     "usr/share/terminfo/x/xterm",
     "usr/bin/xkbcomp",
-    "usr/share/licenses/turbovnc/libsha1-COPYING"
+    "usr/share/licenses/turbovnc/libsha1-COPYING",
+    "usr/share/licenses/turbovnc/LICENSE.txt",
+    "usr/share/licenses/turbovnc/Xserver-COPYING",
+    "usr/share/licenses/i3/LICENSE",
+    "usr/share/licenses/xterm/COPYING",
+    "usr/share/licenses/xkbcomp/COPYING",
+    "usr/share/X11/xkb",
+    "usr/share/licenses/basic-font/COPYING"
   ],
   "protected_evidence": [
     "signed selected-stage grant and immutable exact revisions",
@@ -125,7 +131,10 @@
     "installed files and ELF DT_NEEDED/RPATH/loader closure",
     "XKB/font/terminfo bytes from selected packages",
     "original notices mapped to compiled and installed components",
-    "separate rights authorization and signed immutable generation witness"
+    "separate rights authorization and signed immutable generation witness",
+    "selected XKB compiler and xkeyboard-config output source/manifest binding to accepted predecessor generation",
+    "authoritative installed font and XKB resource ownership/permission proof",
+    "real package stage closure for i3/xterm/Xvnc against exact independent Mesa branch pin"
   ],
   "native_accepted": false,
   "rights_authorized": false,
