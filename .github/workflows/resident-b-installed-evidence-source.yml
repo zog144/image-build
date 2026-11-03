@@ -1,0 +1,37 @@
+name: Resident B installed-generation evidence (synthetic source-only)
+on:
+  push:
+    branches: [review/resident-b-native-evidence-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12','3.13']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Bind independent exact Resident B combined-source predecessor
+        run: |
+          git merge-base --is-ancestor 02fdd2f6b374322dd902ec58b982bbbf64d4b013 HEAD
+          python tools/verify_resident_b_combined_source.py
+          python -m compileall -q tools/verify_resident_b_installed_evidence.py tests/test_resident_b_installed_evidence.py
+      - name: Test locally signed fake receipts and actual synthetic file bytes
+        run: |
+          python -m pip install 'pytest==8.4.2' 'cryptography==46.0.3'
+          python -m pytest -q tests/test_resident_b_installed_evidence.py
+      - name: Prevent native acceptance inference
+        if: always()
+        run: |
+          echo 'ONLY synthetic local files, test signing keys and source-level acceptance interface checks.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No protected policy, native Host rootfs, AWS, selected generation, actual installed accepted wheels, STATE or service activation.' >> "$GITHUB_STEP_SUMMARY"
