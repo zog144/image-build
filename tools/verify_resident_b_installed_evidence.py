@@ -72,15 +72,25 @@ def receipt_shape(receipt):
     bind=receipt["binding"]
     exact(bind,("host_id","installation_id","state_volume_id",
                 "rootfs_generation_id","rootfs_manifest_sha256","operation_id"),"binding")
-    for k in bind:
-        if k.endswith("_sha256") or k.endswith("_id"):
-            sha(bind[k])
+    for k in ("rootfs_generation_id","rootfs_manifest_sha256"):
+        sha(bind[k])
+    for k in ("host_id","installation_id","state_volume_id","operation_id"):
+        if (type(bind[k]) is not str or
+            not re.fullmatch(r"[A-Za-z0-9_.:-]{6,160}",bind[k])):
+            reject("missing protected Host/install/STATE/operation binding")
     preds=receipt["predecessors"]
     if type(preds) is not dict or set(preds)!=set(STAGES):
         reject("required authentic generation predecessor absent/extra")
     for name,entry in preds.items():
         exact(entry,("source_sha256","generation_id","manifest_sha256","receipt_sha256"),name)
         for value in entry.values():sha(value)
+        package,stage=name.rsplit("-",1)
+        if stage!="final":
+            reject("unreviewed predecessor stage")
+        original=literal(PKG/package/"stages/final/sources.py")
+        if (type(original) is not list or len(original)!=1 or
+            original[0]["sha256"]!=entry["source_sha256"]):
+            reject("stale/unpinned predecessor original source SHA: "+name)
     manifest=receipt["files"]
     if type(manifest) is not dict or not required_files().issubset(set(manifest)):
         reject("missing required installed output or module")
@@ -274,7 +284,7 @@ def verify_external_signatures(receipt,protected_policy):
             if len(pub)!=32:reject("wrong protected signer key size")
             signature=base64.b64decode(witness["signature"],validate=True)
             Ed25519PublicKey.from_public_bytes(pub).verify(signature,domain+canonical)
-        except (ValueError,InvalidSignature) as exc:
+        except (ValueError,InvalidSignature,base64.binascii.Error) as exc:
             reject("unsigned or substituted installed-generation evidence: "+role)
     return "PROTECTED_KEYS_SIGNATURES_MATCH_EXTERNAL_POLICY"
 
