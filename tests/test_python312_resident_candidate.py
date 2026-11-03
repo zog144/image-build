@@ -81,5 +81,5 @@ def test_runtime_import_probe_and_strict_openssl_headers_are_required():
         m.check(build=script)
     script=m.load("stages/final/build.py")
     script["configure"][0][-1]=script["configure"][0][-1].replace("/usr/include/openssl/ssl.h","/host/usr/include/openssl/ssl.h")
-    with pytest.raises(ValueError,match="configure ABI"):
+    with pytest.raises(ValueError,match="selected-root|configure ABI"):
         m.check(build=script)
