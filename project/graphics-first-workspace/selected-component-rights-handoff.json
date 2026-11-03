@@ -25,7 +25,12 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-notice-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/turbovnc/Xserver-COPYING"
+      ],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "turbovnc-libsha1",
@@ -42,7 +47,12 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-notice-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/turbovnc/libsha1-COPYING"
+      ],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "turbovnc-zlib-ng-excluded",
@@ -59,7 +69,10 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-notice-file-excluded-in-draft",
+      "planned_notice_output_paths": [],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "llvm-generated-blake3",
@@ -77,7 +90,13 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-notice-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/llvm/BLAKE3-LICENSE",
+        "usr/share/licenses/llvm/LICENSE.TXT"
+      ],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "mesa-glapi-generated",
@@ -95,7 +114,13 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-generator-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa/glapi-generator-license.py",
+        "usr/share/licenses/mesa/license.rst"
+      ],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "mesa-llvmpipe",
@@ -114,7 +139,12 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa/license.rst"
+      ],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "libdrm-common",
@@ -132,7 +162,13 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/libdrm/xf86drm.c",
+        "usr/share/licenses/libdrm/xf86drm.h"
+      ],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "mesa-demos-glxgears",
@@ -149,7 +185,12 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa-demos/glxgears.c"
+      ],
+      "delivery_proof_status": "not_observed"
     },
     {
       "id": "mesa-demos-glxinfo",
@@ -166,7 +207,12 @@
       ],
       "source_bytes_status": "pinned_original_archive_member_sha256_observed",
       "native_selection_status": "unobserved",
-      "redistribution_status": "HOLD"
+      "redistribution_status": "HOLD",
+      "member_role": "original-c-source-file",
+      "planned_notice_output_paths": [
+        "usr/share/licenses/mesa-demos/glxinfo.c"
+      ],
+      "delivery_proof_status": "not_observed"
     }
   ],
   "independent_next_evidence": [
@@ -175,5 +221,6 @@
     "installed paths and notice SHA-256 map",
     "device-access and enabled/excluded feature evidence",
     "independently signed component-rights acceptance distinct from source archive hashes"
-  ]
+  ],
+  "review_boundary": "The source member digest proves exact original bytes only. C source or generator files are not, by themselves, complete notices or legal rights grants. Planned notice paths come from source produce-manifests; native installed bytes and independent rights decisions remain missing."
 }
