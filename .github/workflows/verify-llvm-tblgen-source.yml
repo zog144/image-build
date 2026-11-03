@@ -8,6 +8,8 @@ on:
       - 'project/graphics-drafts/rights-admission-evidence.json'
       - 'tools/verify_llvm_tblgen_source.py'
       - 'tests/test_llvm_tblgen_source.py'
+      - 'tests/test_mesa_software_recipes.py'
+      - 'docs/image-build/llvm-tablegen-selected-output-source-review-2026-11-03.md'
       - '.github/workflows/verify-llvm-tblgen-source.yml'
   workflow_dispatch:
 permissions:
