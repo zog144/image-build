@@ -26,6 +26,12 @@ jobs:
         run: |
           python -m pip install 'pytest>=8,<10'
           python -m pytest -q -rs tests/test_resident_b_source_prerequisites.py
+      - name: Independently verify pinned Python 3.12.16 source candidate and ABI
+        run: |
+          python tools/verify_python312_resident_candidate.py
+          python -m pytest -q tests/test_python312_resident_candidate.py
+      - name: Verify network and controller source output contracts
+        run: python -m pytest -q tests/test_resident_b_controller_stage_contracts.py
       - name: Preserve independent Boot A audit and review gates
         run: |
           python tools/verify_boot_a_source_prerequisites.py
@@ -33,5 +39,5 @@ jobs:
       - name: Native acceptance withheld
         if: always()
         run: |
-          echo 'Resident B source inventory only. Python 3.12 request vs authored 3.15, missing installed SSL/SQLite and controller outputs remain HOLD.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Resident B source inventory only. Python 3.12.16 separate source candidate remains held; actual native SSL/SQLite, controller services, installed generation and authority remain HOLD.' >> "$GITHUB_STEP_SUMMARY"
           echo 'No submitted image-build generation, accepted rootfs, native boot, installed credential, STATE or certificate authorization.' >> "$GITHUB_STEP_SUMMARY"
