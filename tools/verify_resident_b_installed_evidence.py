@@ -258,9 +258,10 @@ def verify(root, receipt, trusted_public_key, *, expected_generation, expected_s
     if type(modules) is not dict or set(modules)!=set(MODULES):
         deny("missing Python runtime SSL SQLite hashlib")
     for name,path in modules.items():
-        if type(path) is not str or not path.startswith(
-                "usr/lib/python3.12/lib-dynload/"+name+"."):
-            deny("wrong Python native module path")
+        exact_abi=("usr/lib/python3.12/lib-dynload/"+name+
+                   ".cpython-312-x86_64-linux-gnu.so")
+        if type(path) is not str or path!=exact_abi:
+            deny("wrong Python native module or exact CPython 3.12 SOABI path")
         file,_=_file(root,path)
         _elf(file.read_bytes())
     wheels=claim["wheels"]
