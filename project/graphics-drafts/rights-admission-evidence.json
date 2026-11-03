@@ -1,0 +1,355 @@
+{
+  "schema": "mesa-software-glx-selected-rights-v1",
+  "status": "independent-rights-and-native-output-NO-GO",
+  "source_revision": "0254e0b3044d361a111c402c408fe33bdffd7d38",
+  "scope": {
+    "enabled": [
+      "LLVM X86 shared RTTI",
+      "Mesa Gallium swrast llvmpipe GLX/X11",
+      "libdrm common userspace",
+      "libxshmfence",
+      "libXxf86vm",
+      "mesa-demos glxgears/glxinfo"
+    ],
+    "excluded": [
+      "Vulkan",
+      "Wayland",
+      "hardware GPU DRM/KMS drivers",
+      "EGL",
+      "GBM",
+      "other mesa-demos"
+    ]
+  },
+  "components": {
+    "llvm": {
+      "verified_notice_members": [
+        "LICENSE.TXT",
+        "include/llvm/Support/LICENSE.TXT",
+        "lib/Support/BLAKE3/LICENSE"
+      ],
+      "outstanding": [
+        "compiled/bundled BLAKE3 linkage",
+        "generated-code license origins",
+        "install-time notices",
+        "Source declares explicit /usr/bin/llvm-tblgen production; native binary/origin/ELF closure and generated-table attribution unverified; TableGen original generator and result mapping not yet natively attested"
+      ],
+      "expected_output_paths": [
+        "usr/bin/llvm-config",
+        "usr/bin/llvm-tblgen",
+        "usr/lib/libLLVM.so",
+        "usr/share/licenses/llvm/LICENSE.TXT",
+        "usr/share/licenses/llvm/BLAKE3-LICENSE"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "llvm-21.1.6.src/LICENSE.TXT",
+          "installed_path": "usr/share/licenses/llvm/LICENSE.TXT",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "llvm-21.1.6.src/lib/Support/BLAKE3/LICENSE",
+          "installed_path": "usr/share/licenses/llvm/BLAKE3-LICENSE",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "lib/Support/BLAKE3/LICENSE",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "6a94bedb8b707ed97f6e310d0d015ab14e0683ffa0a612b02958581b9cc9fc0e",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "include/llvm/Support/LICENSE.TXT",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "54cbc326a78b9400065bfc5830a57fdcdaf808286d4ac35d8a9e324aa77b7241",
+          "verification_run": 41330909677
+        }
+      ],
+      "actual_compile_commands_status": "not received"
+    },
+    "mesa": {
+      "verified_notice_members": [
+        "docs/license.rst",
+        "src/mesa/glapi/glapi/gen/license.py",
+        "src/imgui/LICENSE.txt",
+        "src/vulkan/runtime/radix_sort/LICENSE"
+      ],
+      "outstanding": [
+        "selected GLAPI and llvmpipe source copyrights",
+        "prove Vulkan/imgui excluded from built bytes",
+        "generated shader/JIT material"
+      ],
+      "expected_output_paths": [
+        "usr/lib/libGL.so",
+        "usr/lib/dri/swrast_dri.so",
+        "usr/share/licenses/mesa/license.rst",
+        "usr/share/licenses/mesa/glapi-generator-license.py"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "mesa-25.3.0/docs/license.rst",
+          "installed_path": "usr/share/licenses/mesa/license.rst",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "mesa-25.3.0/src/mesa/glapi/glapi/gen/license.py",
+          "installed_path": "usr/share/licenses/mesa/glapi-generator-license.py",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/gallium/drivers/llvmpipe/lp_screen.c",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "77005dfcb7ad695a8ea508a82c87f383ef117d66d4170d553239fabb6ed4ddc5",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "src/glx/meson.build",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "f4b555b609029603e796ddf87620f642eb6e612b3617dfe8f0ca7dd7bde5b394",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "src/mesa/glapi/glapi/gen/license.py",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "9f11bc368fa08ad8a0fed990e5d54235425e4d1908625a4b06e860bb9aa1352a",
+          "verification_run": 41330909677
+        }
+      ],
+      "actual_compile_commands_status": "not received"
+    },
+    "libdrm": {
+      "verified_notice_members": [
+        "xf86drm.c",
+        "xf86drm.h"
+      ],
+      "outstanding": [
+        "all common library sources",
+        "prove GPU KMS and udev excluded from built bytes"
+      ],
+      "expected_output_paths": [
+        "usr/lib/libdrm.so",
+        "usr/include/xf86drm.h",
+        "usr/lib/pkgconfig/libdrm.pc",
+        "usr/share/licenses/libdrm/xf86drm.c",
+        "usr/share/licenses/libdrm/xf86drm.h"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "libdrm-2.4.128/xf86drm.c",
+          "installed_path": "usr/share/licenses/libdrm/xf86drm.c",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "libdrm-2.4.128/xf86drm.h",
+          "installed_path": "usr/share/licenses/libdrm/xf86drm.h",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "xf86drm.c",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "676845942ab8b9bc5759b295528fce0f32b28ca7765c17d4546e253caaba62c4",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "xf86drm.h",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "5fad86acbddcc3b6a685690da0c7de59412d354d1375644734672f5c6bdf4202",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "xf86drmMode.c",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "642bf81371fd6e8cc4b76147772f78bea5fbcdfdbfeecca5180877623dd80dda",
+          "verification_run": 41330909677
+        }
+      ],
+      "actual_compile_commands_status": "not received"
+    },
+    "libxshmfence": {
+      "verified_notice_members": [
+        "COPYING"
+      ],
+      "outstanding": [
+        "selected compiled files and notice delivery"
+      ],
+      "expected_output_paths": [
+        "usr/lib/libxshmfence.so",
+        "usr/include/X11/xshmfence.h",
+        "usr/lib/pkgconfig/xshmfence.pc",
+        "usr/share/licenses/libxshmfence/COPYING"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "libxshmfence-1.3.3/COPYING",
+          "installed_path": "usr/share/licenses/libxshmfence/COPYING",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/Makefile.am",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "18775cc259f873802489a621f492ece321c55d635e6e3600b9348993175d49af",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "COPYING",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "64a579d1a0b3347301d87c94698a58ea7933d0ae6ca7e8fdd702fde2ea376301",
+          "verification_run": 41330909677
+        }
+      ],
+      "actual_compile_commands_status": "not received"
+    },
+    "libXxf86vm": {
+      "verified_notice_members": [
+        "COPYING"
+      ],
+      "outstanding": [
+        "compiled files, xorgproto inherited header rights"
+      ],
+      "expected_output_paths": [
+        "usr/lib/libXxf86vm.so",
+        "usr/lib/pkgconfig/xxf86vm.pc",
+        "usr/share/licenses/libXxf86vm/COPYING"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "libXxf86vm-1.1.7/COPYING",
+          "installed_path": "usr/share/licenses/libXxf86vm/COPYING",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/XF86VMode.c",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "0dc5864c31f4fd97e3c9ba42662ea9bb24d9d33a6cb73e188037e1d844857e53",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "COPYING",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "f3da8eaed19e27e4f67e6f076d4ebdb8d649e15a8ad33a415fb65a23de1b6689",
+          "verification_run": 41330909677
+        }
+      ],
+      "actual_compile_commands_status": "not received"
+    },
+    "mesa-demos": {
+      "verified_notice_members": [
+        "src/xdemos/glxgears.c",
+        "src/xdemos/glxinfo.c"
+      ],
+      "outstanding": [
+        "exact public-domain versus copyright attribution",
+        "only selected linked source objects"
+      ],
+      "expected_output_paths": [
+        "usr/bin/glxgears",
+        "usr/bin/glxinfo",
+        "usr/share/licenses/mesa-demos/glxgears.c",
+        "usr/share/licenses/mesa-demos/glxinfo.c"
+      ],
+      "installed_outputs_observed": false,
+      "notice_delivery_verified": false,
+      "output_rights_status": "HOLD: exact native source-to-object and notice-to-artifact mapping required",
+      "original_member_delivery_plan": [
+        {
+          "original_member": "mesa-demos-9.0.0/src/xdemos/glxgears.c",
+          "installed_path": "usr/share/licenses/mesa-demos/glxgears.c",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        },
+        {
+          "original_member": "mesa-demos-9.0.0/src/xdemos/glxinfo.c",
+          "installed_path": "usr/share/licenses/mesa-demos/glxinfo.c",
+          "scope": "verified original archive-member evidence; not exhaustive rights grant",
+          "status": "draft install command only; actual byte and rights verification required"
+        }
+      ],
+      "delivery_plan_status": "source-authored-but-not-native-observed",
+      "original_scoped_source_candidates": [
+        {
+          "relative_member": "src/xdemos/glxgears.c",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "344a03aff01708350d90603fd6b841bccd295157670f519b459bbf3874acf847",
+          "verification_run": 41330909677
+        },
+        {
+          "relative_member": "src/xdemos/glxinfo.c",
+          "source_sha256_status": "original archive SHA-256 verified",
+          "selected_native_compilation": "unobserved",
+          "sha256": "54844ad4d57d65ae2041467f52035f3f4f8d299467a5790a0b6f6d56e6a2a4f7",
+          "verification_run": 41330909677
+        }
+      ],
+      "actual_compile_commands_status": "not received"
+    }
+  },
+  "required_evidence": [
+    "original archive notice inventory plus SHA-256",
+    "real native source-object/compile_commands manifest",
+    "exact DESTDIR output and dynamic linking inventory",
+    "delivered license/notice text and component-to-output map",
+    "genuinely independent reviewer authorization"
+  ],
+  "rights_approved": false,
+  "canonical_admitted": false,
+  "review_scope": {
+    "kind": "source-and-selected-original-member-review",
+    "independent_reviewer_signed": false,
+    "original_notices_hashed": true,
+    "compile_commands_received": false,
+    "installed_manifest_received": false,
+    "license_delivery_received": false,
+    "native_source_selection_approved": false,
+    "source_candidate_digest_ledger_checked": true
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "image-build-first-workspace-graphics-canonical-admission-v1",
+  "status": "source-prepared-native-and-rights-NO-GO",
+  "source_pin": "project/pins/2026-11-01/graphics-source-pin.py",
+  "source_pin_contract": "supplementary-review-only-not-canonical",
+  "canonical_package_root": "project/package",
+  "draft_root": "project/graphics-drafts",
+  "immutable_publication": "applications-v1",
+  "intended_stage_order": [
+    "llvm-final",
+    "libdrm-final",
+    "libxshmfence-final",
+    "libXxf86vm-final",
+    "mesa-final",
+    "mesa-demos-final"
+  ],
+  "already_authored_predecessors": [
+    "libX11-final",
+    "libXext-final",
+    "libxcb-final",
+    "xorgproto-final",
+    "expat-final",
+    "zlib-native-environment"
+  ],
+  "blocked_python_build_inputs": [
+    {
+      "name": "mako-final",
+      "issue": "Build and verify exact MarkupSafe/PEP517 source dependencies in isolated Python."
+    },
+    {
+      "name": "pyyaml-final",
+      "issue": "Select and pin pure-Python or C-extension/Cython backend and Python/packaging closure."
+    }
+  ],
+  "required_acceptance": [
+    "Independently review original archive/source member copyright notices and complete component attribution for all selected built inputs.",
+    "Verify source-built compiler/CMake/Ninja/Meson/pkgconf/Python dependencies without fallback to distribution host libraries.",
+    "Native configure/compile with exact Mesa source options and LLVM 21.1.6 X86 shared ABI including RTTI; validate no auto fallback.",
+    "Record deterministic DESTDIR installed-path inventory and ELF NEEDED/RPATH/RUNPATH for libLLVM, GLX/Mesa, libdrm, libxshmfence, libXxf86vm and demo utilities.",
+    "Bind immutable software application artifact/view and compatible rootfs references; no Basic rootfs or /dev/dri expansion.",
+    "On modest CPU TurboVNC/Xvnc noVNC Workspace, show Zog-built glxgears briefly animated, no server/client crash, optional glxinfo -B showing llvmpipe; no FPS gate."
+  ],
+  "forbidden_promotions": [
+    "No canonical monthly pin until above evidence",
+    "No automatic Host native compilation submission",
+    "No GPU/DRI device grants",
+    "No host-provided glxgears",
+    "No performance soak or high-core benchmark"
+  ]
+}

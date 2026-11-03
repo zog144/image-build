@@ -55,6 +55,12 @@ jobs:
             tests/test_certify_manage_software.py \
             tests/test_post_install_progress.py \
             tests/test_graphical_application_catalogue.py \
+            tests/test_mesa_software_recipes.py \
+            tests/test_graphics_package_admission.py \
+            tests/test_mesa_selected_notice_rights.py \
+            tests/test_mesa_native_evidence.py \
+            tests/test_mesa_native_security_review.py \
+            tests/test_mesa_bounded_link_expansion.py \
             tests/test_verification_environment.py \
             tests/test_licensing.py \
             tests/test_host_fixture.py \

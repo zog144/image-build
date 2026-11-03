@@ -129,7 +129,46 @@ before authoring.  The profile should deliberately decide:
 Required source capabilities still include X11, Xau, Xdmcp, xkbfile, xfont2,
 Pixman, OpenGL/GLX headers, libjpeg-turbo/TurboJPEG and XKB data.
 
-### E. VirtualGL
+### E. Mesa software OpenGL — first Workspace prerequisite (2026-10-31)
+
+The first interactive TurboVNC Workspace requires source-built Mesa
+software OpenGL. Treat it as a required predecessor of **Workspace runtime
+acceptance** rather than as a Basic/rootfs or hardware-GPU prerequisite.
+
+- Review and pin Mesa's exact upstream archive, checksum, file notices and
+  source recipe. Do not invent a version/pin or reuse previously compiled
+  unverified binaries.
+- Source-build the explicit LLVM dependency for the llvmpipe JIT, selecting
+  and testing its x86-64 backend; account for the LLVM build footprint.
+  Close the real Meson build/runtime graph (including Python/Mako/PyYAML,
+  X11/GLX dispatch/loader and libdrm if required by the selected Mesa
+  configuration) without implicit host packages.
+- Select Gallium swrast/llvmpipe and OpenGL/GLX for Xvnc; explicitly disable
+  hardware DRI3 paths, GPU Gallium drivers, Vulkan, Wayland and optional
+  device/privilege surfaces in this baseline. Confirm supported Meson
+  options against the selected upstream source rather than assuming them.
+- Produce an immutable software artifact/view with full runtime ELF and
+  library/driver path closure. Do not silently expand the console-first
+  rootfs or grant `/dev/dri` access.
+- Author a separately pinned, minimal `mesa-demos` smoke-test utility
+  recipe for `glxgears` (and `glxinfo` if needed). Mesa does not install
+  these tools; use immutable Zog-built tools, not host-provided binaries.
+- **Small, inexpensive native integration smoke only:** start a real Xvnc
+  Workspace over noVNC and run `glxgears`. Its animated window must appear
+  and stay alive briefly without a client/X-server crash. Use `glxinfo -B`
+  when available to identify Mesa llvmpipe; verify that graphics libraries
+  and drivers resolve from Zog's immutable software view, not the host.
+  Preserve normal source/build/inventory/isolation checks, but require no
+  minimum FPS or broader graphics-validation suite. Two to four cores
+  suffice for the initial smoke; do not request expensive 16/32-core
+  instances merely for Mesa/VirtualGL validation.
+- **Deferred hardware path:** evaluate Intel iGPU Mesa drivers on the
+  user's Qotom hardware around January-February 2027; physical DRM/iGPU,
+  DRI3 and VirtualGL acceleration do not block this software smoke gate.
+
+**Status (2026-11-01):** source-authored native-held LLVM 21.1.6, Mesa 25.3.0 and mesa-demos 9.0.0 stage drafts now exist on PR #8, with a separate supplementary November graphics source ledger and source-only contract tests. They are not canonical monthly build-admitted recipes. Selected original archive-member hashes and Mesa Meson option names are now checked; complete scoped rights review, native libdrm/GLX, Python Mako/PyYAML isolated packaging and installed ELF closure remain blocked. No native compilation, graphics artifact or Workspace acceptance is claimed.
+
+### F. VirtualGL — later GPU acceleration
 
 Pin the exact stable release and build server/client components needed by the Zog
 workspace architecture.  Explicitly review X11/XCB, OpenGL/GLX/EGL, TurboJPEG and
@@ -157,3 +196,7 @@ All rows above remain source preparation until a supported host-deploy/image-bui
 submission route is explicitly authorized for the compiler host.  GitHub Actions may
 validate metadata and download exact public sources for evidence; it is not evidence
 that the Zog rootfs package was compiled or installed.
+
+### Software GL source-closure checkpoint (2026-11-01)
+
+Draft source pins, original archive-member rights SHA-256, and upstream Meson option names were checked in GitHub Actions. Direct GLX requirements now include independently pinned libdrm 2.4.128, libxshmfence 1.3.3 and libXxf86vm 1.1.7 alongside the authored libX11/libXext/libxcb/xorgproto predecessors; Mako/PyYAML raw source archives are pinned but their isolated packaging closures are not admitted. The review-only `project/graphics-drafts/admission-plan.json` governs later migration to `project/package`. Native build/installed inventory/ELF and final rights review remain NO-GO.
