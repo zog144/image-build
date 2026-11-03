@@ -30,6 +30,8 @@ def fake_root(tmp):
         "usr/lib/libssl.so","usr/lib/libcrypto.so","usr/lib/libsqlite3.so",
         "usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/entry_points.txt",
         "usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/entry_points.txt",
+        "usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/WHEEL",
+        "usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/WHEEL",
     })
     def content(name):
         if name=="usr/bin/python3.12" or name.endswith(".so") or ".so." in name:
@@ -38,7 +40,12 @@ def fake_root(tmp):
             return b"#!/usr/bin/python3.12\n# synthetic entry\n"
         if name.endswith("/METADATA"):
             label="box-control" if "box_control-" in name else "root-control"
-            return ("Metadata-Version: 2.3\nName: "+label+"\nVersion: 0.1.0\n").encode()
+            deps=["image-build==0.2.0.dev5","dbus-next==0.2.3"]
+            if label=="root-control":deps.append("box-control==0.1.0")
+            return ("Metadata-Version: 2.3\nName: "+label+"\nVersion: 0.1.0\n"+
+                    "".join("Requires-Dist: "+v+"\n" for v in deps)).encode()
+        if name.endswith("/WHEEL"):
+            return b"Wheel-Version: 1.0\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
         if name.endswith("/entry_points.txt"):
             label="box-control" if "box_control-" in name else "root-control"
             return ("[console_scripts]\n"+label+" = "+m.PROGRAMS[label]+"\n").encode()
@@ -57,6 +64,7 @@ def fake_root(tmp):
         parent="usr/lib/python3.12/site-packages/"
         native=[
             parent+dist+"/METADATA",
+            parent+dist+"/WHEEL",
             parent+dist+"/entry_points.txt",
             parent+"zog/"+label.replace("-","_")+"/__init__.py",
             "usr/bin/"+label,
