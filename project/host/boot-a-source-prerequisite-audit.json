@@ -1,0 +1,137 @@
+{
+  "schema": "zog-boot-a-source-prerequisite-audit-v1",
+  "reviewed_image_build_unstable_before_audit": "1f07e83dbd80dacb9bed0d6494c697375f0e26cd",
+  "reviewed_boot_a_source_correction": "68d6397ca20c4651df8f13c8a840dc8f77d55034",
+  "host_install_source_contract": "cf3ca569d6109ab75e5082dd4109698680155984",
+  "source_contract": "source-checked-native-successor-and-boot-not-accepted",
+  "selected_successor_generation_id": null,
+  "installed_generation_verification": null,
+  "historical_rejected_generation": "5af34ec67cbfdcd1e7936bf70e3cf2f5c6945c7e3de5f95993918325f6e29c44",
+  "historical_failure": "REJECTED_SWITCH_ROOT_OS_TREE_MISSING",
+  "efi": {
+    "producer": "systemd-final",
+    "selected_source_recipe": "project/package/systemd/stages/final/build.py",
+    "required_stage_output": "usr/lib/systemd/boot/efi/systemd-bootx64.efi",
+    "required_build_options": [
+      "-Defi=true",
+      "-Dbootloader=enabled",
+      "-Dsbat-distro=zog",
+      "-Dsbat-distro-generation=1"
+    ],
+    "required_native_evidence": [
+      "exact original EFI bytes and SHA-256",
+      "PE/COFF EFI and .sbat original section inspection",
+      "accepted generation manifest/installed path",
+      "ESP installed copy must byte-match immutable rootfs output"
+    ],
+    "native_verified": false
+  },
+  "boot_a_required": {
+    "systemd-final": [
+      "usr/lib/systemd/systemd",
+      "usr/lib/systemd/systemd-journald",
+      "usr/lib/systemd/systemd-udevd",
+      "usr/bin/systemctl",
+      "usr/bin/journalctl",
+      "usr/bin/udevadm",
+      "usr/lib/systemd/system/getty@.service",
+      "usr/lib/systemd/system/serial-getty@.service",
+      "usr/lib/systemd/boot/efi/systemd-bootx64.efi",
+      "usr/lib/os-release",
+      "etc/os-release"
+    ],
+    "shadow-login": [
+      "usr/bin/login"
+    ],
+    "e2fsprogs-final": [
+      "usr/sbin/fsck.ext4"
+    ],
+    "kmod-final": [
+      "usr/bin/kmod"
+    ]
+  },
+  "boot_a_parent_inherited_unverified": [
+    "usr/bin/bash",
+    "usr/sbin/agetty",
+    "usr/bin/findmnt"
+  ],
+  "expected_resident_b_paths": [
+    "usr/lib/systemd/systemd-networkd",
+    "usr/lib/systemd/systemd-resolved",
+    "usr/lib/systemd/systemd-timesyncd",
+    "usr/bin/networkctl",
+    "usr/bin/resolvectl",
+    "usr/bin/python3",
+    "usr/bin/dbus-daemon",
+    "usr/sbin/ip",
+    "usr/sbin/ss",
+    "usr/sbin/tc",
+    "usr/sbin/mkfs.ext4",
+    "usr/sbin/e2fsck",
+    "usr/bin/host-install",
+    "usr/bin/host-discover",
+    "usr/bin/box-control",
+    "usr/bin/root-control",
+    "usr/lib/systemd/system/dbus.service"
+  ],
+  "resident_b_status": "DEFERRED_UNVERIFIED",
+  "os_tree": {
+    "regular_file": "usr/lib/os-release",
+    "symlink": "etc/os-release",
+    "target": "../usr/lib/os-release",
+    "identity": "NAME=\"Zog\"\nID=zog\nPRETTY_NAME=\"Zog\"\n",
+    "required_by": "initrd switch-root safety check with /usr/lib/systemd/systemd"
+  },
+  "mountpoints": {
+    "state": {
+      "type": "directory",
+      "mode": "0000",
+      "owner": "root:root",
+      "empty": true
+    },
+    "applications": {
+      "type": "directory",
+      "mode": "0000",
+      "owner": "root:root",
+      "empty": true
+    }
+  },
+  "immutable_generation_forbids": [
+    "machine-id",
+    "Host identity private key",
+    "installation-specific GPT/partition UUID",
+    "station credentials",
+    "Cloudflare credentials"
+  ],
+  "foreign_al2023_provider": {
+    "status": "historically_observed_in_failed_generation_reverify_for_successor",
+    "release": "6.18.44-99.149.amzn2023.x86_64",
+    "kernel_sha256": "1faf0278011e0d62f01b28ddf81fc32af9e3fd032be0b805a1d38d981933431b",
+    "initramfs_sha256": "06bca6e41de36109384ba019212ab1be72643a578d0afb9f3fa3c561a190f599",
+    "modules_inventory_sha256": "8dbf40e1497ff8857a6a0602e66626155e897cfd54b6731aa1eea8f842899da4",
+    "kernel_config_sha256": "de3812ae0e81108f86550781cac8302c8b400bf7bfefe5ea23e115074b6e0ef6",
+    "dracut": "102-3.amzn2023.0.4.x86_64",
+    "native_required": [
+      "verify kernel/initramfs/modules exact bytes and matching release",
+      "root=PARTUUID= exact selected HOST-A with ext4 read-only",
+      "NVMe/virtio required driver in initramfs",
+      "initrd switch-root to immutable Zog systemd",
+      "EFI loader and kernel/initrd signed/original identities",
+      "serial/getty/journald recovery and live generation slot"
+    ]
+  },
+  "boot_admission_authorized": false,
+  "boot_native_pass": false,
+  "successor_build_submission_authorized": false,
+  "certificate_dependency": false,
+  "early_userspace_evidence_status": "HISTORICAL_PARTUUID_RO_EXT4_SWITCH_ROOT_REACHED_BUT_RESIDENT_PID1_NOT_REACHED",
+  "protected_successor_requirements": [
+    "independently authenticated new generation ID distinct from rejected 5af34ec6…",
+    "trusted export manifest and exact installed os-release bytes and symlink",
+    "EFI SBAT and EFI installed image hash bound to successor provenance",
+    "early userspace kernel/initramfs/modules exact re-verification before device writes",
+    "canonical installed inventory confirms root-owned empty mode-0000 STATE and APPLICATIONS",
+    "source-verified login, kmod, fsck, journald, udevd and serial/getty",
+    "source audit is not permission to submit or boot"
+  ]
+}

@@ -76,6 +76,7 @@ jobs:
             tests/test_systemd_core.py \
             tests/test_resident_boot_source.py \
             tests/test_resident_boot_targeted.py \
+            tests/test_boot_a_source_prerequisite_audit.py \
             tests/test_targeted_publication_binding.py \
             tests/test_staging_durability.py \
             tests/test_worker_identity.py \
