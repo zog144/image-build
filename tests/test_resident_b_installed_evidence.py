@@ -86,15 +86,25 @@ def fixture(tmp_path):
         return {"schema":v.SCHEMA,"claim":value,
                 "signature":base64.b64encode(key.sign(
                     b"zog-resident-b-installed-evidence-v1\0"+v.canonical(value))).decode()}
-    return root,claim,key,sign
+    upstream_key=Ed25519PrivateKey.generate()
+    selected={"generation_id":GEN,"source_generation_receipt_sha256":"f"*64,
+              "selection_status":"accepted-as-input","native_boot_authorized":False,
+              "root_control_activation_authorized":False}
+    selection={"schema":"zog-resident-b-selected-input-generation-v1",
+               "selection":selected,
+               "signature":base64.b64encode(upstream_key.sign(
+                    b"zog-resident-b-selected-input-generation-v1\0"+v.canonical(selected))).decode()}
+    return root,claim,key,sign,selection,upstream_key
 
-def run(root,claim,key,sign,*,generation=GEN,state=STATE):
+def run(root,claim,key,sign,selection,upstream_key,*,generation=GEN,state=STATE):
     return v.verify(root,sign(claim),key.public_key(),
-        expected_generation=generation,expected_state=state)
+        expected_generation=generation,expected_state=state,
+        selected_generation_receipt=selection,
+        trusted_generation_public_key=upstream_key.public_key())
 
 def test_synthetic_complete_receipt_is_never_native_acceptance(tmp_path):
-    root,claim,key,sign=fixture(tmp_path)
-    result=run(root,claim,key,sign)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path)
+    result=run(root,claim,key,sign,selection,upstream_key)
     assert result["status"]=="EVIDENCE_COHERENT_UNACCEPTED"
     assert result["accepted_generation"] is None
     assert result["native_install_authorized"] is False
@@ -116,39 +126,53 @@ def test_synthetic_complete_receipt_is_never_native_acceptance(tmp_path):
     lambda c:c.update(source_pins={**c["source_pins"],"root-control":"0"*40}),
 ])
 def test_fabricated_success_or_incomplete_receipt_denied(tmp_path,change):
-    root,claim,key,sign=fixture(tmp_path)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path)
     change(claim)
     with pytest.raises(v.EvidenceDenied):
-        run(root,claim,key,sign)
+        run(root,claim,key,sign,selection,upstream_key)
 
 def test_wrong_signature_source_or_generation_denied(tmp_path):
-    root,claim,key,sign=fixture(tmp_path)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path)
     forged=sign(claim)
     forged["signature"]=base64.b64encode(b"x"*64).decode()
     with pytest.raises(v.EvidenceDenied):
-        v.verify(root,forged,key.public_key(),expected_generation=GEN,expected_state=STATE)
+        v.verify(root,forged,key.public_key(),expected_generation=GEN,expected_state=STATE,
+            selected_generation_receipt=selection,
+            trusted_generation_public_key=upstream_key.public_key())
     with pytest.raises(v.EvidenceDenied):
-        run(root,claim,key,sign,generation="b"*64)
+        run(root,claim,key,sign,selection,upstream_key,generation="b"*64)
     with pytest.raises(v.EvidenceDenied):
-        run(root,claim,key,sign,state="other-state-identity")
+        run(root,claim,key,sign,selection,upstream_key,state="other-state-identity")
 
 def test_bytes_permissions_elf_and_wheel_record_are_independently_inspected(tmp_path):
-    root,claim,key,sign=fixture(tmp_path)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path)
     exe=root/"usr/bin/root-control"
     exe.write_bytes(b"#!/usr/bin/python3.15\n")
-    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign)
-    root,claim,key,sign=fixture(tmp_path/"second")
+    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign,selection,upstream_key)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path/"second")
     path=root/claim["modules"]["_ssl"];path.write_bytes(b"fake-elf")
-    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign)
-    root,claim,key,sign=fixture(tmp_path/"third")
+    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign,selection,upstream_key)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path/"third")
     path=root/"usr/lib/python3.12/site-packages/root_control-0.1.0.dist-info/RECORD"
     path.write_text("forged,sha256=bad,1\n")
-    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign)
-    root,claim,key,sign=fixture(tmp_path/"fourth")
+    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign,selection,upstream_key)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path/"fourth")
     (root/"usr/bin/box-control").chmod(0o777)
-    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign)
+    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign,selection,upstream_key)
 
 def test_symlink_or_missing_executable_denied(tmp_path):
-    root,claim,key,sign=fixture(tmp_path)
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path)
     p=root/"usr/bin/box-control";p.unlink();p.symlink_to("/bin/true")
-    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign)
+    with pytest.raises(v.EvidenceDenied):run(root,claim,key,sign,selection,upstream_key)
+
+def test_independent_generation_selection_must_be_signed_and_distinct(tmp_path):
+    root,claim,key,sign,selection,upstream_key=fixture(tmp_path)
+    fake={**selection,"signature":base64.b64encode(b"0"*64).decode()}
+    with pytest.raises(v.EvidenceDenied):
+        run(root,claim,key,sign,fake,upstream_key)
+    with pytest.raises(v.EvidenceDenied):
+        run(root,claim,key,sign,selection,key)
+    changed={**selection,"selection":{**selection["selection"],
+                                  "native_boot_authorized":True}}
+    with pytest.raises(v.EvidenceDenied):
+        run(root,claim,key,sign,changed,upstream_key)
