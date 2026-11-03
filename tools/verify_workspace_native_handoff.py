@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Offline source handoff gate, NOT a native authority or generator of accepted IDs."""
 import json
+import ast
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,7 +18,88 @@ MUST_OUTPUT = ("usr/bin/Xvnc","usr/bin/i3","usr/bin/xterm","usr/lib/dri/swrast_d
 REQUIRED_TOOLS = ("C-C++-linker-ar-objcopy-readelf", "meson-ninja-cmake-pkgconf",
                   "python-generators","XKB-and-font-tools","build-utilities")
 
+
+# Exact review schema, not a generalized admission parser. Unknown success or
+# authority-shaped fields must never be silently ignored by source CI.
+ROOT_FIELDS = frozenset((
+    "schema", "status", "source_revisions", "source_revision_policy",
+    "producer_order", "producer_edges", "accepted_generation_receipts",
+    "generation_receipt_policy", "inherited_stages", "source_packages",
+    "selected_package_order_contract", "required_resources", "required_tools",
+    "required_tool_provenance", "expected_outputs", "protected_evidence",
+    "native_accepted", "rights_authorized", "build_submission_allowed",
+    "canonical_promotion_allowed", "rights_gate", "native_readiness",
+))
+REQUIRED_DEPENDENCIES = {
+    "i3": {"libxkbcommon-final", "xkeyboard-config-final", "libX11-final",
+           "libxcb-final", "xcb-util-cursor-final", "pango-final"},
+    "xterm": {"libXt-final", "libXaw-final", "libXmu-final", "libXpm-final",
+              "libXft-final", "ncurses-temporary", "luit-final", "basic-font-final"},
+    "turbovnc": {"mesa-final", "zlib-native-environment", "xkbcomp-final",
+                  "xkeyboard-config-final", "libX11-final", "libXfont2-final",
+                  "pixman-final", "libjpeg-turbo-final", "openssl-final"},
+}
+STAGE_PATHS = {
+    "i3": ROOT/"project/package/i3/stages/final",
+    "xterm": ROOT/"project/package/xterm/stages/final",
+    "turbovnc": ROOT/"project/graphics-first-workspace/turbovnc-draft/stages/final",
+    "basic-font": ROOT/"project/package/basic-font/stages/final",
+    "xkbcomp": ROOT/"project/package/xkbcomp/stages/final",
+    "xkeyboard-config": ROOT/"project/package/xkeyboard-config/stages/final",
+}
+REQUIRED_RESOURCES = frozenset((
+    "usr/share/fonts/X11/misc/6x13.pcf.gz", "usr/share/fonts/X11/misc/fonts.dir",
+    "usr/share/X11/xkb", "usr/bin/xkbcomp", "usr/share/X11/app-defaults/XTerm",
+    "usr/share/terminfo/x/xterm",
+))
+REQUIRED_DESKTOP = frozenset((
+    "basic-font","bdftopcf","mkfontscale","xkbcomp","xkeyboard-config",
+    "xcb-util-renderutil","xcb-util-cursor","i3","xterm","turbovnc",
+    "libX11","libxcb","libXfont2","libxkbcommon","pixman","libjpeg-turbo",
+))
+REQUIRED_MESA = frozenset(("llvm","mesa","mesa-demos","libdrm","libxshmfence","libXxf86vm"))
+
+def review_local_stage_closure(record, *, dependency_overrides=None, manifest_overrides=None):
+    """Compare handoff to actual local stage metadata, not copied claims."""
+    dependency_overrides = dependency_overrides or {}
+    manifest_overrides = manifest_overrides or {}
+    for name, prerequisites in REQUIRED_DEPENDENCIES.items():
+        dependency = dependency_overrides.get(
+            name, ast.literal_eval((STAGE_PATHS[name]/"dependencies.py").read_text()))
+        if not isinstance(dependency, dict) or set(dependency) != {"build", "runtime"}:
+            raise ValueError("invalid actual package dependency schema: "+name)
+        all_deps = set(dependency["build"]) | set(dependency["runtime"])
+        if not prerequisites.issubset(all_deps):
+            raise ValueError("missing actual package predecessor: "+name)
+        if "zlib-final" in all_deps or "ncurses-final" in all_deps:
+            raise ValueError("invented inherited final-stage dependency: "+name)
+    declared_outputs = set(record.get("expected_outputs", []))
+    for name, path in STAGE_PATHS.items():
+        manifest = manifest_overrides.get(name, ast.literal_eval((path/"produce-manifest.py").read_text()))
+        if not isinstance(manifest,dict) or not isinstance(manifest.get("required"),list):
+            raise ValueError("missing actual output manifest: "+name)
+        required=set(manifest["required"])
+        if not required.issubset(declared_outputs):
+            raise ValueError("handoff omits actual package output: "+name)
+    packages = record.get("source_packages",{})
+    if not isinstance(packages,dict) or set(packages)!={"desktop","mesa_draft"}:
+        raise ValueError("source package groups missing")
+    for group, must in (("desktop",REQUIRED_DESKTOP),("mesa_draft",REQUIRED_MESA)):
+        items=packages.get(group)
+        if not isinstance(items,list) or len(items)!=len(set(items)) or not must.issubset(set(items)):
+            raise ValueError("missing or duplicate selected source package: "+group)
+    if not REQUIRED_RESOURCES.issubset(set(record.get("required_resources",[]))):
+        raise ValueError("required installed fonts/XKB/terminfo resource missing")
+    for name in ("i3","xterm","turbovnc"):
+        origin = (ROOT/"project/graphics-first-workspace/turbovnc-draft/package.py"
+                  if name=="turbovnc" else ROOT/"project/package"/name/"package.py")
+        if ast.literal_eval(origin.read_text()).get("status") != "catalogue-only":
+            raise ValueError("selected source package already admitted: "+name)
+    return True
+
 def verify(record):
+    if set(record) != ROOT_FIELDS:
+        raise ValueError("unrecognized source handoff field or missing gate; no implicit authorization")
     if record.get("schema") != "zog-first-workspace-source-to-native-handoff-v1":
         raise ValueError("unknown Workspace handoff schema")
     if record.get("status") != "PREPARED_NOT_SUBMITTABLE":
@@ -59,8 +141,11 @@ def verify(record):
         raise ValueError("missing selected build-tool origins or no-Host-leakage evidence")
     if not record.get("rights_gate","").startswith("HOLD:"):
         raise ValueError("component rights cannot be source-approved")
-    if not isinstance(record.get("source_packages"),dict) or not record["source_packages"].get("mesa_draft"):
-        raise ValueError("Mesa source packages absent from handoff")
+    for key in REQUIRED_TOOLS:
+        descriptor = tools[key].lower()
+        if "host defaults" in descriptor or "host fallback" in descriptor:
+            raise ValueError("unreviewed host tool provenance: "+key)
+    review_local_stage_closure(record)
     return True
 
 def refuse_native_readiness(record):
