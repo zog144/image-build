@@ -22,8 +22,8 @@
       "python_import": "zog.box_control",
       "required_runtime": [
         "python-resident312-final",
-        "image-build-python-final",
-        "dbus-next-final"
+        "resident312-image-build-final",
+        "resident312-dbus-next-final"
       ],
       "runtime_services": [],
       "installation": {
@@ -34,7 +34,7 @@
       },
       "known_gaps": [
         "selected accepted source and installed generation/ELF/shebang/wheel RECORD absent",
-        "setuptools/packaging/installer/wheel/dbus-next and image-build Python interface stage producers not authored or independently accepted",
+        "All seven transitive source candidates authored; accepted native predecessor generations and wheel RECORD provenance remain unverified",
         "no global evaluator service: operator-selected per-home Project required",
         "independent rights and original source notices require native installed-byte verification"
       ],
@@ -50,8 +50,8 @@
       "python_import": "zog.root_control",
       "required_runtime": [
         "python-resident312-final",
-        "image-build-python-final",
-        "dbus-next-final",
+        "resident312-image-build-final",
+        "resident312-dbus-next-final",
         "box-control-final",
         "systemd-final"
       ],
@@ -66,7 +66,7 @@
       },
       "known_gaps": [
         "selected accepted source and installed generation/ELF/shebang/wheel RECORD absent",
-        "setuptools/packaging/installer/wheel/dbus-next and image-build Python interface stage producers not authored or independently accepted",
+        "All seven transitive source candidates authored; accepted native predecessor generations and wheel RECORD provenance remain unverified",
         "static /usr/libexec/zog/journal-wait native helper not built; opt-in journal barrier remains disabled",
         "protected group/UID/STATE install and privileged service activation pending",
         "independent rights and original source notices require native installed-byte verification"
@@ -81,10 +81,29 @@
   ],
   "holds": [
     "SOURCE_PIN_REVIEWED_BUT_UNSELECTED",
-    "MISSING_TRANSITIVE_STAGE_PRODUCERS",
     "NATIVE_INSTALLED_PROOF_ABSENT",
     "PYTHON312_NOT_SELECTED",
     "SERVICE_UID_STATE_AUTHORITY_PENDING",
-    "JOURNAL_STATIC_HELPER_UNVERIFIED"
-  ]
+    "JOURNAL_STATIC_HELPER_UNVERIFIED",
+    "SOURCE_PINNED_TRANSITIVE_STAGES_NATIVE_UNVERIFIED",
+    "SETUPTOOLS_82_SEPARATE_CANDIDATE_NOT_SELECTED",
+    "CP312_SOURCE_TOOL_IMPORTED_FROM_SELECTED_ROOT_NATIVE_UNPROVEN"
+  ],
+  "source_graph_closure": {
+    "status": "SEVEN_PINNED_CP312_SOURCE_STAGES_AUTHORED_NATIVE_NOT_VERIFIED",
+    "stage_order": [
+      "resident312-flit-core-final",
+      "resident312-installer-final",
+      "resident312-packaging-final",
+      "resident312-wheel-final",
+      "resident312-setuptools-final",
+      "resident312-dbus-next-final",
+      "resident312-image-build-final"
+    ],
+    "image_build_source": "1f07e83dbd80dacb9bed0d6494c697375f0e26cd",
+    "image_build_archive_sha256": "74ca7fe804e08eb6102ca7ce2e227476aa8f448872cec08b6d6b1fab60b4f376",
+    "setuptools_choice": "82.0.1 instead of 3.15 stack's 84.0.0",
+    "native_stage_receipts": null,
+    "authorized_compiler_submission": false
+  }
 }
