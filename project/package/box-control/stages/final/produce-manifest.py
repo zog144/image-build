@@ -1,0 +1,1 @@
+{'trees': ['usr'], 'required': ["usr/bin/box-control","usr/lib/python3.12/site-packages/zog/box_control/__init__.py","usr/share/licenses/box-control/LICENSE","usr/share/licenses/box-control/THIRD-PARTY-NOTICES.md"]}
