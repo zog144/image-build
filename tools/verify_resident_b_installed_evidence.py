@@ -213,11 +213,11 @@ def file_bytes(root,receipt,*,synthetic=False):
             if meta["mode"]!=0o644 or meta["kind"]!="data":
                 reject("privileged root service file permissions changed")
             selected=literal(PKG/"root-control/stages/final/build.py")["install"][0][-1]
-            sentinel="<<'ZOG_ROOT_CONTROL_UNIT'\\n"
+            sentinel="<<'ZOG_ROOT_CONTROL_UNIT'\n"
             if selected.count(sentinel)!=1:
                 reject("root-control service source cannot be authenticated")
-            original=selected.split(sentinel,1)[1].split("\\nZOG_ROOT_CONTROL_UNIT",1)
-            if len(original)!=2 or p.read_bytes()!=(original[0]+"\\n").encode():
+            original=selected.split(sentinel,1)[1].split("\nZOG_ROOT_CONTROL_UNIT",1)
+            if len(original)!=2 or p.read_bytes()!=(original[0]+"\n").encode():
                 reject("installed privileged root service not equal to approved source")
     return "INSTALLED_BYTES_MATCH_RECEIPT_NOT_ACCEPTED"
 
