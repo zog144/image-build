@@ -32,7 +32,8 @@ def test_even_validly_signed_synthetic_wheel_cannot_substitute_metadata(tmp_path
     p=root/"usr/lib/python3.12/site-packages/box_control-0.1.0.dist-info/METADATA"
     p.write_text("Metadata-Version: 2.4\nName: box-control\nVersion: 0.1.0\nRequires-Dist: host-only==1.0\n")
     with pytest.raises(v.EvidenceDenied,match="Requires-Dist"):
-        original.run(root,c,key,sign,selection,upstream)
+        v._wheel_record(root,"box_control-0.1.0",
+                        c["wheels"]["box_control-0.1.0"])
 
 def test_entry_point_and_wheel_tag_are_part_of_checked_bytes(tmp_path):
     root,c,key,sign,selection,upstream=original.fixture(tmp_path)
@@ -51,6 +52,11 @@ def test_privileged_systemd_unit_must_match_exact_source_not_just_contains_root(
     unit=root/"usr/lib/systemd/system/zog-root-control.service"
     original_bytes=unit.read_bytes()
     unit.write_bytes(original_bytes.replace(b"Restart=no",b"Restart=always"))
+    changed=unit.read_bytes()
+    for row in c["files"]:
+        if row["path"]=="usr/lib/systemd/system/zog-root-control.service":
+            row["sha256"]=original.sha(changed)
+            row["size"]=len(changed)
     with pytest.raises(v.EvidenceDenied,match="exact reviewed disabled unit"):
         original.run(root,c,key,sign,selection,upstream)
 
