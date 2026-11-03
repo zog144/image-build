@@ -1,0 +1,57 @@
+name: Resident B controller package source-stage verification
+on:
+  push:
+    branches: [review/resident-b-controller-packages-20261103]
+  pull_request:
+    paths:
+      - 'project/package/box-control/**'
+      - 'project/package/root-control/**'
+      - 'project/host/resident-b-controller-stage-contracts-v1.json'
+      - 'project/host/resident-b-source-prerequisite-audit-2026-11-03.json'
+      - 'tests/test_resident_b_controller_stage_contracts.py'
+      - 'tools/verify_resident_b_controller_stages.py'
+      - '.github/workflows/resident-b-controller-source-stage.yml'
+permissions:
+  contents: read
+jobs:
+  source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12','3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: zog144/box-control
+          ref: b513a9bde79135c7569adc7cadb4d45a163c7841
+          path: companions/box-control
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: zog144/root-control
+          ref: 0c217182d25f05b9cc0f7528ee614bb5669370d3
+          path: companions/root-control
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify immutable reviewed upstream source and stage metadata
+        run: |
+          test "$(git -C companions/box-control rev-parse HEAD)" = b513a9bde79135c7569adc7cadb4d45a163c7841
+          test "$(git -C companions/root-control rev-parse HEAD)" = 0c217182d25f05b9cc0f7528ee614bb5669370d3
+          python tools/verify_resident_b_controller_stages.py --box-upstream companions/box-control/box-control/pyproject.toml --root-upstream companions/root-control/pyproject.toml
+      - name: Run exact stage/negative tests and original Resident B source review
+        run: |
+          python -m pip install 'pytest>=8,<10'
+          python -m pytest -q -rs tests/test_resident_b_controller_stage_contracts.py tests/test_resident_b_source_prerequisites.py
+          python tools/verify_resident_b_source_prerequisites.py
+          python tools/verify_boot_a_source_prerequisites.py
+      - name: No native promotion
+        if: always()
+        run: |
+          echo 'Source-only package stage, source SHA and wheel metadata. No accepted dependency graph, selected Python 3.12 installed bytes, service activation or native boot.' >> "$GITHUB_STEP_SUMMARY"
