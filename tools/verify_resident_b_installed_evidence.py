@@ -168,12 +168,15 @@ def _wheel_record(root, dist, expected):
     if seen!=set(expected["record_members"]):
         deny("wheel RECORD inventory differs from independently selected receipt")
 
-def verify(root, receipt, trusted_public_key, *, expected_generation, expected_state,\n           selected_generation_receipt, trusted_generation_public_key):
+def verify(root, receipt, trusted_public_key, *, expected_generation, expected_state,
+           selected_generation_receipt, trusted_generation_public_key):
     root=Path(root)
     if root.is_symlink() or not root.is_dir(): deny("invalid rootfs evidence directory")
     claim=_attestation(receipt,trusted_public_key,
                        expected_generation=expected_generation,expected_state=expected_state)
-    _verified_generation_selection(selected_generation_receipt,\n        trusted_generation_public_key, trusted_public_key, expected_generation,\n        claim["native_observation"]["source_generation_receipt_sha256"])\n    source=json.loads(SOURCE_EXPECTED.read_text())
+    _verified_generation_selection(selected_generation_receipt,
+        trusted_generation_public_key, trusted_public_key, expected_generation,
+        claim["native_observation"]["source_generation_receipt_sha256"])\n    source=json.loads(SOURCE_EXPECTED.read_text())
     expected=set(sum(source["expected_installed_outputs"].values(),[]))
     records=claim["files"]
     if type(records) is not list or len(records)!=len(expected) or len(records)!=len(set(expected)):
