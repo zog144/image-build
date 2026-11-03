@@ -1,0 +1,22 @@
+name: Inspect original Resident B controller archives (source-only)
+on:
+  push:
+    branches: [review/resident-b-source-prerequisites-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  originals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Fetch and inspect exact pinned public source archives
+        run: python tools/inspect_resident_controller_archive.py
+      - name: Source-only evidence boundary
+        if: always()
+        run: echo 'No native build, compiler submit, Host installation or rights approval.' >> "$GITHUB_STEP_SUMMARY"
