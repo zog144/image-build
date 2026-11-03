@@ -57,3 +57,64 @@ def test_mesa_precedes_xvnc_and_smoke_occurs_last():
     assert order.index("X11") < order.index("Mesa") < order.index("Xvnc-i3-xterm")
     assert order.index("LLVM") < order.index("Mesa")
     assert order[-1]=="mesa-demos-smoke"
+
+@pytest.mark.parametrize("injected",[
+    ("native_ready",True), ("accepted_generation_id","a"*64),
+    ("approval_receipt",{"issuer":"forged","verified":True}),
+    ("signed",True), ("submission_authorized",True),
+])
+def test_unrecognized_authority_or_success_field_rejected(injected):
+    record=copy.deepcopy(original)
+    key,value=injected
+    record[key]=value
+    with pytest.raises(ValueError,match="unrecognized source handoff field"):
+        mod.verify(record)
+
+
+@pytest.mark.parametrize("stage,missing",[
+    ("turbovnc","mesa-final"), ("turbovnc","xkbcomp-final"),
+    ("turbovnc","zlib-native-environment"),
+    ("i3","libxkbcommon-final"), ("xterm","ncurses-temporary"),
+    ("xterm","basic-font-final"),
+])
+def test_independent_stage_source_dependency_omission(stage,missing):
+    deps=__import__("ast").literal_eval((mod.STAGE_PATHS[stage]/"dependencies.py").read_text())
+    replaced={key:[x for x in values if x!=missing] for key,values in deps.items()}
+    with pytest.raises(ValueError,match="missing actual package predecessor"):
+        mod.review_local_stage_closure(original,dependency_overrides={stage:replaced})
+
+
+def test_actual_stage_manifest_cannot_be_missing_from_handoff():
+    record=copy.deepcopy(original)
+    record["expected_outputs"].remove("usr/share/licenses/xkbcomp/COPYING")
+    with pytest.raises(ValueError,match="handoff omits actual package output"):
+        mod.verify(record)
+
+
+@pytest.mark.parametrize("pkg",["i3","turbovnc","xterm","basic-font","xkbcomp"])
+def test_missing_selected_package_is_rejected(pkg):
+    record=copy.deepcopy(original)
+    record["source_packages"]["desktop"].remove(pkg)
+    with pytest.raises(ValueError,match="missing or duplicate selected source package"):
+        mod.verify(record)
+
+
+def test_duplicate_stage_entry_and_fake_tool_origin_rejected():
+    record=copy.deepcopy(original)
+    record["source_packages"]["desktop"].append("xkbcomp")
+    with pytest.raises(ValueError,match="duplicate selected source package"):
+        mod.verify(record)
+    record=copy.deepcopy(original)
+    record["required_tool_provenance"]["build-utilities"]="Host defaults"
+    with pytest.raises(ValueError,match="unreviewed host tool provenance"):
+        mod.verify(record)
+
+
+def test_forged_receipt_object_not_accepted_even_with_authentic_looking_fields():
+    record=copy.deepcopy(original)
+    record["accepted_generation_receipts"]["X11"]={
+        "generation":"a"*64,"issuer":"zog","verified":True,"signature":"b"*128}
+    with pytest.raises(ValueError,match="fabricated or unauthenticated"):
+        mod.verify(record)
+    with pytest.raises(ValueError,match="native-readiness DENIED"):
+        mod.refuse_native_readiness(record)
