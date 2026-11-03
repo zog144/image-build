@@ -1,0 +1,115 @@
+{
+  "schema": "zog-first-workspace-text-source-preparation-v1",
+  "status": "source-pinned-no-compiled-graph",
+  "native_accepted": false,
+  "canonical_admitted": false,
+  "redistribution_authorized": false,
+  "versions": {
+    "glib": {
+      "version": "2.86.5",
+      "url": "https://download.gnome.org/sources/glib/2.86/glib-2.86.5.tar.xz",
+      "sha256": "ce85a947bb8b3c0204dbeff79aec39bcb46371c6fafb64ba5b8726c71e038d5f",
+      "published": "https://download.gnome.org/sources/glib/2.86/glib-2.86.5.sha256sum",
+      "provides": [
+        "glib-2.0",
+        "gobject-2.0"
+      ],
+      "predecessors": [
+        "libffi",
+        "pcre2",
+        "zlib",
+        "Python 3.12",
+        "Meson",
+        "Ninja"
+      ],
+      "unresolved": [
+        "gettext/intl and platform code generation variants",
+        "gobject-introspection-disabled build feature confirmation",
+        "glib-mkenums/gdbus-codegen Python import-origin verification",
+        "generated headers and immutable install inventory"
+      ],
+      "original_notice_members": {
+        "glib-2.86.5/LICENSES/Apache-2.0.txt": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+        "glib-2.86.5/LICENSES/CC0-1.0.txt": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "glib-2.86.5/LICENSES/GPL-2.0-or-later.txt": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+        "glib-2.86.5/LICENSES/LGPL-2.1-only.txt": "fa6f36630bb1e0c571d34b2bbdf188d08495c9dbf58f28cac112f303fc1f58fb",
+        "glib-2.86.5/LICENSES/LGPL-2.1-or-later.txt": "fa6f36630bb1e0c571d34b2bbdf188d08495c9dbf58f28cac112f303fc1f58fb",
+        "glib-2.86.5/LICENSES/LLVM-exception.txt": "e34c58338bd89d43e709e226610d8f32b3e3c47f4ad9a99a8dc1d4ac7842488e",
+        "glib-2.86.5/LICENSES/LicenseRef-old-glib-tests.txt": "fb261b2d5dbe76c4850f90da763210bc385e52428df6bbfd7b06295ac8a32914",
+        "glib-2.86.5/LICENSES/MIT.txt": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+        "glib-2.86.5/LICENSES/MPL-1.1.txt": "6214f8b1300bb9f37b16ebc146f8f61af0187e0025042ff95c8b3030744a8795"
+      }
+    },
+    "cairo": {
+      "version": "1.18.4",
+      "url": "https://cairographics.org/releases/cairo-1.18.4.tar.xz",
+      "sha256": "445ed8208a6e4823de1226a74ca319d3600e83f6369f99b14265006599c32ccb",
+      "published": "https://cairographics.org/releases/cairo-1.18.4.tar.xz.sha256sum",
+      "provides": [
+        "cairo",
+        "cairo-ft",
+        "cairo-xcb"
+      ],
+      "predecessors": [
+        "pixman",
+        "freetype",
+        "fontconfig",
+        "libpng",
+        "libXrender",
+        "libxcb",
+        "zlib"
+      ],
+      "unresolved": [
+        "feature-scoped Xlib/xcb and font option validation",
+        "inherited Xrender library source recipe",
+        "bundled source/notice and output attribution",
+        "remove optional GTK/image backend and OpenGL components"
+      ],
+      "original_notice_members": {
+        "cairo-1.18.4/COPYING": "67228a9f7c5f9b67c58f556f1be178f62da4d9e2e6285318d8c74d567255abdf"
+      }
+    },
+    "pango": {
+      "version": "1.56.4",
+      "url": "https://download.gnome.org/sources/pango/1.56/pango-1.56.4.tar.xz",
+      "sha256": "17065e2fcc5f5a5bdbffc884c956bfc7c451a96e8c4fb2f8ad837c6413cb5a01",
+      "published": "https://download.gnome.org/sources/pango/1.56/pango-1.56.4.sha256sum",
+      "provides": [
+        "pango",
+        "pangocairo"
+      ],
+      "predecessors": [
+        "glib",
+        "cairo",
+        "fontconfig",
+        "freetype",
+        "harfbuzz",
+        "fribidi"
+      ],
+      "unresolved": [
+        "HarfBuzz/FriBidi original source, notice and native build stages",
+        "PangoCairo actual Meson pkgconf feature selection",
+        "generated headers/tool import origins",
+        "gobject-introspection and docs disabled explicitly"
+      ],
+      "original_notice_members": {
+        "pango-1.56.4/COPYING": "d245807f90032872d1438d741ed21e2490e1175dc8aa3afa5ddb6c8e529b58e5"
+      }
+    }
+  },
+  "remaining_new_catalogue_inputs": [
+    "libXrender",
+    "harfbuzz",
+    "fribidi"
+  ],
+  "software_only_requirements": [
+    "No OS Host .pc files",
+    "No distribution Python build modules",
+    "No automatic Meson subproject downloads",
+    "No unreviewed optional text libraries",
+    "Authenticated native selected source and ELF closure"
+  ],
+  "reason": "Immutable upstream release identities alone do not establish the complete source/build/toolchain/rights graph.",
+  "source_evidence_actions_run": 41501768154,
+  "license_meaning": "Original member identity only, not selected-feature copyright/notice delivery proof or redistribution authorization."
+}

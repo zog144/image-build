@@ -1,0 +1,39 @@
+# Data only; parsed with ast.literal_eval.
+{
+  "build": [
+    "libev-final",
+    "yajl-final",
+    "startup-notification-final",
+    "libxkbcommon-final",
+    "xkeyboard-config-final",
+    "libX11-final",
+    "libxcb-final",
+    "xcb-util-final",
+    "xcb-util-wm-final",
+    "xcb-util-cursor-final",
+    "xcb-util-keysyms-final",
+    "xcb-util-xrm-final",
+    "glib-final",
+    "cairo-final",
+    "pango-final",
+    "pcre2-final"
+  ],
+  "runtime": [
+    "libev-final",
+    "yajl-final",
+    "startup-notification-final",
+    "libxkbcommon-final",
+    "xkeyboard-config-final",
+    "libX11-final",
+    "libxcb-final",
+    "xcb-util-final",
+    "xcb-util-wm-final",
+    "xcb-util-cursor-final",
+    "xcb-util-keysyms-final",
+    "xcb-util-xrm-final",
+    "glib-final",
+    "cairo-final",
+    "pango-final",
+    "pcre2-final"
+  ]
+}

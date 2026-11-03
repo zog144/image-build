@@ -1,0 +1,30 @@
+name: Inspect selected i3 text-stack upstream source and original notices
+on:
+  push:
+    branches: [regular/graphics-xvnc-source-closure-20261102]
+  pull_request:
+    branches: [main, unstable]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-text-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [glib, cairo, pango]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - run: python tools/inspect_i3_text_stack_archives.py --package ${{ matrix.name }}
+      - name: Preserve source-incomplete type/font/GLib closure
+        run: |
+          python -m pip install pytest==8.4.2
+          python -m pytest -q -p no:cacheprovider tests/test_i3_text_stack_source_candidates.py tests/test_i3_text_stack_build_stages.py
+# Source-only. Do not treat published hash check as compiler or rights acceptance.

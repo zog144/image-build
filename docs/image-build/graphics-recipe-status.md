@@ -23,7 +23,7 @@ No row may advance to **compiled** or **live-accepted** from this regular chat.
 | xorgproto libevdev prerequisite | recipe-authored / CI-validated | libevdev 1.14.0 and Python libevdev 0.13.1; privileged uinput/device suites remain explicit external evidence |
 | consumer-driven X11 core | recipe-authored / CI-validated | xtrans, libX11, libXext, libXfixes, libXi, libXtst, libXv, libxkbfile, libfontenc, libXfont2; libX11 includes four exact upstream 2026 security fixes; dedicated `graphics-recipes` run `38088814898` passed at `002343c169985e4b3909a3e21b242838f92796ab` |
 | XCB/i3 support phase 1 | recipe-authored / CI pending | xcb-util 0.4.1, xcb-util-image 0.4.1, xcb-util-keysyms 0.4.1, xcb-util-wm 0.4.2, xcb-util-xrm 1.3; source preparation only |
-| XCB cursor closure | researched / evidence correction pending | xcb-util-renderutil 0.3.10 and xcb-util-cursor 0.1.6; current research workflow omitted renderutil from the immutable Fedora probe, so neither row is advanced to recipe-authored yet |
+| XCB cursor closure | recipe-authored / source CI-validated (draft PR #9) | xcb-util-renderutil 0.3.10 and xcb-util-cursor 0.1.6 now have source-pinned build/test/install/dependency/notice contracts. Exact original archive members and CI graph passed; compiler/native and independent rights remain unaccepted |
 | X11 session support | recipe-authored / CI pending | libICE 1.1.2, libSM 1.2.6, libXt 1.3.1; required by startup-notification; libSM binds libuuid from the retained util-linux native-environment output; source preparation only |
 | comparable generation check | authored only | common installed check remains unchanged; no compiler-host run is claimed |
 
@@ -103,6 +103,8 @@ library rather than being arbitrary bundle imports. Do not hide those dependenci
 behind host distribution packages.
 
 ### C. xterm and i3
+
+**2026-11-02 source checkpoint:** xterm patch 412 archive SHA-256 and original COPYING/configure/MANIFEST member bytes are pinned in the catalogue-only metadata and independently checked in GitHub Actions #41458233770. A native xterm build stage, luit, font and Xaw/Xmu/Xpm/Xft dependencies remain open. i3 4.25.1 and TurboVNC 3.3.1 have exact pinned existing source references; their consumer requirements/server feature scope are recorded in the fail-closed `project/graphics-first-workspace/closure.json`. This is explicitly `source-incomplete`, not an accepted interactive Workspace.
 
 - xterm: pin the current reviewed release, luit/runtime font requirement and exact
   Xorg library features used by configure.

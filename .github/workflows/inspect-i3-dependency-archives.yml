@@ -1,0 +1,32 @@
+name: Inspect candidate i3 non-graphical original archives
+on:
+  push:
+    branches: [regular/graphics-xvnc-source-closure-20261102]
+  pull_request:
+    branches: [main, unstable]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [libev, yajl, startup-notification, libxkbcommon, xkeyboard-config]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Fetch exact public candidate source and inspect original rights bytes
+        run: python tools/inspect_i3_dependency_archives.py --single ${{ matrix.package }}
+      - name: Verify new noncanonical source recipes and dependency graph
+        run: |
+          python -m pip install pytest==8.4.2
+          PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_i3_nongraphical_recipes.py
+# Read-only public original-source inspection. Not native compilation,
+# source admission, key authority, rights approval or catalogue promotion.

@@ -1,0 +1,30 @@
+name: Inspect original i3 shaping bidi and Xrender sources
+on:
+  pull_request:
+    branches: [main, unstable]
+  push:
+    branches: [regular/graphics-xvnc-source-closure-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [harfbuzz, fribidi, libXrender, i3]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - run: python tools/inspect_i3_font_source_archives.py --package ${{ matrix.name }}
+      - name: Validate source-only original notices and typed stage manifests
+        run: |
+          python -m pip install pytest==8.4.2
+          PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_i3_font_dependency_recipes.py tests/test_i3_actual_source_recipe.py
+# No installation, rights or compilation authorization from archive hashes.

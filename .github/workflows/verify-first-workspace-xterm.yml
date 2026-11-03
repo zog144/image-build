@@ -1,0 +1,25 @@
+name: Verify first Workspace xterm 412 original source archive
+on:
+  push:
+    branches: [regular/graphics-xvnc-source-closure-20261102]
+  pull_request:
+    branches: [main, unstable]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  archive-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - run: python tools/inspect_xterm_archive.py
+      - run: |
+          python -m pip install pytest==8.4.2
+          PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_xterm_held_stage.py tests/test_xterm_acquisition_fallback.py
+# Source inspection only; no native build, publication or rights approval.

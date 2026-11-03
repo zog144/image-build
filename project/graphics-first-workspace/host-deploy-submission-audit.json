@@ -1,0 +1,56 @@
+{
+  "schema": "zog-first-workspace-host-deploy-submission-audit-v1",
+  "status": "SOURCE_REVIEW_NO_COMPILER_SUBMISSION",
+  "image_build_reviewed_source": "54431ea8f5ed69fd120d5e862a2277c5d2a2c46d",
+  "mesa_source": "9cbd652226b863a7b4bb2d6d9539722e1a262508",
+  "host_deploy_pr8_source": "a4ac7cdb4646e0fcd9a9cf49df9d367f2a108006",
+  "host_deploy_pr11_source": "7d052b340a026497fd32afb82d0a290d1d6bc60e",
+  "host_deploy_selected_image_source": "1f07e83dbd80dacb9bed0d6494c697375f0e26cd",
+  "source_path": "project/graphics-first-workspace/source-to-native-handoff.json",
+  "host_deploy_source_blobs": {
+    "src/zog/host_deploy/gateway/graphics_catalogue_owner.py": "675add79c90dee0d97570747cf5d7ec271846940",
+    "src/zog/host_deploy/gateway/task_catalogue.py": "673153b71acb853eab5fa25da337283f17fed73e",
+    "src/zog/host_deploy/gateway/graphics_generation_chain.py": "16217f064291edfa07b898f40e15db0cff58d9b0",
+    "src/zog/host_deploy/gateway/generic_pipeline.py": "4436490e3fe86e61c77a08f168043eea819b904e",
+    "src/zog/host_deploy/gateway/graphics_stage_once.py": "56a02d82a2d7d0af0bf93cfa07a6c23c388bda24",
+    "src/zog/host_deploy/gateway/graphics_external_checkpoint.py": "a9e1da91517ded13ce6e345c8475e490e66db965",
+    "src/zog/host_deploy/gateway/graphics_gateway_history.py": "7659c4c63b2df3940346593ff8c480fc09b453bb",
+    "src/zog/host_deploy/gateway/graphics_chain_export.py": "a60e10c68fe4a7b069604127ab7b92d52f481500",
+    "src/zog/host_deploy/gateway/protocol.py": "141c1211f38286b1b304513787da5bd11bf55c17"
+  },
+  "reviewed_graphical_tasks": [
+    "graphics-fonts-image-v1",
+    "graphics-xcb-core-image-v1",
+    "graphics-x11-core-image-v1"
+  ],
+  "unregistered_workspace_tasks": [
+    "llvm-final",
+    "mesa-final",
+    "turbovnc-final",
+    "i3-final",
+    "xterm-final",
+    "mesa-demos-final"
+  ],
+  "inherited_receipt_slots": [
+    "fonts",
+    "XCB",
+    "X11",
+    "zlib_native_environment",
+    "ncurses_temporary",
+    "LLVM",
+    "Mesa"
+  ],
+  "protected_gate_obligations": [
+    "genuine installed accepted fonts/XCB/X11 generation evidence, not a syntactic 64-hex ID",
+    "host-deploy original admitted gateway request, matched typed task and frozen catalogue digest",
+    "approved exact source revision and monthly pin, lane/host/installation/owner binding",
+    "protected independent source/pin/worker budget 30+2 GiB and 21600 second limit",
+    "current root-selected issuer and independently signed monotonic checkpoint",
+    "one native stage claim, original request/history grant, no replay or new automatic authorization",
+    "separate frozen authorization for new Workspace and Mesa recipes absent from bounded chain"
+  ],
+  "source_handoff_admits_compiler": false,
+  "native_receipts_observed": false,
+  "host_install_current_authority_observed": false,
+  "authorized_submission_test_allowed": false
+}
