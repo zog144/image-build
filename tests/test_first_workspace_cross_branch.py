@@ -65,6 +65,14 @@ def test_selected_review_artifacts_are_newer_but_cannot_change_native_holds():
         "project/graphics-drafts/llvm/stages/final/dependencies.py",
         "project/graphics-drafts/mesa/stages/final/dependencies.py",
         "docs/image-build/mesa-inherited-zlib-stage-2026-11-02.md",
+        "project/graphics-drafts/llvm/license.py",
+        "project/graphics-drafts/mesa/license.py",
+        "project/graphics-drafts/libdrm/license.py",
+        "project/graphics-drafts/mesa-demos/license.py",
+        "project/graphics-drafts/llvm/stages/final/produce-manifest.py",
+        "project/graphics-drafts/mesa/stages/final/produce-manifest.py",
+        "project/graphics-drafts/libdrm/stages/final/produce-manifest.py",
+        "project/graphics-drafts/mesa-demos/stages/final/produce-manifest.py",
     }
     mod.guard(*valid())
 
