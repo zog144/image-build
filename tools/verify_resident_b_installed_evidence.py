@@ -102,6 +102,34 @@ def _attestation(receipt, public_key, *, expected_generation, expected_state):
         raise EvidenceDenied("unverified independent witness signature") from exc
     return claim
 
+def _verified_generation_selection(selection, key, witness_key, generation, source_receipt):
+    """Separate signed upstream generation admission is a PRECONDITION, not a result."""
+    _keys(selection,("schema","selection","signature"),"selected generation")
+    if selection["schema"]!="zog-resident-b-selected-input-generation-v1":
+        deny("invalid independent generation source")
+    fields=("generation_id","source_generation_receipt_sha256","selection_status",
+            "native_boot_authorized","root_control_activation_authorized")
+    proof=selection["selection"]
+    _keys(proof,fields,"upstream selection")
+    if (proof["generation_id"]!=generation or
+        proof["source_generation_receipt_sha256"]!=source_receipt or
+        proof["selection_status"]!="accepted-as-input" or
+        proof["native_boot_authorized"] is not False or
+        proof["root_control_activation_authorized"] is not False):
+        deny("missing independently accepted source generation")
+    # Reusing the same signing authority for both evidence and source selection
+    # silently destroys the cross-owner acceptance boundary.
+    from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat
+    if key.public_bytes(Encoding.Raw,PublicFormat.Raw)==witness_key.public_bytes(Encoding.Raw,PublicFormat.Raw):
+        deny("generation authority is not independent of native witness")
+    try:
+        signature=base64.b64decode(selection["signature"],validate=True)
+        if len(signature)!=64 or base64.b64encode(signature).decode()!=selection["signature"]:
+            deny("invalid independent selection signature")
+        key.verify(signature,b"zog-resident-b-selected-input-generation-v1\\0"+canonical(proof))
+    except (ValueError,InvalidSignature,TypeError,AttributeError) as exc:
+        raise EvidenceDenied("unverified selected generation signature") from exc
+
 def _elf(raw):
     if len(raw)<64 or raw[:4]!=b"\x7fELF" or raw[4]!=2 or raw[5]!=1:
         deny("not 64-bit little-endian ELF")
@@ -140,12 +168,12 @@ def _wheel_record(root, dist, expected):
     if seen!=set(expected["record_members"]):
         deny("wheel RECORD inventory differs from independently selected receipt")
 
-def verify(root, receipt, trusted_public_key, *, expected_generation, expected_state):
+def verify(root, receipt, trusted_public_key, *, expected_generation, expected_state,\n           selected_generation_receipt, trusted_generation_public_key):
     root=Path(root)
     if root.is_symlink() or not root.is_dir(): deny("invalid rootfs evidence directory")
     claim=_attestation(receipt,trusted_public_key,
                        expected_generation=expected_generation,expected_state=expected_state)
-    source=json.loads(SOURCE_EXPECTED.read_text())
+    _verified_generation_selection(selected_generation_receipt,\n        trusted_generation_public_key, trusted_public_key, expected_generation,\n        claim["native_observation"]["source_generation_receipt_sha256"])\n    source=json.loads(SOURCE_EXPECTED.read_text())
     expected=set(sum(source["expected_installed_outputs"].values(),[]))
     records=claim["files"]
     if type(records) is not list or len(records)!=len(expected) or len(records)!=len(set(expected)):
