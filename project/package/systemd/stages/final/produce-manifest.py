@@ -15,4 +15,4 @@
               'usr/lib/os-release',
               'etc/os-release',
               'usr/include/systemd/sd-id128.h',
-              'usr/include/libudev.h']}
+              'usr/include/libudev.h', 'usr/bin/networkctl', 'usr/bin/resolvectl']}
