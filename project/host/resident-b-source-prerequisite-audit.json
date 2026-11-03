@@ -1,0 +1,106 @@
+{
+  "schema": "zog-resident-b-source-prerequisites-audit-v1",
+  "reviewed_image_build_source": "1f07e83dbd80dacb9bed0d6494c697375f0e26cd",
+  "host_install_bootable_contract_revision": "08f007cb14598d22debb2efc20eb3f00c2d8f2dd",
+  "scope": "Resident B AFTER Boot A; excludes Boot A revalidation, native generation selection, certificates, device writes",
+  "status": "SOURCE_GAPS_DOCUMENTED_RESIDENT_B_NO_GO",
+  "target_python": "3.12",
+  "source_python": "3.15.0rc2",
+  "python_stage": "python/stages/final",
+  "source_stage_inputs": {
+    "python": "project/package/python/stages/final",
+    "openssl": "project/package/openssl/stages/final",
+    "sqlite": "project/package/sqlite/stages/final",
+    "ca-certificates": "project/package/ca-certificates/stages/final",
+    "dbus": "project/package/dbus/stages/final",
+    "iproute2": "project/package/iproute2/stages/final",
+    "systemd": "project/package/systemd/stages/final",
+    "host-install": "project/package/host-install/stages/final",
+    "host-discover": "project/package/host-discover/stages/final",
+    "host-identify": "project/package/host-identify/stages/final"
+  },
+  "declared_existing_contracts": {
+    "python": [
+      "usr/bin/python3",
+      "usr/bin/python3.15",
+      "usr/lib/libpython3.15.so.1.0"
+    ],
+    "openssl": [
+      "usr/bin/openssl",
+      "usr/lib/libssl.so",
+      "usr/lib/libcrypto.so",
+      "usr/include/openssl/ssl.h",
+      "etc/ssl/openssl.cnf"
+    ],
+    "sqlite": [
+      "usr/bin/sqlite3",
+      "usr/include/sqlite3.h",
+      "usr/lib/libsqlite3.so"
+    ],
+    "ca-certificates": [
+      "etc/ssl/cert.pem",
+      "etc/ssl/certs/ca-certificates.crt"
+    ],
+    "dbus": [
+      "usr/bin/dbus-daemon",
+      "usr/lib/systemd/system/dbus.service",
+      "usr/bin/dbus-run-session"
+    ],
+    "iproute2": [
+      "usr/sbin/ip",
+      "usr/sbin/ss",
+      "usr/sbin/tc"
+    ],
+    "systemd": [
+      "usr/lib/systemd/systemd-networkd",
+      "usr/lib/systemd/systemd-resolved",
+      "usr/lib/systemd/systemd-timesyncd"
+    ],
+    "host-install": [
+      "usr/lib/python3.15/site-packages/zog/host_install/__init__.py"
+    ],
+    "host-discover": [
+      "usr/lib/python3.15/site-packages/zog/host_discover/__init__.py"
+    ],
+    "host-identify": [
+      "usr/lib/python3.15/site-packages/zog/host_identify/__init__.py"
+    ]
+  },
+  "resident_b_host_install_required": [
+    "usr/lib/systemd/systemd-networkd",
+    "usr/lib/systemd/systemd-resolved",
+    "usr/lib/systemd/systemd-timesyncd",
+    "usr/bin/networkctl",
+    "usr/bin/resolvectl",
+    "usr/bin/python3",
+    "usr/bin/dbus-daemon",
+    "usr/sbin/ip",
+    "usr/sbin/ss",
+    "usr/sbin/tc",
+    "usr/sbin/mkfs.ext4",
+    "usr/sbin/e2fsck",
+    "usr/bin/host-install",
+    "usr/bin/host-discover",
+    "usr/bin/box-control",
+    "usr/bin/root-control",
+    "usr/lib/systemd/system/dbus.service"
+  ],
+  "source_blockers": [
+    "PYTHON_TARGET_3_12_CONTRADICTS_PINNED_3_15_RC2",
+    "PYTHON_OPENSSL_SQLITE_STAGE_DEPS_NOT_DECLARED",
+    "PYTHON_SSL_SQLITE_EXTENSION_OUTPUTS_NOT_REQUIRED",
+    "NETWORKCTL_RESOLVECTL_MANIFEST_NOT_REQUIRED",
+    "HOST_INSTALL_DISCOVER_EXECUTABLE_MANIFEST_NOT_REQUIRED",
+    "BOX_CONTROL_ROOT_CONTROL_STAGE_MISSING",
+    "PROTECTED_INHERITED_BUILD_AND_CA_RUNTIME_PROOF_ABSENT",
+    "GENERATION_AND_RUNNING_SERVICES_NOT_VERIFIED"
+  ],
+  "accepted_generation_id": null,
+  "installed_output_provenance": null,
+  "source_promoted": false,
+  "native_accepted": false,
+  "release_authorized": false,
+  "job_submission_authorized": false,
+  "boot_a_reopened": false,
+  "certificate_dependency": false
+}
