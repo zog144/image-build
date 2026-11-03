@@ -110,6 +110,15 @@ def verify(*, overrides=None, controllers=None):
                       "importlib.metadata.version","spec.origin.startswith('/usr/lib/python3.12/site-packages/')"):
             if token not in scripts["configure"]:
                 deny("selected source tool/module origin unverified: "+name)
+        if key in ("flit-core","installer","packaging","wheel"):
+            if "PKG-INFO" not in scripts["configure"] or "BytesParser" not in scripts["configure"]:
+                deny("dynamic source version not checked against original PKG-INFO: "+name)
+        if key=="dbus-next":
+            if ("assert not (root/'pyproject.toml').exists()" not in scripts["configure"] or
+                "root/'PKG-INFO'" not in scripts["configure"] or
+                "setuptools.build_meta.__legacy__" not in scripts["build"] or
+                "root/'setup.py'" not in scripts["build"]):
+                deny("legacy dbus-next backend/source not verified")
         for token in ("dist-info/METADATA","dist-info/RECORD","m['Version']=='"+version+"'"):
             if token not in scripts["test"]:
                 deny("wheel metadata or RECORD verification missing: "+name)

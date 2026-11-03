@@ -1,4 +1,4 @@
-# Held Resident B Python 3.12 source candidate; no native compilation or admission.
+# Held Resident B CPython 3.12 source stage; original-source metadata checked, native build not executed.
 {
   "configure": [
     [

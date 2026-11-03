@@ -1,4 +1,4 @@
-# Held Resident B Python 3.12 source candidate; no native compilation or admission.
+# Held Resident B CPython 3.12 source stage; original-source metadata checked, native build not executed.
 {
   "configure": [
     [
@@ -7,7 +7,7 @@
       "-o",
       "pipefail",
       "-c",
-      "set -eu\ncd upstream/installer-1.0.1\ntest -x /usr/bin/python3.12\n/usr/bin/python3.12 -I - <<'ZOG_SELECTED_SOURCE'\nimport importlib.metadata,importlib.util,os,pathlib,sys,tomllib\nassert sys.version_info[:3]==(3,12,16) and sys.flags.isolated\nassert sys.executable=='/usr/bin/python3.12'\nassert not os.environ.get('PYTHONPATH') and not os.environ.get('PYTHONHOME')\nassert not any(p.startswith(('/usr/local/','/home/','/opt/host/')) for p in sys.path)\nroot=pathlib.Path.cwd(); p=tomllib.loads((root/'pyproject.toml').read_text())\nassert p['project']['name'].replace('_','-').lower()=='installer'\nassert str(p['project']['version'])=='1.0.1'\nrequired=[{\"dist\":\"flit_core\",\"version\":\"3.12.0\",\"module\":\"flit_core\"}]\nfor x in required:\n assert importlib.metadata.version(x['dist'])==x['version'], ('wrong selected tool',x)\n spec=importlib.util.find_spec(x['module'])\n assert spec and spec.origin and spec.origin.startswith('/usr/lib/python3.12/site-packages/'), ('Host module fallback',x)\nprint('ZOG_RESIDENT312_SELECTED_TOOLS_CONSISTENT')\nZOG_SELECTED_SOURCE"
+      "set -eu\ncd upstream/installer-1.0.1\ntest -x /usr/bin/python3.12\n/usr/bin/python3.12 -I - <<'ZOG_SELECTED_SOURCE'\nimport importlib.metadata,importlib.util,os,pathlib,sys,tomllib\nassert sys.version_info[:3]==(3,12,16) and sys.flags.isolated\nassert sys.executable=='/usr/bin/python3.12'\nassert not os.environ.get('PYTHONPATH') and not os.environ.get('PYTHONHOME')\nassert not any(p.startswith(('/usr/local/','/home/','/opt/host/')) for p in sys.path)\nroot=pathlib.Path.cwd(); p=tomllib.loads((root/'pyproject.toml').read_text())\nassert p['project']['name'].replace('_','-').lower()=='installer'\nfrom email.parser import BytesParser\ninfo=BytesParser().parsebytes((root/'PKG-INFO').read_bytes())\nassert info['Version']=='1.0.1'\nassert info['Name'].replace('_','-').lower()==p['project']['name'].replace('_','-').lower()\nrequired=[{\"dist\":\"flit_core\",\"version\":\"3.12.0\",\"module\":\"flit_core\"}]\nfor x in required:\n assert importlib.metadata.version(x['dist'])==x['version'], ('wrong selected tool',x)\n spec=importlib.util.find_spec(x['module'])\n assert spec and spec.origin and spec.origin.startswith('/usr/lib/python3.12/site-packages/'), ('Host module fallback',x)\nprint('ZOG_RESIDENT312_SELECTED_TOOLS_CONSISTENT')\nZOG_SELECTED_SOURCE"
     ]
   ],
   "build": [

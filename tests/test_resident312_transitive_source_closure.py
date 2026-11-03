@@ -110,3 +110,30 @@ def test_selected_source_produces_explicit_dependency_acyclic_order():
     for ix,key in enumerate(order):
         assert all(order.index(n)<ix for n in m.PINS[key][3])
     assert m.CONTROLLERS["root-control"]["runtime"].index("box-control-final")>0
+
+
+@pytest.mark.parametrize("key",["flit-core","installer","packaging","wheel"])
+def test_dynamic_pypi_versions_must_use_original_pkg_info(key):
+    name="resident312-"+key
+    b=load(name,"stages/final/build.py")
+    assert "PKG-INFO" in b["configure"][0][-1]
+    b["configure"][0][-1]=b["configure"][0][-1].replace("PKG-INFO","pyproject.toml")
+    with pytest.raises(ValueError,match="dynamic source version"):
+        m.verify(overrides=change(name,"stages/final/build.py",b))
+
+def test_legacy_dbus_next_cannot_be_treated_as_pep517_pyproject():
+    name="resident312-dbus-next"
+    b=load(name,"stages/final/build.py")
+    assert "setuptools.build_meta.__legacy__" in b["build"][0][-1]
+    assert "not (root/'pyproject.toml').exists()" in b["configure"][0][-1]
+    b["build"][0][-1]=b["build"][0][-1].replace(
+        "setuptools.build_meta.__legacy__","setuptools.build_meta")
+    with pytest.raises(ValueError,match="legacy dbus-next"):
+        m.verify(overrides=change(name,"stages/final/build.py",b))
+
+def test_setuptools_vendored_modules_remain_source_rights_hold():
+    entry=load("resident312-setuptools","license.py")
+    assert entry["status"]=="unresolved"
+    assert entry["evidence"]==[]
+    result=m.verify()
+    assert result["native_tool_origin"]=="NOT_ACCEPTED"

@@ -1,0 +1,24 @@
+name: Inspect Resident B cp312 original Python archives (source-only)
+on:
+  push:
+    branches: [review/resident-b-controller-wheel-output-20261103]
+    paths:
+      - 'project/package/resident312-*/stages/final/sources.py'
+      - 'project/package/resident312-*/package.py'
+      - 'tools/inspect_resident312_original_sources.py'
+      - '.github/workflows/resident312-original-source-inspection.yml'
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Inspect bounded SHA-256 original source archives without executing code
+        run: python tools/inspect_resident312_original_sources.py
+      - name: Never infer native acceptance
+        if: always()
+        run: echo 'No Python package builds or native compiler jobs; original archive checks only.' >> "$GITHUB_STEP_SUMMARY"
