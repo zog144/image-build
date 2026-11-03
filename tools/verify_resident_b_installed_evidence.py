@@ -309,6 +309,8 @@ def verify_protected_mounts(rootfs, state_mount, *, protected_context):
         deny("rootfs and STATE must both be actual distinct mounted volumes")
     rstat=rootfs.stat()
     sstat=state_mount.stat()
+    if not (os.statvfs(rootfs).f_flag & os.ST_RDONLY):
+        deny("independently selected rootfs mount must be read-only")
     if (rstat.st_dev!=protected_context["rootfs_device"] or
         sstat.st_dev!=protected_context["state_device"] or
         rstat.st_dev==sstat.st_dev):
