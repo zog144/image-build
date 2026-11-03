@@ -145,7 +145,12 @@ def test_original_xxf86vm_pkgconfig_install_and_complete_llvm_target_graph():
     assert "usr/share/licenses/libXxf86vm/COPYING" in xxf["required"]
     assert "xf86vmode.h" not in str(xxf)
     llvm = stage("llvm", "build.py")
-    assert llvm["build"][0][-1] == "cmake --build build-llvm --parallel 2"
+    assert llvm["build"][0][-1] == ("cmake --build build-llvm --target llvm-tblgen --parallel 2\\n"
+                                   "cmake --build build-llvm --parallel 2")
+    assert "test -x build-llvm/bin/llvm-tblgen" in llvm["test"][0][-1]
+    assert 'install -Dm755 build-llvm/bin/llvm-tblgen' in llvm["install"][0][-1]
+    assert "usr/bin/llvm-tblgen" in stage("llvm", "produce-manifest.py")["required"]
+    assert "test -x /usr/bin/llvm-tblgen" in stage("mesa", "build.py")["configure"][0][-1]
     assert "llvm-config --has-rtti" in stage("mesa", "build.py")["configure"][0][-1]
 
 
