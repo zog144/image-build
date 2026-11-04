@@ -316,8 +316,8 @@ def verify_protected_mounts(rootfs, state_mount, *, protected_context):
         rstat.st_dev==sstat.st_dev):
         deny("selected rootfs/STATE device identity does not match protected owner")
     if (sstat.st_uid!=0 or sstat.st_gid!=0 or
-        stat.S_IMODE(sstat.st_mode) not in (0o700,0o750)):
-        deny("STATE mount must have protected root ownership and mode")
+        stat.S_IMODE(sstat.st_mode)!=0o755):
+        deny("STATE mount must match host-install's root:root mode 0755; private directories remain separate")
     source=json.loads(SOURCE_EXPECTED.read_text())
     python=ast.literal_eval((SOURCE_EXPECTED.parents[2]/
         "project/package/python-resident312/stages/final/produce-manifest.py").read_text())
