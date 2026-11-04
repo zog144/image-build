@@ -1,0 +1,66 @@
+name: First Fonts GitHub trigger preparation — source only
+on:
+  push:
+    branches: [review/first-fonts-github-preparation-20261104]
+  pull_request:
+    paths:
+      - 'project/graphics-first-workspace/first-fonts-github-preparation-v1.json'
+      - 'tools/verify_first_fonts_github_preparation.py'
+      - 'tests/test_first_fonts_github_preparation.py'
+      - '.github/workflows/verify-first-fonts-github-preparation.yml'
+permissions:
+  contents: read
+jobs:
+  exact-no-dispatch-source-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/image-build
+          ref: 1f07e83dbd80dacb9bed0d6494c697375f0e26cd
+          path: dependencies/image-build-source
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/host-deploy
+          ref: 78a772a6542dba660ddaa4223b28593c0251f810
+          path: dependencies/host-deploy-pr7
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/host-deploy
+          ref: c46c6b5819b1f4496de1b860aa2785812244493e
+          path: dependencies/host-deploy-taskc
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install synthetic test dependency only
+        run: python -m pip install 'pytest==8.4.2'
+      - name: Verify immutable checkout identities
+        run: |
+          test "$(git -C dependencies/image-build-source rev-parse HEAD)" = "1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
+          test "$(git -C dependencies/host-deploy-pr7 rev-parse HEAD)" = "78a772a6542dba660ddaa4223b28593c0251f810"
+          test "$(git -C dependencies/host-deploy-taskc rev-parse HEAD)" = "c46c6b5819b1f4496de1b860aa2785812244493e"
+      - name: Exact Fonts catalogue, October source and non-submittable request validation
+        env:
+          AWS_EC2_METADATA_DISABLED: 'true'
+          ZOG_HOSTDEPLOY_FONTS_PR7: dependencies/host-deploy-pr7
+          ZOG_HOSTDEPLOY_TASKC_PR26: dependencies/host-deploy-taskc
+          ZOG_IMAGE_BUILD_SELECTED_SOURCE: dependencies/image-build-source
+        run: |
+          python -m compileall -q tools/verify_first_fonts_github_preparation.py tests/test_first_fonts_github_preparation.py
+          python tools/verify_first_fonts_github_preparation.py \
+            --fonts-host "$ZOG_HOSTDEPLOY_FONTS_PR7" \
+            --taskc-host "$ZOG_HOSTDEPLOY_TASKC_PR26" \
+            --image-build-source "$ZOG_IMAGE_BUILD_SELECTED_SOURCE"
+          python -m pytest -q tests/test_first_fonts_github_preparation.py
+      - name: Source only, zero execution authority
+        if: always()
+        run: |
+          echo 'No GitHub execution issue created; no SQS, SSM, AWS credentials, build, or generation admitted.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PR7 installed catalogue, protected Task C owner and native managed Host remain NO-GO.' >> "$GITHUB_STEP_SUMMARY"
