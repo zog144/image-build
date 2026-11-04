@@ -7,7 +7,9 @@ root and never mounts, executes controllers, enables services or selects a
 generation. No caller-provided success flag can turn this into acceptance.
 """
 from __future__ import annotations
+import ast
 import base64
+import configparser
 import csv
 import hashlib
 import io
@@ -17,6 +19,7 @@ from pathlib import Path, PurePosixPath
 import re
 import stat
 import struct
+from email.parser import BytesParser
 
 from cryptography.exceptions import InvalidSignature
 
@@ -79,7 +82,7 @@ def _attestation(receipt, public_key, *, expected_generation, expected_state):
         deny("untrusted generation argument")
     if type(expected_state) is not str or len(expected_state)<16:
         deny("missing expected STATE")
-    if claim["python_version"]!="3.12":
+    if claim["python_version"]!="3.12.16":
         deny("wrong python ABI")
     if (type(claim["native_observation"]) is not dict or
         set(claim["native_observation"])!={"rootfs_slot","rootfs_readonly","state_mount_id",
@@ -139,34 +142,63 @@ def _elf(raw):
         deny("unsupported ELF type")
 
 def _wheel_record(root, dist, expected):
+    """Verify actual wheel member bytes, metadata, entry points and tag."""
     prefix="usr/lib/python3.12/site-packages/"
-    record=prefix+dist+".dist-info/RECORD"
-    file,_=_file(root,record)
-    raw=file.read_bytes()
+    label=dist.split("-0.1.0",1)[0].replace("_","-")
+    if label not in REQUIRED_CONTROLLERS:deny("unexpected wheel distribution")
+    info_path=prefix+dist+".dist-info/"
+    record=info_path+"RECORD"
+    raw=_file(root,record)[0].read_bytes()
     if _digest(raw)!=expected["record_sha256"]:
         deny("wheel RECORD digest mismatch")
+    metadata=BytesParser().parsebytes(_file(root,info_path+"METADATA")[0].read_bytes())
+    if (metadata.get("Name","").replace("_","-").lower()!=label or
+        metadata.get("Version")!="0.1.0"):
+        deny("installed wheel Name/Version differs from selected source")
+    selected={"image-build==0.2.0.dev5","dbus-next==0.2.3"}
+    if label=="root-control":selected.add("box-control==0.1.0")
+    deps={x.lower().replace(" ","") for x in (metadata.get_all("Requires-Dist") or [])}
+    if deps!=selected or len(metadata.get_all("Requires-Dist") or [])!=len(selected):
+        deny("installed wheel Requires-Dist does not match selected runtime graph")
+    cfg=configparser.ConfigParser(interpolation=None)
+    cfg.read_string(_file(root,info_path+"entry_points.txt")[0].read_text())
+    if (set(cfg.sections())!={"console_scripts"} or
+        dict(cfg.items("console_scripts"))!={label:
+            "zog."+label.replace("-","_")+
+            (".cli:main" if label=="box-control" else ".daemon:main")}):
+        deny("wheel console script entry-point origin mismatched")
+    wheel=BytesParser().parsebytes(_file(root,info_path+"WHEEL")[0].read_bytes())
+    if (wheel.get("Root-Is-Purelib","").lower()!="true" or
+        wheel.get_all("Tag")!=["py3-none-any"]):
+        deny("wheel CPython ABI/tag unexpectedly changed")
     seen=set()
-    for path,hashpart,sizepart in csv.reader(io.StringIO(raw.decode("utf-8"))):
-        path=_path(path)
-        if path in seen: deny("duplicate wheel RECORD member")
-        seen.add(path)
-        if not path.startswith(("zog/",dist+".dist-info/","../../../bin/")):
-            deny("unexpected RECORD member path")
-        if not hashpart:
-            if path!=dist+".dist-info/RECORD": deny("unchecked wheel member")
-            continue
-        if not hashpart.startswith("sha256=") or not sizepart.isdecimal():
-            deny("incomplete RECORD member")
-        member=(prefix+path) if not path.startswith("../../../bin/") else ("usr/bin/"+path.split("/")[-1])
-        installed,_=_file(root,member)
+    for row in csv.reader(io.StringIO(raw.decode("utf-8"))):
+        if len(row)!=3:deny("invalid wheel RECORD row")
+        member,hashpart,sizepart=row
+        if member in seen:deny("duplicate wheel RECORD member")
+        seen.add(member)
+        script="../../../bin/"+label
+        if member==script:
+            installed_path="usr/bin/"+label
+        else:
+            _path(member)
+            if not member.startswith(("zog/",dist+".dist-info/")):
+                deny("unexpected wheel RECORD path")
+            installed_path=prefix+member
+        installed,_=_file(root,installed_path)
         data=installed.read_bytes()
-        encoded=base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
-        if encoded!=hashpart[7:] or len(data)!=int(sizepart):
-            deny("installed wheel RECORD byte mismatch")
-    for mandatory in (dist+".dist-info/METADATA",dist+".dist-info/RECORD"):
-        if mandatory not in seen: deny("wheel metadata absent from RECORD")
-    if seen!=set(expected["record_members"]):
-        deny("wheel RECORD inventory differs from independently selected receipt")
+        if member==dist+".dist-info/RECORD":
+            if hashpart or sizepart:deny("self-hashed wheel RECORD not supported")
+        else:
+            if not hashpart.startswith("sha256=") or not sizepart.isdecimal():
+                deny("unhashed wheel member")
+            actual=base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
+            if actual!=hashpart[7:] or len(data)!=int(sizepart):
+                deny("installed wheel RECORD byte mismatch")
+    mandatory={dist+".dist-info/"+x for x in ("METADATA","RECORD","WHEEL","entry_points.txt")}
+    mandatory|={"zog/"+label.replace("-","_")+"/__init__.py","../../../bin/"+label}
+    if not mandatory.issubset(seen) or seen!=set(expected["record_members"]):
+        deny("wheel RECORD omitted required metadata/executable or substituted inventory")
 
 def verify(root, receipt, trusted_public_key, *, expected_generation, expected_state,
            selected_generation_receipt, trusted_generation_public_key):
@@ -179,6 +211,11 @@ def verify(root, receipt, trusted_public_key, *, expected_generation, expected_s
         claim["native_observation"]["source_generation_receipt_sha256"])
     source=json.loads(SOURCE_EXPECTED.read_text())
     expected=set(sum(source["expected_installed_outputs"].values(),[]))
+    python=ast.literal_eval((SOURCE_EXPECTED.parents[2]/
+        "project/package/python-resident312/stages/final/produce-manifest.py").read_text())
+    if python.get("trees")!=["usr"] or len(python.get("required",[]))!=5:
+        deny("Python 3.12 source-native output manifest changed")
+    expected.update(python["required"])
     records=claim["files"]
     if type(records) is not list or len(records)!=len(expected) or len(records)!=len(set(expected)):
         deny("incomplete installed inventory")
@@ -197,23 +234,34 @@ def verify(root, receipt, trusted_public_key, *, expected_generation, expected_s
             deny("installed file evidence mismatch")
         if rec["kind"] not in ("text","python","script","elf"):
             deny("bad installed file classification")
+        if name in python["required"]:
+            if rec["kind"]!="elf":
+                deny("Python 3.12 installed interpreter/extension is not an ELF")
+            _elf(data)
         if name in ("usr/bin/root-control","usr/bin/box-control"):
             if rec["kind"]!="script" or not data.startswith(b"#!/usr/bin/python3.12"):
                 deny("unreviewed controller console script")
             if rec["mode"]!=0o755: deny("controller executable permissions")
         if name.endswith("zog-root-control.service"):
-            if rec["mode"]!=0o644 or b"User=root" not in data or b"Group=root" not in data:
+            if rec["mode"]!=0o644:
                 deny("root service privilege mismatch")
-            if b"[Install]" in data or b"RequiresMountsFor=/state" not in data:
-                deny("service activation or missing STATE mount gate")
+            selected=ast.literal_eval((SOURCE_EXPECTED.parents[2]/
+                "project/package/root-control/stages/final/build.py").read_text())["install"][0][-1]
+            marker="<<'ZOG_ROOT_CONTROL_UNIT'\n"
+            if selected.count(marker)!=1:
+                deny("missing exact reviewed root service source")
+            expected_unit=selected.split(marker,1)[1].split("\nZOG_ROOT_CONTROL_UNIT",1)[0]+"\n"
+            if data!=expected_unit.encode():
+                deny("privileged root service differs from exact reviewed disabled unit")
     if observed!=expected: deny("missing selected native outputs")
     modules=claim["modules"]
     if type(modules) is not dict or set(modules)!=set(MODULES):
         deny("missing Python runtime SSL SQLite hashlib")
     for name,path in modules.items():
-        if type(path) is not str or not path.startswith(
-                "usr/lib/python3.12/lib-dynload/"+name+"."):
-            deny("wrong Python native module path")
+        exact_abi=("usr/lib/python3.12/lib-dynload/"+name+
+                   ".cpython-312-x86_64-linux-gnu.so")
+        if type(path) is not str or path!=exact_abi:
+            deny("wrong Python native module or exact CPython 3.12 SOABI path")
         file,_=_file(root,path)
         _elf(file.read_bytes())
     wheels=claim["wheels"]
@@ -232,3 +280,54 @@ def verify(root, receipt, trusted_public_key, *, expected_generation, expected_s
     # SOURCE/RECEIPT consistency only. No native authority or acceptance.
     return {"status":"EVIDENCE_COHERENT_UNACCEPTED","accepted_generation":None,
             "native_install_authorized":False,"service_activation_authorized":False}
+
+
+def verify_protected_mounts(rootfs, state_mount, *, protected_context):
+    """Additional native-only check; policy must be independently host-install-authenticated.
+
+    This helper does not authenticate a caller's protected_context or issue
+    rootfs acceptance, but prevents using signed-looking mount claims as an
+    equivalent of actual kernel mount/device/ownership observations.
+    """
+    _keys(protected_context,("schema","rootfs_device","state_device",
+                             "state_volume_id","rootfs_generation_id",
+                             "socket_gid"),"protected native mount context")
+    if protected_context["schema"]!="zog-host-install-resident-b-native-mount-v1":
+        deny("unreviewed protected native mount schema")
+    for field in ("rootfs_device","state_device","socket_gid"):
+        if type(protected_context[field]) is not int or protected_context[field]<=0:
+            deny("missing host-install selected device or socket numeric group")
+    if (type(protected_context["rootfs_generation_id"]) is not str or
+        not SHA.fullmatch(protected_context["rootfs_generation_id"]) or
+        type(protected_context["state_volume_id"]) is not str or
+        len(protected_context["state_volume_id"])<16):
+        deny("native mount does not bind accepted generation and STATE")
+    rootfs=Path(rootfs)
+    state_mount=Path(state_mount)
+    if (rootfs.is_symlink() or not rootfs.is_mount() or
+        state_mount.is_symlink() or not state_mount.is_mount()):
+        deny("rootfs and STATE must both be actual distinct mounted volumes")
+    rstat=rootfs.stat()
+    sstat=state_mount.stat()
+    if not (os.statvfs(rootfs).f_flag & os.ST_RDONLY):
+        deny("independently selected rootfs mount must be read-only")
+    if (rstat.st_dev!=protected_context["rootfs_device"] or
+        sstat.st_dev!=protected_context["state_device"] or
+        rstat.st_dev==sstat.st_dev):
+        deny("selected rootfs/STATE device identity does not match protected owner")
+    if (sstat.st_uid!=0 or sstat.st_gid!=0 or
+        stat.S_IMODE(sstat.st_mode)!=0o755):
+        deny("STATE mount must match host-install's root:root mode 0755; private directories remain separate")
+    source=json.loads(SOURCE_EXPECTED.read_text())
+    python=ast.literal_eval((SOURCE_EXPECTED.parents[2]/
+        "project/package/python-resident312/stages/final/produce-manifest.py").read_text())
+    for name in set(sum(source["expected_installed_outputs"].values(),[]))|set(python["required"]):
+        installed,info=_file(rootfs,name)
+        if info.st_uid!=0 or info.st_gid!=0:
+            deny("native installed immutable rootfs output not root-owned")
+    # A source-installed unit is not authorization to create an activation symlink.
+    if (rootfs/"etc/systemd/system/multi-user.target.wants/zog-root-control.service").exists():
+        deny("root-control service was enabled without protected installer action")
+    return {"physical_mounts":"MATCH_INDEPENDENT_PROTECTED_CONTEXT",
+            "rootfs_generation_accepted":None,
+            "controller_activation_authorized":False}

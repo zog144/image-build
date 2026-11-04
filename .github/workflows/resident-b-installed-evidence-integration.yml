@@ -1,0 +1,42 @@
+name: Resident B installed evidence independent source integration
+on:
+  push:
+    branches: [review/resident-b-native-evidence-integration-20261103]
+  pull_request:
+    paths:
+      - 'tools/verify_resident_b_installed_evidence.py'
+      - 'tests/test_resident_b_installed_evidence.py'
+      - 'tests/test_resident_b_installed_evidence_hardening.py'
+      - '.github/workflows/resident-b-installed-evidence-integration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-protected-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12','3.13']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Prove original combined Resident B source retained
+        run: |
+          git merge-base --is-ancestor 02fdd2f6b374322dd902ec58b982bbbf64d4b013 HEAD
+          python tools/verify_resident_b_combined_source.py
+      - name: Synthetic signed native-generation evidence, no actual Host
+        run: |
+          python -m pip install 'pytest==8.4.2' 'cryptography==46.0.3'
+          python -m pytest -q tests/test_resident_b_installed_evidence.py tests/test_resident_b_installed_evidence_hardening.py
+      - name: Native authority remains separate
+        if: always()
+        run: |
+          echo 'Source-only fake installed files and disposable Ed25519 keys.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No accepted rootfs, native source/ELF closure, STATE, service activation or copyright authorization.' >> "$GITHUB_STEP_SUMMARY"

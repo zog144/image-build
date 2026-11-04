@@ -24,18 +24,32 @@ def fixture(tmp_path):
     root=tmp_path/"image";root.mkdir(parents=True)
     src=json.loads(v.SOURCE_EXPECTED.read_text())
     paths=set(sum(src["expected_installed_outputs"].values(),[]))
+    py=v.ast.literal_eval((v.SOURCE_EXPECTED.parents[2]/
+        "project/package/python-resident312/stages/final/produce-manifest.py").read_text())
+    paths.update(py["required"])
+    elf=bytearray(64);elf[:4]=b"\x7fELF";elf[4]=2;elf[5]=1
+    struct.pack_into("<H",elf,16,3);struct.pack_into("<H",elf,18,62)
     source={}
     for name in paths:
         if name.endswith(".service"):
-            data=b"[Unit]\nRequiresMountsFor=/state\n[Service]\nType=exec\nUser=root\nGroup=root\nExecStart=/usr/bin/root-control\n"
+            unit=v.ast.literal_eval((v.SOURCE_EXPECTED.parents[2]/
+                "project/package/root-control/stages/final/build.py").read_text())["install"][0][-1]
+            data=(unit.split("<<'ZOG_ROOT_CONTROL_UNIT'\n",1)[1]
+                 .split("\nZOG_ROOT_CONTROL_UNIT",1)[0]+"\n").encode()
+        elif name in py["required"]:
+            data=bytes(elf)
         elif name in ("usr/bin/box-control","usr/bin/root-control"):
             data=b"#!/usr/bin/python3.12\nimport sys\n"
         elif name.endswith("/RECORD"):
             continue
         elif name.endswith("/METADATA"):
             app="box-control" if "box_control" in name else "root-control"
-            data=("Metadata-Version: 2.4\nName: "+app+"\nVersion: 0.1.0\n").encode()
-        else: data=("synthetic:"+name).encode()
+            deps=["image-build==0.2.0.dev5","dbus-next==0.2.3"]
+            if app=="root-control":deps.append("box-control==0.1.0")
+            data=("Metadata-Version: 2.4\nName: "+app+"\nVersion: 0.1.0\n"+
+                  "".join("Requires-Dist: "+d+"\n" for d in deps)).encode()
+        else:
+            data=("synthetic:"+name).encode()
         target=root/name;target.parent.mkdir(parents=True,exist_ok=True)
         target.write_bytes(data)
         target.chmod(0o755 if name.startswith("usr/bin/") else 0o644)
@@ -44,22 +58,31 @@ def fixture(tmp_path):
     prefix="usr/lib/python3.12/site-packages/"
     for app in ("box_control-0.1.0","root_control-0.1.0"):
         dist=app+".dist-info"
-        members=[x for x in source if x.startswith(prefix+"zog/"+app.split("_")[0]+"_control/") or
-                 x.startswith(prefix+dist+"/")]
-        # Need exact names matching RECORD, plus RECORD itself.
-        members=[x[len(prefix):] for x in members]
+        command=app.split("-0.1.0")[0].replace("_","-")
+        ep=prefix+dist+"/entry_points.txt"
+        wh=prefix+dist+"/WHEEL"
+        source[ep]=("[console_scripts]\n"+command+" = "+
+            ("zog.box_control.cli:main" if command=="box-control" else
+             "zog.root_control.daemon:main")+"\n").encode()
+        source[wh]=b"Wheel-Version: 1.0\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
+        for pth in (ep,wh):
+            obj=root/pth;obj.parent.mkdir(parents=True,exist_ok=True)
+            obj.write_bytes(source[pth]);obj.chmod(0o644)
+        members=[x[len(prefix):] for x in source
+                 if x.startswith(prefix+"zog/"+app.split("_")[0]+"_control/")
+                 or x.startswith(prefix+dist+"/")]
         record=dist+"/RECORD"
         lines=[record_line(p,source[prefix+p]) for p in members]
+        lines.append(record_line("../../../bin/"+command,source["usr/bin/"+command]))
         lines.append((record,"",""))
         buf=io.StringIO();csv.writer(buf,lineterminator="\n").writerows(lines)
         raw=buf.getvalue().encode()
-        path=prefix+record
-        (root/path).write_bytes(raw)
-        source[path]=raw
-        wheels[app]={"record_sha256":sha(raw),"record_members":sorted(members+[record])}
+        record_path=prefix+record
+        (root/record_path).write_bytes(raw)
+        source[record_path]=raw
+        wheels[app]={"record_sha256":sha(raw),
+                     "record_members":sorted(members+["../../../bin/"+command,record])}
     modules={}
-    elf=bytearray(64);elf[:4]=b"\x7fELF";elf[4]=2;elf[5]=1
-    struct.pack_into("<H",elf,16,3);struct.pack_into("<H",elf,18,62)
     for name in v.MODULES:
         path="usr/lib/python3.12/lib-dynload/"+name+".cpython-312-x86_64-linux-gnu.so"
         dest=root/path;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(elf)
@@ -67,11 +90,12 @@ def fixture(tmp_path):
     files=[]
     for name in sorted(paths):
         target=root/name;raw=target.read_bytes()
-        kind="script" if name.startswith("usr/bin/") else "text"
+        kind=("elf" if name in py["required"] else
+              "script" if name.startswith("usr/bin/") else "text")
         files.append(dict(path=name,sha256=sha(raw),size=len(raw),
                           mode=stat.S_IMODE(target.stat().st_mode),kind=kind))
     claim=dict(generation_id=GEN,state_volume_id=STATE,source_pins=v.SOURCE_PINS,
-        files=files,modules=modules,python_version="3.12",
+        files=files,modules=modules,python_version="3.12.16",
         wheels=wheels,
         native_observation={"rootfs_slot":"HOST-B","rootfs_readonly":True,
             "state_mount_id":STATE,"source_generation_receipt_sha256":"f"*64,
