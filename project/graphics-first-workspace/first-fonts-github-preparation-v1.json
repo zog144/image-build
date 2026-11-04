@@ -1,0 +1,110 @@
+{
+  "schema": "zog-fonts-github-trigger-preparation-v1",
+  "status": "PREPARED_NOT_SUBMITTABLE",
+  "task": "graphics-fonts-image-v1",
+  "producer": {
+    "repository": "zog144/image-build",
+    "source_revision": "1f07e83dbd80dacb9bed0d6494c697375f0e26cd",
+    "source_plan_path": "project/bootstrap/graphics-fonts.py",
+    "monthly_pin_path": "project/pins/2026-10-01/commit-pin.py",
+    "monthly_pin_sha256": "sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
+  },
+  "reviewer": {
+    "host_deploy_fonts_catalogue_revision": "78a772a6542dba660ddaa4223b28593c0251f810",
+    "host_deploy_task_c_revision": "c46c6b5819b1f4496de1b860aa2785812244493e"
+  },
+  "task_catalogue": {
+    "schema": 2,
+    "only_task": "graphics-fonts-image-v1",
+    "entries": [
+      [
+        "fontconfig-final",
+        "fontconfig",
+        "fontconfig/stages/final"
+      ],
+      [
+        "freetype-final",
+        "freetype",
+        "freetype/stages/final"
+      ],
+      [
+        "libpng-final",
+        "libpng",
+        "libpng/stages/final"
+      ]
+    ],
+    "targets": [
+      "libpng-final",
+      "freetype-final",
+      "fontconfig-final"
+    ],
+    "arguments_mode": "image",
+    "selected_base_generation": null,
+    "selected_managed_lane": null,
+    "selected_host": null,
+    "installed_catalogue_sha256": null,
+    "installed_catalogue_receipt_sha256": null
+  },
+  "gateway": {
+    "event": "issues.opened",
+    "origin_repository": "zog144/host-deploy",
+    "operation": "build.submit",
+    "source_repository": "zog144/image-build",
+    "source_commit": "1f07e83dbd80dacb9bed0d6494c697375f0e26cd",
+    "request_schema": 1,
+    "request_id": null,
+    "workspace_id": null,
+    "issue_number": null,
+    "actor": null,
+    "request_sha256": null,
+    "queue_receipt": null,
+    "dispatcher_selected_revision": null,
+    "admin_operation_opt_in": null
+  },
+  "native_gates": {
+    "protected_original_operator_approval": null,
+    "accepted_self_hosted_toolchain_generation": null,
+    "canonical_base_generation_receipt": null,
+    "real_managed_lane_and_host_installation": null,
+    "protected_one_task_catalogue_and_receipt": null,
+    "dedicated_30_plus_2_gib_native_reservation": null,
+    "six_hour_cpu_and_persistent_write_budget": null,
+    "authenticated_original_preflight_claim_and_ssm_result": null,
+    "installed_protected_stream_owner": null,
+    "independently_nonrollbackable_external_checkpoint": null,
+    "owner_only_ssm_credentials_and_gateway_iam_denial": null,
+    "authenticated_native_source_and_producer_reader": null,
+    "signed_current_authority_and_revocation": null,
+    "one_attempt_and_uncertain_ack_reconciliation": null
+  },
+  "budget": {
+    "work_bytes": 32212254720,
+    "external_bytes": 2147483648,
+    "total_bytes": 34359738368,
+    "execution_limit_seconds": 21600
+  },
+  "submission": {
+    "enabled": false,
+    "auto_retry": false,
+    "manual_direct_ssm_allowed": false,
+    "github_issue_created": false,
+    "submitted_sqs_message": false,
+    "acceptance_claimed": false
+  },
+  "output_evidence": {
+    "schema": "image-build-verified-graphical-predecessor-v1",
+    "output_kind": "image",
+    "pipeline_id": null,
+    "original_request_id": null,
+    "recipe_snapshot": null,
+    "input_generation_id": null,
+    "output_generation_id": null,
+    "generation_manifest_sha256": null,
+    "acceptance_receipt_sha256": null,
+    "producer_receipt_sha256": null,
+    "installed_verification_execution": null,
+    "build_record_root": null,
+    "trace_provenance": null,
+    "actual_immutable_generation_verified": false
+  }
+}
