@@ -230,6 +230,7 @@ def test_actual_engine_image_requires_acceptance_and_propagates_binding(monkeypa
     # Exercise the real _ensure path without issuing a real compiler command.
     b=ImageBuild.__new__(ImageBuild)
     b.state=tmp_path
+    b.package_dir=tmp_path/"packages"
     b.provenance=None
     b.dependency_replacements={}
     b.runner=SimpleNamespace()
