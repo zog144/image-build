@@ -2175,6 +2175,10 @@ def main():
         help="absolute read-only historical state root used only by pipeline.inspect",
     )
     parser.add_argument("--controller-config", type=Path)
+    parser.add_argument(
+        "--compiler-base-authority",type=Path,
+        help="independently installed root-owned 0600 compiler issuer policy; never request JSON",
+    )
     parser.add_argument("--source-mirror-config", type=Path)
     parser.add_argument("--provenance-host-id")
     parser.add_argument("--provenance-project-id")
@@ -2260,12 +2264,22 @@ def main():
         )
     from .engine import ImageBuild
 
+    compiler_authority=None
+    if args.compiler_base_authority is not None:
+        if args.controller_config is None or not provenance_enabled:
+            raise SystemExit("protected compiler base requires original controller and provenance identities")
+        from .compiler_base_acceptance import native_authority
+        compiler_authority=native_authority(args.compiler_base_authority)
+        if (compiler_authority["host_id"]!=args.provenance_host_id or
+            compiler_authority["project_id"]!=args.provenance_project_id):
+            raise SystemExit("original native Host/Project differs from installed compiler issuer")
     builder = ImageBuild(
         package_dir=args.package_dir,
         state_dir=args.state_dir,
         runner=runner,
         source_mirror=source_mirror,
         provenance=provenance,
+        compiler_base_authority=compiler_authority,
     )
     adapter = RemoteOperations(
         builder,
