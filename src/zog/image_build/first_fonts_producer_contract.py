@@ -82,7 +82,8 @@ def source_plan(repository_root):
         "native_compiler_authorized": False,
     }
 
-def observe_base(builder, *, repository_root, selected_generation_id):
+def observe_base(builder, *, repository_root, selected_generation_id,
+                 acceptance_receipt_sha256=None):
     """Reopen and verify a canonical stage-two toolchain without modifying it.
 
     The selected_generation_id is a *native owner* selection. This read-only
@@ -91,7 +92,11 @@ def observe_base(builder, *, repository_root, selected_generation_id):
     """
     source_plan(repository_root)
     if type(selected_generation_id) is not str or HEX64.fullmatch(selected_generation_id) is None:
-        _deny("accepted toolchain generation must have canonical identity")
+        _deny("accepted compiler generation must have canonical identity")
+    if acceptance_receipt_sha256 is not None:
+        from .compiler_base_acceptance import resolve
+        selection=read_selection(Path(builder.state)/"image-build"/"generations"/selected_generation_id)
+        return resolve(builder,selection,acceptance_receipt_sha256)
     if builder is None or getattr(builder, "provenance", None) is None:
         _deny("canonical producer provenance is unavailable")
     provenance = builder.provenance
@@ -157,8 +162,10 @@ def observe_base(builder, *, repository_root, selected_generation_id):
 
 def verify_fonts_output(builder, *, repository_root, trusted_context, observed_base):
     """Use the EXISTING canonical output attester, never a substitute receipt."""
-    if type(trusted_context) is not dict or trusted_context.get("task") != TASK:
-        _deny("not the selected original Fonts output task")
+    if (type(trusted_context) is not dict or trusted_context.get("task") != TASK or
+        trusted_context.get("schema")!="image-build-graphical-predecessor-attestation-context-v2" or
+        "compiler_base" not in trusted_context):
+        _deny("not the protected Fonts output task with explicit compiler acceptance")
     if (trusted_context.get("source_repository") != REPOSITORY
         or trusted_context.get("source_revision") != SOURCE_REVISION
         or trusted_context.get("monthly_pin_identity") != PIN_SHA256):
@@ -166,6 +173,7 @@ def verify_fonts_output(builder, *, repository_root, trusted_context, observed_b
     native_base = observe_base(
         builder, repository_root=repository_root,
         selected_generation_id=trusted_context.get("input_generation_id"),
+        acceptance_receipt_sha256=trusted_context["compiler_base"],
     )
     if observed_base != native_base:
         _deny("untrusted or stale base observation substituted")
@@ -180,16 +188,22 @@ def verify_fonts_output(builder, *, repository_root, trusted_context, observed_b
         or evidence.get("status") != "accepted"
         or evidence.get("terminal_outcome") != "success"
         or evidence.get("uncertainty") is not False
-        or evidence.get("missing_evidence_count") != 0):
+        or evidence.get("missing_evidence_count") != 0
+        or evidence.get("compiler_base_acceptance_sha256") != trusted_context["compiler_base"]
+        or evidence.get("compiler_base_generation_kind") != native_base["generation_kind"]
+        or evidence.get("compiler_base_historical_provenance_status") !=
+            native_base["historical_provenance"]["status"]):
         _deny("existing producer output acceptance differs")
     return evidence
 
-def observe_base_native(builder, *, repository_root, selected_generation_id):
+def observe_base_native(builder, *, repository_root, selected_generation_id,
+                        acceptance_receipt_sha256=None):
     """Only a root-installed native owner may call the local base observer."""
     if os.geteuid() != 0:
         raise PermissionError("first Fonts producer reader requires native protected owner")
     return observe_base(builder, repository_root=repository_root,
-                        selected_generation_id=selected_generation_id)
+                        selected_generation_id=selected_generation_id,
+                        acceptance_receipt_sha256=acceptance_receipt_sha256)
 
 def verify_fonts_output_native(builder, *, repository_root, trusted_context, observed_base):
     if os.geteuid() != 0:
