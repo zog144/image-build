@@ -32,6 +32,16 @@ class PipelineMixin:
             policy = dict(policy or {}, dependency_replacements=self.dependency_replacements)
         if self.provenance is not None:
             policy=dict(policy or {},provenance=self.provenance.configuration())
+        authority=getattr(self,"compiler_base_authority",None)
+        if authority is not None:
+            # Durable pipelines bind the installed issuer key/Host/environment
+            # identity. No caller JSON may dynamically replace this owner.
+            from .compiler_base_acceptance import _protected, digest, canonical
+            selected,_=_protected(self)
+            policy=dict(policy or {},compiler_base_authority_identity=digest(canonical({
+                k:selected[k] for k in ("schema","host_id","installation_id",
+                  "state_volume_id","project_id","key_id","ed25519_public_key",
+                  "execution_environment_sha256")})))
         if self.source_mirror is not None:
             policy=dict(policy or {},source_mirror=self.source_mirror.configuration())
         return policy
