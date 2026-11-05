@@ -30,9 +30,9 @@ test -x /usr/bin/as
 test -x /usr/bin/ld
 test -f /usr/include/stdio.h
 /usr/bin/gcc -dumpmachine > /image-build/output/target.txt
-/usr/bin/gcc -E -v /image-build/source/probe.c -o /image-build/output/probe.i 2> /image-build/output/includes.txt
+/usr/bin/gcc -E -H /image-build/source/probe.c -o /image-build/output/probe.i 2> /image-build/output/includes.txt
 /usr/bin/gcc -Werror -O0 -c /image-build/source/probe.c -o /image-build/output/probe.o
-/usr/bin/gcc -Werror -O0 -Wl,-t /image-build/source/probe.c -o /image-build/output/probe 2> /image-build/output/links.txt
+/usr/bin/gcc -Werror -O0 -Wl,-t /image-build/source/probe.c -o /image-build/output/probe > /image-build/output/links.txt 2> /image-build/output/link-diagnostics.txt
 /image-build/output/probe > /image-build/output/runtime.txt
 test "$(cat /image-build/output/runtime.txt)" = "zog-compiler-probe"
 """
@@ -50,7 +50,7 @@ def deny(message):
 def _sha(raw):
     return "sha256:"+hashlib.sha256(raw).hexdigest()
 
-def _lines(raw,*,kind):
+def _lines(raw,*,kind,selected_root=None):
     if len(raw)>128*1024:
         deny("unbounded "+kind+" trace")
     try: lines=raw.decode("utf-8").splitlines()
@@ -63,7 +63,21 @@ def _lines(raw,*,kind):
         if s.startswith(WHITELIST):
             candidate=s.split()[0].rstrip(":")
             if ".." in candidate.split("/"):
-                deny("invalid selected root header/library trace")
+                # GCC emits real installed CRT/library paths through its target
+                # subdirectory. Resolve those against the independently selected
+                # root; lexical normalization alone could hide symlink escapes.
+                if selected_root is None:
+                    deny("selected root required for relative compiler trace")
+                base=Path(selected_root)
+                if not base.is_absolute() or base.is_symlink() or not base.is_dir():
+                    deny("invalid selected root for compiler trace")
+                try:
+                    resolved=(base/candidate.lstrip("/")).resolve(strict=True)
+                    candidate="/"+resolved.relative_to(base).as_posix()
+                except (OSError,ValueError):
+                    deny("compiler trace escapes or is absent from selected root")
+                if not candidate.startswith(WHITELIST) or any(x in candidate for x in HOST_INDICATORS):
+                    deny("unexpected resolved compiler trace")
             found.append(candidate)
     if not found:
         deny("missing "+kind+" search-path trace")
@@ -78,7 +92,7 @@ def _file(root,name,size=128*1024):
         deny("invalid bounded "+name+" output")
     return b
 
-def inspect_completed_probe(root,*,generation,completion,seconds):
+def inspect_completed_probe(root,*,generation,completion,seconds,selected_root=None):
     """Re-read completed sandbox artifacts and return a nonauthoritative report."""
     root=Path(root)
     if not root.is_dir() or root.is_symlink():
@@ -95,8 +109,8 @@ def inspect_completed_probe(root,*,generation,completion,seconds):
     target=_file(root,"target.txt").decode().strip()
     if ABI.fullmatch(target) is None:
         deny("selected ABI differs from x86_64 Linux GNU")
-    includes=_lines(_file(root,"includes.txt"),kind="include")
-    libs=_lines(_file(root,"links.txt"),kind="library")
+    includes=_lines(_file(root,"includes.txt"),kind="include",selected_root=selected_root)
+    libs=_lines(_file(root,"links.txt"),kind="library",selected_root=selected_root)
     image=_file(root,"probe",16*1024*1024)
     if not image.startswith(ELF) or int.from_bytes(image[18:20],"little")!=62:
         deny("compiled executable is not x86_64 ELF")
@@ -142,6 +156,14 @@ def execute_native_probe(builder,selection,attempt_dir):
             deny("reserved sandbox path conflict")
         p.mkdir(exist_ok=True)
     (source/"probe.c").write_bytes(SOURCE)
+    # configured_runner's input_manifest reopens this before registration. Keep
+    # the copied root and exact probe identity durable before any controller job.
+    write_json(attempt/"prepared.json", {
+        "root": inventory(root),
+        "binding": {"generation": selection.generation,
+                    "source_sha256": SOURCE_SHA256,
+                    "command_sha256": COMMAND_SHA256},
+    })
     runner=BoxControlRunner(execute=executor,timeout=MAX_SECONDS)
     request=runner.build_request(root,source,output,
              ["/bin/sh","-eu","-c",COMMAND],{})

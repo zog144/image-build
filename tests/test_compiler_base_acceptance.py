@@ -280,3 +280,11 @@ def test_native_probe_does_not_expose_direct_ssm_or_host_execute():
         assert dangerous not in source
     assert cp.MAX_SECONDS==120
     assert cp.SOURCE_SHA256.startswith("sha256:")
+
+
+def test_actual_zog_target_abi_is_preserved(tmp_path):
+    builder,selection,claim,auth,sign=signed_fixture(tmp_path)
+    claim['target_abi']='x86_64-zog-linux-gnu'
+    claim['native_probe']['compiler_target']=claim['target_abi']
+    result=ca.resolve(builder,selection,sign())
+    assert result['target_abi']=='x86_64-zog-linux-gnu'
