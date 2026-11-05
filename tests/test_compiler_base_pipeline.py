@@ -72,6 +72,7 @@ def test_real_pipeline_prepare_and_resume_freeze_receipt_before_work(monkeypatch
     b.provenance=SimpleNamespace(
         pin={"revision":SOURCE},configuration=lambda:{"schema":2,"source":"synthetic"})
     b.runner=builder.runner
+    b.runner.timeout=3600
     b.source_mirror=None
     b.dependency_replacements={}
     b.maximum_generations=10
