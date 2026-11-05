@@ -80,12 +80,16 @@ def _file_identity(root,path,expected):
     current=root
     for part in rel.parts:
         current=current/part
+        if not current.exists() and not current.is_symlink():
+            deny("selected compiler/header/library path missing")
         if current.is_symlink():
             # Permit normal compiler symlinks ONLY within this selected root.
-            link=current.resolve(strict=True)
+            try:link=current.resolve(strict=True)
+            except OSError:deny("selected compiler symlink target missing")
             try:link.relative_to(root)
             except ValueError:deny("compiler path leaves selected root")
-    resolved=current.resolve(strict=True)
+    try:resolved=current.resolve(strict=True)
+    except OSError:deny("selected compiler/header/library not installed")
     try:resolved.relative_to(root)
     except ValueError:deny("compiler path escapes selected root")
     if not resolved.is_file():deny("compiler/header/library identity is not a file")
