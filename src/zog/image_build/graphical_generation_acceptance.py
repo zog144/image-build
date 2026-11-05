@@ -746,6 +746,10 @@ def main(argv=None):
     parser.add_argument("--provenance-project-id", required=True)
     parser.add_argument("--provenance-pin", required=True)
     parser.add_argument("--expected-pin-digest", required=True)
+    parser.add_argument("--compiler-base-authority",type=Path,
+        help="root-installed 0600 issuer policy for explicit compiler-base v2 only")
+    parser.add_argument("--controller-config",type=Path,
+        help="exact original installed box-control environment for v2 provenance checks")
     args = parser.parse_args(argv)
     if not _HEX40.fullmatch(args.source_revision):
         raise SystemExit("source revision must be an exact 40-hex commit")
@@ -782,6 +786,20 @@ def main(argv=None):
         state=Path(args.state_dir).resolve(),
         provenance=provenance,
     )
+    if context.get("schema")==CONTEXT_COMPILER_BASE:
+        if args.compiler_base_authority is None or args.controller_config is None:
+            raise SystemExit("v2 compiler-base attestation requires independent installed issuer and controller")
+        from .compiler_base_acceptance import native_authority
+        from .configuration import configured_runner
+        authority=native_authority(args.compiler_base_authority)
+        if (authority["host_id"]!=args.provenance_host_id or
+            authority["project_id"]!=args.provenance_project_id or
+            authority["installation_id"]!=context["installation_id"]):
+            raise SystemExit("protected issuer does not bind original Host/Project/installation")
+        reader.compiler_base_authority=authority
+        reader.runner=configured_runner(args.controller_config,args.state_dir)
+    elif args.compiler_base_authority is not None:
+        raise SystemExit("v1 graphical attestation cannot consume a v2 compiler issuer")
     evidence = attest_native(
         reader,
         repository_root=Path(args.repository_root).resolve(),
