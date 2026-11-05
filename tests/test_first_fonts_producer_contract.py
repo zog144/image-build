@@ -121,7 +121,7 @@ def test_manifest_mutation_during_observation_denied(monkeypatch,tmp_path):
   "source_revision":"f"*40},
 ])
 def test_output_verification_denies_wrong_original_task_source_before_any_builder_read(wrong):
-    with pytest.raises(ImageBuildError,match="selected original|not the selected"):
+    with pytest.raises(ImageBuildError,match="protected Fonts output task|selected original|not the selected"):
         p.verify_fonts_output(None,repository_root=REPO,
                               trusted_context=wrong,observed_base={})
 
