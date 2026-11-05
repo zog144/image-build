@@ -700,6 +700,7 @@ class RemoteOperations:
             dependency_replacements=self.builder.dependency_replacements,
             provenance=self.builder.provenance,
             source_mirror=self.builder.source_mirror,
+            compiler_base_authority=getattr(self.builder,"compiler_base_authority",None),
         )
 
     def _pipeline_owner(self, record):
@@ -763,6 +764,7 @@ class RemoteOperations:
             "stages",
             "recipe_snapshot",
             "graphical_predecessor",
+            "compiler_base",
         }:
             raise ImageBuildError(
                 "unsupported pipeline submission argument"
@@ -820,14 +822,32 @@ class RemoteOperations:
             )
         expected = {"mode", "selection", "targets", "recipe_snapshot"}
         predecessor = arguments.get("graphical_predecessor")
+        receipt=arguments.get("compiler_base")
+        if receipt is not None and mode!="image":
+            raise ImageBuildError("compiler base acceptance is image-mode only")
+        if receipt is not None:
+            from .compiler_base_acceptance import resolve
+            base_evidence=resolve(self.builder,selection,receipt)
+        else:
+            base_evidence=None
+        from .graphical_composition import FONTS, XCB, X11
+        selected_targets=list(names(arguments["targets"]))
+        required=(mode=="image" and
+            (selection.manifest.get("kind")=="image" or (
+                self.source_revision=="1f07e83dbd80dacb9bed0d6494c697375f0e26cd" and
+                selected_targets in (list(FONTS),list(XCB),list(X11)))))
+        if required and base_evidence is None:
+            raise ImageBuildError("original graphical request lacks independent compiler base receipt")
+        allowed=expected|({"compiler_base"} if receipt is not None else set())
         if predecessor is not None:
-            if mode != "image" or set(arguments) != expected | {"graphical_predecessor"}:
+            if mode != "image" or set(arguments) != allowed | {"graphical_predecessor"}:
                 raise ImageBuildError("graphical predecessor requires exact image arguments")
             from .graphical_composition import validate
-            validate(self.builder, selection, predecessor, list(names(arguments["targets"])))
-        elif set(arguments) != expected:
+            validate(self.builder, selection, predecessor, selected_targets,
+                     compiler_base=base_evidence)
+        elif set(arguments) != allowed:
             raise ImageBuildError(
-                "image/native pipeline requires selection, targets, and recipe_snapshot"
+                "image/native pipeline requires exact selection, targets, snapshot, and optional protected compiler receipt"
             )
         targets = list(names(arguments["targets"]))
         if not set(targets) <= packages:
@@ -837,7 +857,9 @@ class RemoteOperations:
         return (
             mode,
             selection,
-            {"targets": targets, **({"graphical_predecessor": predecessor} if predecessor is not None else {})},
+            {"targets": targets,
+             **({"graphical_predecessor": predecessor} if predecessor is not None else {}),
+             **({"compiler_base": receipt} if receipt is not None else {})},
             snapshot,
         )
 
@@ -1331,11 +1353,21 @@ class RemoteOperations:
                         "selection",
                         "targets",
                         "recipe_snapshot",
+                        "compiler_base",
                     ],
+                    "compiler_base": {
+                        "contract":"image-build-compiler-base-acceptance-v1",
+                        "request_field":"compiler_base",
+                        "value":"sha256-protected-receipt-bytes",
+                        "issuer":"native-owner-installed-outside-request",
+                        "accepted_original_kinds":["toolchain","image"],
+                        "required_for":"first-graphics-and-any-compiler-image",
+                        "source_only_is_authority":False,
+                    },
                     "graphical_predecessor": {
                         "contract": "image-build-graphical-predecessor-composition-v1",
                         "optional_image_argument": "graphical_predecessor",
-                        "base_selection_kind": "toolchain",
+                        "base_selection_kind": ["toolchain","image-with-independent-compiler-acceptance"],
                         "stages": ["graphics-xcb-core-image-v1", "graphics-x11-core-image-v1"],
                     },
                     "bootstrap_arguments": [
