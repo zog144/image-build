@@ -106,6 +106,35 @@ def _file_identity(root,path,expected):
     if expected!="sha256:"+h.hexdigest():
         deny("compiler/header/library installed-byte identity changed")
 
+def native_authority(path):
+    """Read a root-owned installed issuer policy; installation remains Work-only.
+
+    A uid-0 file is not by itself proof of the selected Host/installation:
+    host-install/root-control must authenticate and install this exact policy.
+    """
+    if os.geteuid()!=0:
+        raise PermissionError("protected compiler issuer policy requires root")
+    location=Path(path)
+    if not location.is_absolute() or location.is_symlink():
+        deny("installed issuer path must be absolute and non-symlink")
+    st=location.stat()
+    if (not stat.S_ISREG(st.st_mode) or st.st_uid!=0 or st.st_gid!=0 or
+        stat.S_IMODE(st.st_mode)!=0o600):
+        deny("independent issuer policy is not root-owned 0600")
+    value,_=_read_file(location)
+    exact(value,("schema","host_id","installation_id","state_volume_id",
+                 "project_id","key_id","ed25519_public_key","receipt_directory",
+                 "execution_environment_sha256"),"installed issuer policy")
+    root=Path(value["receipt_directory"])
+    if not root.is_absolute() or root.is_symlink() or not root.is_dir():
+        deny("issuer receipt directory is not installed")
+    rights=root.stat()
+    if (rights.st_uid!=0 or rights.st_gid!=0 or
+        stat.S_IMODE(rights.st_mode) not in (0o700,0o750)):
+        deny("issuer receipt directory is not protected")
+    return value
+
+
 def _protected(builder):
     policy=getattr(builder,"compiler_base_authority",None)
     exact(policy,("schema","host_id","installation_id","state_volume_id",
@@ -261,6 +290,11 @@ def resolve(builder, selection, receipt_sha256):
         deny("original generation Build Record identity fabricated")
     files=claim["installed_paths"]
     exact(files,SLOTS,"compiler/header/library installed paths")
+    if (files["compiler"]["path"]!="usr/bin/gcc" or
+        files["linker"]["path"]!="usr/bin/ld" or
+        files["assembler"]["path"]!="usr/bin/as" or
+        files["libc_header"]["path"]!="usr/include/stdio.h"):
+        deny("compiler role paths differ from fixed native probe executable and headers")
     for role in SLOTS:
         desc=files[role]
         exact(desc,("path","sha256"),"installed compiler role "+role)
@@ -274,6 +308,12 @@ def resolve(builder, selection, receipt_sha256):
     if claim["required_probe_command_sha256"]!=COMMAND_SHA256:
         deny("native compile/link probe instructions substituted")
     validate_probe(claim["native_probe"],claim)
+    included=claim["native_probe"]["include_paths"]
+    linked=claim["native_probe"]["library_paths"]
+    if (("/"+files["libc_header"]["path"] not in included or
+         "/"+files["crt"]["path"] not in linked or
+         "/"+files["libc"]["path"] not in linked)):
+        deny("native compiler/header/library search traces disagree with inspected files")
     if (root/"manifest.json").read_bytes()!=manifest_raw:
         deny("original generation changed after verifier inspection")
     return {
