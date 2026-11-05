@@ -137,6 +137,7 @@ def test_graphical_fonts_predecessor_accepts_image_compiler_without_relabel(monk
     monkeypatch.setattr(gc,"_canonical_selection",lambda *_:verified)
     monkeypatch.setattr(gc,"_verified",lambda _b,_selected,_base,_targets:
                         (calls.append(_base.generation),original)[1])
+    (tmp_path/"manifest.json").write_text('{"schema":2,"kind":"image"}')
     fake=SimpleNamespace(state=tmp_path,provenance=None)
     # Never infer acceptance from kind=image alone.
     with pytest.raises(ImageBuildError,match="separately accepted compiler base"):
