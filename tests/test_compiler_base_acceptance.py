@@ -250,7 +250,7 @@ def test_actual_engine_image_requires_acceptance_and_propagates_binding(monkeypa
     calls=[]
     monkeypatch.setattr(acceptance,"resolve",
                         lambda _builder,_selection,_id:copy.deepcopy(bound))
-    monkeypatch.setattr(engine_module,"load_packages",lambda _:{"fixture-final":SimpleNamespace(fingerprint="fixture")})
+    monkeypatch.setattr(engine_module,"load_packages",lambda _:{"fixture-final":SimpleNamespace(fingerprint="fixture",build_dependencies=(),runtime_dependencies=(),test_dependencies=())})
     monkeypatch.setattr(engine_module,"order",lambda *a,**k:["fixture-final"])
     attempt=tmp_path/"attempt"
     attempt.mkdir()
