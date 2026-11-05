@@ -13,8 +13,9 @@ class PipelineMixin:
     def bootstrap(self, host_bootstrap, stages):
         return self._new_pipeline('bootstrap', host_bootstrap, stages=stages)
 
-    def ensure(self, targets, *, toolchain):
-        return self._new_pipeline('image', toolchain, targets=list(targets))
+    def ensure(self, targets, *, toolchain, compiler_base=None):
+        return self._new_pipeline('image', toolchain, targets=list(targets),
+            **({'compiler_base':compiler_base} if compiler_base is not None else {}))
 
     def verify_seed(self, targets, *, host_bootstrap):
         """Integration check only; never promotes a seed to a self-hosted toolchain."""
@@ -31,6 +32,16 @@ class PipelineMixin:
             policy = dict(policy or {}, dependency_replacements=self.dependency_replacements)
         if self.provenance is not None:
             policy=dict(policy or {},provenance=self.provenance.configuration())
+        authority=getattr(self,"compiler_base_authority",None)
+        if authority is not None:
+            # Durable pipelines bind the installed issuer key/Host/environment
+            # identity. No caller JSON may dynamically replace this owner.
+            from .compiler_base_acceptance import _protected, digest, canonical
+            selected,_=_protected(self)
+            policy=dict(policy or {},compiler_base_authority_identity=digest(canonical({
+                k:selected[k] for k in ("schema","host_id","installation_id",
+                  "state_volume_id","project_id","key_id","ed25519_public_key",
+                  "execution_environment_sha256")})))
         if self.source_mirror is not None:
             policy=dict(policy or {},source_mirror=self.source_mirror.configuration())
         return policy
@@ -55,6 +66,27 @@ class PipelineMixin:
                 raise ImageBuildError('pipeline owner metadata must be JSON data') from error
             if not isinstance(owner, dict):
                 raise ImageBuildError('pipeline owner metadata must be an object')
+        # Verify independent issuer receipt before persisting a newly
+        # selected compiler image or authenticated graphical pipeline.
+        if operation == "image":
+            from .compiler_base_acceptance import resolve
+            from .engine import read_selection
+            from .graphical_composition import FONTS, XCB, X11
+            selected=read_selection(Path(selection.root).parent)
+            targets=list(arguments.get("targets",[]))
+            source=(getattr(getattr(self,"provenance",None),"pin",None) or {}).get("revision")
+            required=selected.manifest.get("kind")=="image" or (
+                source=="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
+                and targets in (list(FONTS),list(XCB),list(X11)))
+            receipt=arguments.get("compiler_base")
+            if required and receipt is None:
+                raise ImageBuildError("original graphical pipeline requires accepted compiler base")
+            if receipt is not None:
+                if type(receipt) is not str:
+                    raise ImageBuildError("compiler base binding must be a protected receipt digest")
+                resolve(self,selected,receipt)
+        elif "compiler_base" in arguments:
+            raise ImageBuildError("compiler base only applies to image pipelines")
         from .pins import validate
         pins = validate(self.package_dir, load_packages(self.package_dir))
         pipelines = self.state / 'image-build' / 'pipelines'
@@ -136,6 +168,7 @@ class PipelineMixin:
                     seed_check=record['operation'] == 'seed-check',
                     native_check=record['operation'] == 'native-check',
                     graphical_predecessor=predecessor_id,
+                    compiler_base=record['arguments'].get('compiler_base'),
                 )
             else:
                 raise ImageBuildError('unknown pipeline operation')

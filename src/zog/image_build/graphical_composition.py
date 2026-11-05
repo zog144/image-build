@@ -1,7 +1,8 @@
 """Finite immutable composition: accepted toolchain + verified graphical image.
 
-Graphical images are never recast as toolchains. Only the reviewed fonts and
-XCB predecessor stages may be merged into a disposable build environment.
+Graphical images are never recast as toolchains. A separately accepted
+compiler-bearing image can supply compiler files; Fonts/XCB/X11 predecessor
+images remain separately verified package-generation inputs.
 The original rootfs generations remain immutable.
 """
 import hashlib
@@ -78,17 +79,21 @@ def _verified(builder, selection, base, expected_targets):
     return manifest
 
 
-def validate(builder, base, predecessor, targets):
+def validate(builder, base, predecessor, targets, *, compiler_base=None):
     """Return immutable input binding or refuse before any executable build."""
     if predecessor is None:
         return None
-    if (
-        base.manifest.get("kind") != "toolchain"
-        or base.manifest.get("stage") != 2
-        or base.manifest.get("self_hosted") is not True
-        or targets not in (list(XCB), list(X11))
-    ):
-        _reject("only XCB/X11 may layer a graphical image over stage-2 toolchain")
+    stage_two=(base.manifest.get("kind") == "toolchain"
+               and base.manifest.get("stage") == 2
+               and base.manifest.get("self_hosted") is True)
+    accepted_image=(base.manifest.get("kind") == "image" and
+                    isinstance(compiler_base,dict) and
+                    compiler_base.get("generation_kind") == "image" and
+                    compiler_base.get("generation_id") == base.generation and
+                    compiler_base.get("status") ==
+                    "independent-compiler-capability-observed-not-job-authorization")
+    if not (stage_two or accepted_image) or targets not in (list(XCB),list(X11)):
+        _reject("only XCB/X11 may layer a verified graphical image over a separately accepted compiler base")
     stage = "fonts" if targets == list(XCB) else "xcb"
     expected_targets = FONTS if stage == "fonts" else XCB
     if hasattr(predecessor, "generation"):

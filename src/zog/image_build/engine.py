@@ -74,10 +74,12 @@ def _publish_generation_candidate(candidate, target):
 
 
 class ImageBuild(PipelineMixin):
-    def __init__(self, *, package_dir, state_dir, runner=None, maximum_generations=10, dependency_replacements=None, provenance=None, source_mirror=None):
+    def __init__(self, *, package_dir, state_dir, runner=None, maximum_generations=10, dependency_replacements=None, provenance=None, source_mirror=None, compiler_base_authority=None):
         self.package_dir, self.state = Path(package_dir), Path(state_dir)
         self.runner = runner or BoxControlRunner()
         self.provenance = provenance
+        # Installed separately by the protected native Host owner; never taken from request JSON.
+        self.compiler_base_authority = compiler_base_authority
         if source_mirror is None:
             from .archive_mirror import source_mirror_from_environment
             source_mirror = source_mirror_from_environment()
@@ -292,7 +294,7 @@ class ImageBuild(PipelineMixin):
                 raise ImageBuildError("host bootstrap changed while being imported")
             return selection
 
-    def _build_set(self, packages, targets, toolchain, attempt, *, graphical_predecessor=None):
+    def _build_set(self, packages, targets, toolchain, attempt, *, graphical_predecessor=None, compiler_base=None):
         from .cleanup import package_workspace
         from .graphical_composition import input_fields
         built = {}
@@ -307,6 +309,7 @@ class ImageBuild(PipelineMixin):
                 "schema": SCHEMA,
                 "package": package.fingerprint,
                 "toolchain": toolchain.generation,
+                **({"compiler_base": compiler_base} if compiler_base is not None else {}),
                 "dependencies": {n: built[n]["identity"] for n in dependencies},
                 **input_fields(graphical_predecessor),
                 "architecture": platform.machine(),
@@ -661,7 +664,7 @@ class ImageBuild(PipelineMixin):
             pass
 
     def _ensure(self, targets, *, toolchain, seed_check=False, native_check=False,
-                graphical_predecessor=None):
+                graphical_predecessor=None, compiler_base=None):
         toolchain = read_selection(Path(toolchain.root).parent)
         if native_check:
             kind = toolchain.manifest["kind"]
@@ -678,7 +681,22 @@ class ImageBuild(PipelineMixin):
         validation_only = seed_check or native_check
         if seed_check and toolchain.manifest["kind"] != "host-bootstrap":
             raise ImageBuildError("seed verification requires a recorded host bootstrap")
-        if not validation_only and (
+        # An accepted compiler image retains kind=image. Its independent
+        # native capability witness is bound to every package and generation
+        # input; no compiler image can take the historical stage-two shortcut.
+        from .compiler_base_acceptance import resolve as resolve_compiler
+        from .graphical_composition import FONTS, XCB, X11
+        source_revision=(getattr(getattr(self, "provenance", None), "pin", None) or {}).get("revision")
+        requires_compiler=(not validation_only and
+            (toolchain.manifest["kind"] == "image" or
+             (source_revision == "1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
+              and list(targets) in (list(FONTS),list(XCB),list(X11)))))
+        accepted_compiler=None
+        if not validation_only and compiler_base is not None:
+            accepted_compiler=resolve_compiler(self,toolchain,compiler_base)
+        if requires_compiler and accepted_compiler is None:
+            raise ImageBuildError("graphical/compiled image requires independently accepted compiler base")
+        if not validation_only and accepted_compiler is None and (
             toolchain.manifest["kind"] != "toolchain"
             or toolchain.manifest.get("stage") != 2
             or not toolchain.manifest.get("self_hosted")
@@ -689,7 +707,8 @@ class ImageBuild(PipelineMixin):
         if toolchain.manifest["inputs"].get("architecture") != platform.machine():
             raise ImageBuildError("toolchain architecture differs from this host")
         from .graphical_composition import validate as validate_graphical, input_fields
-        graphical = validate_graphical(self, toolchain, graphical_predecessor, list(targets))
+        graphical = validate_graphical(self, toolchain, graphical_predecessor, list(targets),
+                                       compiler_base=accepted_compiler)
         packages = load_packages(self.package_dir)
         selected = order(packages, targets)
         inputs = {
@@ -697,6 +716,7 @@ class ImageBuild(PipelineMixin):
             "kind": "native-check" if native_check else ("seed-check" if seed_check else "image"),
             "composition_policy": INFO_INDEX_POLICY,
             "toolchain": toolchain.generation,
+            **({"compiler_base": accepted_compiler} if accepted_compiler is not None else {}),
             **input_fields(graphical),
             "targets": list(targets),
             "recipes": {n: packages[n].fingerprint for n in selected},
@@ -722,12 +742,18 @@ class ImageBuild(PipelineMixin):
         attempt = self._candidate("image")
         try:
             built = self._build_set(packages, targets, toolchain, attempt,
-                                    graphical_predecessor=graphical)
+                                    graphical_predecessor=graphical,
+                                    compiler_base=accepted_compiler)
             if graphical is not None:
                 reread = validate_graphical(self, toolchain,
-                                            graphical["generation"], list(targets))
+                                            graphical["generation"], list(targets),
+                                            compiler_base=accepted_compiler)
                 if input_fields(reread) != input_fields(graphical):
                     raise ImageBuildError("graphical predecessor changed during build")
+            if accepted_compiler is not None:
+                current=resolve_compiler(self,toolchain,compiler_base)
+                if current!=accepted_compiler:
+                    raise ImageBuildError("selected compiler base changed during package execution")
             if self.provenance and self.provenance.generation_contract:
                 from .generation_provenance import prepare, finish
                 materials = ()

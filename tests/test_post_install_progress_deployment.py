@@ -161,6 +161,30 @@ def test_certify_manage_broker_profile_is_single_application_and_read_only():
 
 
 def test_current_tree_matches_all_reviewed_security_critical_source_blobs(tmp_path):
+    # The new compiler-image candidate *intentionally* edits the engine and
+    # composition source consumed by the separately frozen progress-observer
+    # allowlist. Preserve the old immutable pins and keep that deployment
+    # rejected until an independently reviewed observer source repin. CI must
+    # not silently turn a new compiler build path into observer permission.
+    candidate = ROOT / "src/zog/image_build/compiler_base_acceptance.py"
+    if candidate.is_file():
+        from zog.image_build.post_install_progress_deployment import _git_blob_sha
+        assert len(MODULE_BLOBS) == 14
+        for module in ("zog.image_build.engine",
+                       "zog.image_build.graphical_composition"):
+            new_bytes=(ROOT/SOURCE_FILES[module]).read_bytes()
+            assert _git_blob_sha(new_bytes) != MODULE_BLOBS[module]
+        with pytest.raises(ImageBuildError, match="observer dependency differs from reviewed source"):
+            reviewed_source_inventory(ROOT)
+        copied = tmp_path / "source"
+        for relative in SOURCE_FILES.values():
+            target = copied / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, target)
+        with pytest.raises(ImageBuildError, match="observer dependency differs from reviewed source"):
+            reviewed_source_inventory(copied)
+        return
+
     observed = reviewed_source_inventory(ROOT)
     assert set(observed) == set(MODULE_BLOBS)
     assert len(observed) == 14

@@ -27,6 +27,7 @@ from .recipe_snapshots import _read_snapshot, normalize_entries
 from .remote_contract import REQUEST_SCHEMA, RESULT_SCHEMA
 
 CONTEXT = "image-build-graphical-predecessor-attestation-context-v1"
+CONTEXT_COMPILER_BASE = "image-build-graphical-predecessor-attestation-context-v2"
 EVIDENCE = "image-build-verified-graphical-predecessor-v1"
 TASK_PLANS = {
     "graphics-fonts-image-v1": "project/bootstrap/graphics-fonts.py",
@@ -109,9 +110,11 @@ def _context(value):
         "graphics-xcb-core-image-v1", "graphics-x11-core-image-v1"
     ):
         fields.add("graphical_predecessor_id")
+    if isinstance(value,dict) and value.get("schema")==CONTEXT_COMPILER_BASE:
+        fields.add("compiler_base")
     if not isinstance(value, dict) or set(value) != fields:
         _fail("trusted attestation context fields differ")
-    if value["schema"] != CONTEXT or value["task"] not in TASK_PLANS:
+    if value["schema"] not in (CONTEXT,CONTEXT_COMPILER_BASE) or value["task"] not in TASK_PLANS:
         _fail("unsupported graphical attestation context")
     for key in (
         "host_id", "installation_id", "lane", "lane_owner", "project_id",
@@ -141,6 +144,8 @@ def _context(value):
         _fail("predecessor catalogue identity is invalid")
     if not _HEX64.fullmatch(value["input_generation_id"]):
         _fail("input generation identity is invalid")
+    if value["schema"]==CONTEXT_COMPILER_BASE and not _SHA.fullmatch(value["compiler_base"]):
+        _fail("compiler-base receipt binding is not canonical SHA-256")
     if "graphical_predecessor_id" in value and (
         not isinstance(value["graphical_predecessor_id"], str)
         or not _HEX64.fullmatch(value["graphical_predecessor_id"])
@@ -449,6 +454,8 @@ def verify(builder, *, repository_root, trusted_context):
             "recipe_snapshot": snapshot_id,
             **({"graphical_predecessor": context["graphical_predecessor_id"]}
                if "graphical_predecessor_id" in context else {}),
+            **({"compiler_base":context["compiler_base"]}
+               if "compiler_base" in context else {}),
         },
         "predecessor": snapshot_operation_id,
     }
@@ -479,6 +486,8 @@ def verify(builder, *, repository_root, trusted_context):
             "targets": targets,
             **({"graphical_predecessor": context["graphical_predecessor_id"]}
                if "graphical_predecessor_id" in context else {}),
+            **({"compiler_base":context["compiler_base"]}
+               if "compiler_base" in context else {}),
         }
     ):
         _fail("durable producer pipeline is not a completed image pipeline")
@@ -511,6 +520,14 @@ def verify(builder, *, repository_root, trusted_context):
     if input_directory.is_symlink() or not input_directory.is_dir():
         _fail("selected input generation is unavailable")
     base_selection = read_selection(input_directory)
+    accepted_compiler=None
+    if "compiler_base" in context:
+        from .compiler_base_acceptance import resolve as resolve_compiler
+        accepted_compiler=resolve_compiler(builder,base_selection,context["compiler_base"])
+        if (accepted_compiler["host_id"]!=context["host_id"] or
+            accepted_compiler["installation_id"]!=context["installation_id"] or
+            accepted_compiler["project_id"]!=context["project_id"]):
+            _fail("independent compiler-base Host/installation/Project differs")
     if Path(pipeline.get("selection", "")) != input_directory.resolve():
         _fail("pipeline selected input generation differs")
 
@@ -558,6 +575,7 @@ def verify(builder, *, repository_root, trusted_context):
         expected_graphical_fields = input_fields(validate_graphical(
             builder, base_selection,
             context["graphical_predecessor_id"], targets,
+            compiler_base=accepted_compiler,
         ))
     generation_inputs = manifest.get("inputs")
     if (
@@ -567,6 +585,7 @@ def verify(builder, *, repository_root, trusted_context):
         != context["input_generation_id"]
         or generation_inputs.get("targets") != targets
         or generation_inputs.get("recipes") != snapshot.manifest["packages"]
+        or generation_inputs.get("compiler_base") != accepted_compiler
         or any(generation_inputs.get(k) != v for k, v in expected_graphical_fields.items())
         or ("graphical_predecessor" in generation_inputs)
            != ("graphical_predecessor_id" in context)
@@ -647,6 +666,11 @@ def verify(builder, *, repository_root, trusted_context):
         "input_generation_id": context["input_generation_id"],
         "output_generation_id": generation,
         "output_kind": "image",
+        **({"compiler_base_acceptance_sha256":context["compiler_base"],
+            "compiler_base_generation_kind":accepted_compiler["generation_kind"],
+            "compiler_base_historical_provenance_status":
+                accepted_compiler["historical_provenance"]["status"]}
+            if accepted_compiler is not None else {}),
         "generation_manifest_sha256": _sha256(manifest_raw),
         # Existing immutable build-record generation root; no synthetic receipt.
         "acceptance_receipt_sha256": pointer["record"],
@@ -722,6 +746,10 @@ def main(argv=None):
     parser.add_argument("--provenance-project-id", required=True)
     parser.add_argument("--provenance-pin", required=True)
     parser.add_argument("--expected-pin-digest", required=True)
+    parser.add_argument("--compiler-base-authority",type=Path,
+        help="root-installed 0600 issuer policy for explicit compiler-base v2 only")
+    parser.add_argument("--controller-config",type=Path,
+        help="exact original installed box-control environment for v2 provenance checks")
     args = parser.parse_args(argv)
     if not _HEX40.fullmatch(args.source_revision):
         raise SystemExit("source revision must be an exact 40-hex commit")
@@ -758,6 +786,20 @@ def main(argv=None):
         state=Path(args.state_dir).resolve(),
         provenance=provenance,
     )
+    if context.get("schema")==CONTEXT_COMPILER_BASE:
+        if args.compiler_base_authority is None or args.controller_config is None:
+            raise SystemExit("v2 compiler-base attestation requires independent installed issuer and controller")
+        from .compiler_base_acceptance import native_authority
+        from .configuration import configured_runner
+        authority=native_authority(args.compiler_base_authority)
+        if (authority["host_id"]!=args.provenance_host_id or
+            authority["project_id"]!=args.provenance_project_id or
+            authority["installation_id"]!=context["installation_id"]):
+            raise SystemExit("protected issuer does not bind original Host/Project/installation")
+        reader.compiler_base_authority=authority
+        reader.runner=configured_runner(args.controller_config,args.state_dir)
+    elif args.compiler_base_authority is not None:
+        raise SystemExit("v1 graphical attestation cannot consume a v2 compiler issuer")
     evidence = attest_native(
         reader,
         repository_root=Path(args.repository_root).resolve(),
