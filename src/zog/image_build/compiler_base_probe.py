@@ -30,9 +30,9 @@ test -x /usr/bin/as
 test -x /usr/bin/ld
 test -f /usr/include/stdio.h
 /usr/bin/gcc -dumpmachine > /image-build/output/target.txt
-/usr/bin/gcc -E -v /image-build/source/probe.c -o /image-build/output/probe.i 2> /image-build/output/includes.txt
+/usr/bin/gcc -E -H /image-build/source/probe.c -o /image-build/output/probe.i 2> /image-build/output/includes.txt
 /usr/bin/gcc -Werror -O0 -c /image-build/source/probe.c -o /image-build/output/probe.o
-/usr/bin/gcc -Werror -O0 -Wl,-t /image-build/source/probe.c -o /image-build/output/probe 2> /image-build/output/links.txt
+/usr/bin/gcc -Werror -O0 -Wl,-t /image-build/source/probe.c -o /image-build/output/probe > /image-build/output/links.txt 2> /image-build/output/link-diagnostics.txt
 /image-build/output/probe > /image-build/output/runtime.txt
 test "$(cat /image-build/output/runtime.txt)" = "zog-compiler-probe"
 """
@@ -142,6 +142,14 @@ def execute_native_probe(builder,selection,attempt_dir):
             deny("reserved sandbox path conflict")
         p.mkdir(exist_ok=True)
     (source/"probe.c").write_bytes(SOURCE)
+    # configured_runner's input_manifest reopens this before registration. Keep
+    # the copied root and exact probe identity durable before any controller job.
+    write_json(attempt/"prepared.json", {
+        "root": inventory(root),
+        "binding": {"generation": selection.generation,
+                    "source_sha256": SOURCE_SHA256,
+                    "command_sha256": COMMAND_SHA256},
+    })
     runner=BoxControlRunner(execute=executor,timeout=MAX_SECONDS)
     request=runner.build_request(root,source,output,
              ["/bin/sh","-eu","-c",COMMAND],{})

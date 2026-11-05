@@ -7,6 +7,7 @@ on:
       - 'src/zog/image_build/first_fonts_producer_contract.py'
       - 'tests/test_first_fonts_producer_contract.py'
       - 'tests/test_compiler_base_acceptance.py'
+      - 'tests/test_compiler_base_probe_execution.py'
       - 'tests/test_compiler_base_pipeline.py'
       - 'src/zog/image_build/compiler_base_acceptance.py'
       - 'src/zog/image_build/compiler_base_probe.py'
@@ -52,7 +53,7 @@ jobs:
           PYTHONPATH: src
         run: |
           python -m compileall -q src/zog/image_build/first_fonts_producer_contract.py tests/test_first_fonts_producer_contract.py
-          python -m pytest -q -p no:cacheprovider tests/test_first_fonts_producer_contract.py tests/test_compiler_base_acceptance.py tests/test_compiler_base_pipeline.py tests/test_graphical_generation_acceptance.py tests/test_graphical_composition.py tests/test_remote_gateway_readiness.py
+          python -m pytest -q -p no:cacheprovider tests/test_first_fonts_producer_contract.py tests/test_compiler_base_acceptance.py tests/test_compiler_base_probe_execution.py tests/test_compiler_base_pipeline.py tests/test_graphical_generation_acceptance.py tests/test_graphical_composition.py tests/test_remote_gateway_readiness.py
       - name: Admit neither native Host nor request
         if: always()
         run: |
