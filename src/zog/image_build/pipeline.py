@@ -60,6 +60,7 @@ class PipelineMixin:
         # selected compiler image or authenticated graphical pipeline.
         if operation == "image":
             from .compiler_base_acceptance import resolve
+            from .engine import read_selection
             from .graphical_composition import FONTS, XCB, X11
             selected=read_selection(Path(selection.root).parent)
             targets=list(arguments.get("targets",[]))
