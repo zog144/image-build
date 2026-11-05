@@ -50,7 +50,7 @@ def deny(message):
 def _sha(raw):
     return "sha256:"+hashlib.sha256(raw).hexdigest()
 
-def _lines(raw,*,kind):
+def _lines(raw,*,kind,selected_root=None):
     if len(raw)>128*1024:
         deny("unbounded "+kind+" trace")
     try: lines=raw.decode("utf-8").splitlines()
@@ -63,7 +63,21 @@ def _lines(raw,*,kind):
         if s.startswith(WHITELIST):
             candidate=s.split()[0].rstrip(":")
             if ".." in candidate.split("/"):
-                deny("invalid selected root header/library trace")
+                # GCC emits real installed CRT/library paths through its target
+                # subdirectory. Resolve those against the independently selected
+                # root; lexical normalization alone could hide symlink escapes.
+                if selected_root is None:
+                    deny("selected root required for relative compiler trace")
+                base=Path(selected_root)
+                if not base.is_absolute() or base.is_symlink() or not base.is_dir():
+                    deny("invalid selected root for compiler trace")
+                try:
+                    resolved=(base/candidate.lstrip("/")).resolve(strict=True)
+                    candidate="/"+resolved.relative_to(base).as_posix()
+                except (OSError,ValueError):
+                    deny("compiler trace escapes or is absent from selected root")
+                if not candidate.startswith(WHITELIST) or any(x in candidate for x in HOST_INDICATORS):
+                    deny("unexpected resolved compiler trace")
             found.append(candidate)
     if not found:
         deny("missing "+kind+" search-path trace")
@@ -78,7 +92,7 @@ def _file(root,name,size=128*1024):
         deny("invalid bounded "+name+" output")
     return b
 
-def inspect_completed_probe(root,*,generation,completion,seconds):
+def inspect_completed_probe(root,*,generation,completion,seconds,selected_root=None):
     """Re-read completed sandbox artifacts and return a nonauthoritative report."""
     root=Path(root)
     if not root.is_dir() or root.is_symlink():
@@ -95,8 +109,8 @@ def inspect_completed_probe(root,*,generation,completion,seconds):
     target=_file(root,"target.txt").decode().strip()
     if ABI.fullmatch(target) is None:
         deny("selected ABI differs from x86_64 Linux GNU")
-    includes=_lines(_file(root,"includes.txt"),kind="include")
-    libs=_lines(_file(root,"links.txt"),kind="library")
+    includes=_lines(_file(root,"includes.txt"),kind="include",selected_root=selected_root)
+    libs=_lines(_file(root,"links.txt"),kind="library",selected_root=selected_root)
     image=_file(root,"probe",16*1024*1024)
     if not image.startswith(ELF) or int.from_bytes(image[18:20],"little")!=62:
         deny("compiled executable is not x86_64 ELF")

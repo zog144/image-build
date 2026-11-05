@@ -70,3 +70,16 @@ esac
     subprocess.run(['/bin/sh','-eu','-c',command],check=True,capture_output=True)
     assert probe._lines((output/'includes.txt').read_bytes(),kind='include') == ['/usr/include/stdio.h']
     assert probe._lines((output/'links.txt').read_bytes(),kind='library') == ['/usr/lib/Scrt1.o','/usr/lib/libc.so']
+
+
+def test_gcc_relative_installed_trace_requires_real_selected_root(tmp_path):
+    import pytest
+    from zog.image_build.errors import ImageBuildError
+    root=tmp_path/'root'; (root/'usr/lib/gcc/x86_64-zog-linux-gnu/15.3.0').mkdir(parents=True)
+    (root/'usr/lib/Scrt1.o').write_bytes(b'source-only-crt')
+    raw=b'/usr/lib/gcc/x86_64-zog-linux-gnu/15.3.0/../../../../lib/Scrt1.o\n'
+    with pytest.raises(ImageBuildError):probe._lines(raw,kind='library')
+    assert probe._lines(raw,kind='library',selected_root=root)==['/usr/lib/Scrt1.o']
+    (root/'usr/lib/Scrt1.o').unlink()
+    (root/'usr/lib/Scrt1.o').symlink_to('/etc/passwd')
+    with pytest.raises(ImageBuildError):probe._lines(raw,kind='library',selected_root=root)

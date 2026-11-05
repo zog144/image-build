@@ -257,7 +257,7 @@ def resolve(builder, selection, receipt_sha256):
         claim["generation_kind"] not in ("toolchain","image") or
         claim["generation_manifest_sha256"]!=digest(manifest_raw) or
         claim["generation_inventory_sha256"]!="sha256:"+identity(manifest["outputs"]) or
-        claim["target_abi"] not in ("x86_64-linux-gnu","x86_64-pc-linux-gnu","x86_64-unknown-linux-gnu") or
+        claim["target_abi"] not in ("x86_64-linux-gnu","x86_64-pc-linux-gnu","x86_64-unknown-linux-gnu","x86_64-zog-linux-gnu") or
         manifest.get("inputs",{}).get("architecture")!="x86_64" or
         platform.machine()!="x86_64"):
         deny("selected compiler generation bytes/kind/target ABI differ")
