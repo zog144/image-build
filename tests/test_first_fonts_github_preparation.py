@@ -15,7 +15,8 @@ def check(obj=None):
     return m.verify(m.load() if obj is None else obj,
         os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"],
         os.environ["ZOG_HOSTDEPLOY_TASKC_PR26"],
-        os.environ["ZOG_IMAGE_BUILD_SELECTED_SOURCE"])
+        os.environ["ZOG_IMAGE_BUILD_SELECTED_SOURCE"],
+        os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"])
 
 def test_exact_source_and_request_shape_only_never_compiler_admission():
     value=check()
@@ -27,6 +28,7 @@ def test_exact_source_and_request_shape_only_never_compiler_admission():
 
 @pytest.mark.parametrize("part,key,value",[
  ("producer","source_revision","b0f53dbdec0e88b9b37feb5317398db3d20507dd"),
+ ("reviewer","compiler_base_reader_revision","0"*40),
  ("producer","monthly_pin_sha256","sha256:"+"f"*64),
  ("reviewer","host_deploy_fonts_catalogue_revision","f"*40),
  ("reviewer","host_deploy_task_c_revision","f"*40),
@@ -97,3 +99,13 @@ def test_source_program_does_not_import_network_or_create_remote_tasks():
                    "send_message(","send_command(","SendCommand(",
                    "create_issue(","subprocess.run("):
         assert denied not in source
+
+
+def test_signed_compiler_base_kind_is_not_invented_by_offline_review():
+    data=check()
+    assert data["native_evidence"] is None
+    assert data["accepted_generation"] is None
+    assert m.load()["native_gates"]["accepted_signed_compiler_base_generation"] is None
+    assert m.load()["reviewer"]["compiler_base_reader_revision"]==(
+        "bf0b37fea1767bf7ab02ca2d1a0d5487d4b6")
+    assert m.load()["reviewer"]["host_deploy_task_c_revision"]==m.HOST_TASK_C
