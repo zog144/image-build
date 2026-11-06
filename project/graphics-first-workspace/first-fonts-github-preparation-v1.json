@@ -10,8 +10,9 @@
     "monthly_pin_sha256": "sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
   },
   "reviewer": {
-    "host_deploy_fonts_catalogue_revision": "78a772a6542dba660ddaa4223b28593c0251f810",
-    "host_deploy_task_c_revision": "c46c6b5819b1f4496de1b860aa2785812244493e"
+    "host_deploy_fonts_catalogue_revision": "745cb7e887fabcea06caf1d7db732b33f9dadca0",
+    "host_deploy_task_c_revision": "02db124609b92396ff89fa628d8ddc9383e05f4b",
+    "compiler_base_reader_revision": "bf0b37fea1767bf7ab02ca2d1a0d5487d4b6"
   },
   "task_catalogue": {
     "schema": 2,
@@ -63,7 +64,6 @@
   },
   "native_gates": {
     "protected_original_operator_approval": null,
-    "accepted_self_hosted_toolchain_generation": null,
     "canonical_base_generation_receipt": null,
     "real_managed_lane_and_host_installation": null,
     "protected_one_task_catalogue_and_receipt": null,
@@ -75,7 +75,8 @@
     "owner_only_ssm_credentials_and_gateway_iam_denial": null,
     "authenticated_native_source_and_producer_reader": null,
     "signed_current_authority_and_revocation": null,
-    "one_attempt_and_uncertain_ack_reconciliation": null
+    "one_attempt_and_uncertain_ack_reconciliation": null,
+    "accepted_signed_compiler_base_generation": null
   },
   "budget": {
     "work_bytes": 32212254720,
