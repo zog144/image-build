@@ -12,7 +12,7 @@
   "reviewer": {
     "host_deploy_fonts_catalogue_revision": "745cb7e887fabcea06caf1d7db732b33f9dadca0",
     "host_deploy_task_c_revision": "02db124609b92396ff89fa628d8ddc9383e05f4b",
-    "compiler_base_reader_revision": "bf0b37fea1767bf7ab02ca2d1a0d5487d4b6"
+    "compiler_base_reader_revision": "bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"
   },
   "task_catalogue": {
     "schema": 2,
