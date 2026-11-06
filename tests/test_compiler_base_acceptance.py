@@ -36,9 +36,7 @@ PROBE={
     "elapsed_seconds":5,
     "controller_execution":{"runtime_id":"fixture-runtime","invocation_id":"fixture-invocation",
         "journal_reference":"fixture-journal","exit_code":0,"cleanup_complete":True},
-    "isolation":{"read_only_root":True,"network_access":False,"pivot_root":True,
-        "host_mounts_visible":False,"host_include_fallback":False,
-        "host_library_fallback":False},
+    "isolation":None,
     "include_paths":["/usr/include/stdio.h"],
     "library_paths":["/usr/lib/crt1.o","/usr/lib/libc.so"],
     "linked_executable_sha256":"sha256:"+"e"*64,
@@ -77,7 +75,8 @@ def signed_fixture(tmp_path,kind="image"):
     files={}
     for role,path in ROLES.items():
         files[role]={"path":path,"sha256":ca.digest((root/"root"/path).read_bytes())}
-    cfg={"project_root":"/isolated-native-fixture","sandbox_mode":"pivot-root"}
+    cfg={"project_root":"/isolated-native-fixture","sandbox_mode":"pivot-root",
+         "execution_user_id":24202,"execution_group_id":24202}
     claim={
         "schema":ca.SCHEMA,
         "status":"independently-accepted-for-compiler-use",
@@ -98,6 +97,24 @@ def signed_fixture(tmp_path,kind="image"):
              "retained_evidence_sha256":"sha256:"+"b"*64}),
         "native_probe":{**copy.deepcopy(PROBE),"base_generation_id":gid},
         "required_probe_command_sha256":cp.COMMAND_SHA256,
+    }
+    from zog.image_build.compiler_base_isolation import SCHEMA,PROFILE
+    probe=claim["native_probe"]
+    probe["isolation"]={
+        "schema":SCHEMA,"profile":PROFILE,"witness_sha256":"sha256:"+"a"*64,
+        "runtime_id":probe["controller_execution"]["runtime_id"],
+        "invocation_id":probe["controller_execution"]["invocation_id"],
+        "uid":24202,"gid":24202,"effective_capabilities":"0000000000000000",
+        "no_new_privileges":True,"mount_namespace":"mnt:[2]","host_mount_namespace":"mnt:[1]",
+        "network_namespace":"net:[2]","host_network_namespace":"net:[1]","network_interfaces":["lo"],
+        "imported_root":"/protected/import/root","source_root":"/protected/source","output_root":"/protected/output",
+        "selected_files":{k:files[k] for k in ("compiler","linker","libc_header")},
+        "mounts":[
+            {"mount":"/","root":"/protected/import/root","type":"xfs","source":"/dev/fixture","options":"ro,nosuid"},
+            {"mount":"/proc","root":"/","type":"proc","source":"proc","options":"rw,nosuid"},
+            {"mount":"/image-build/source","root":"/protected/source","type":"xfs","source":"/dev/fixture","options":"rw,nosuid"},
+            {"mount":"/image-build/output","root":"/protected/output","type":"xfs","source":"/dev/fixture","options":"rw,nosuid"},
+        ],
     }
     authority={
         "schema":"zog-protected-compiler-base-issuer-v1",
@@ -215,7 +232,7 @@ def test_probe_artefacts_are_observed_not_native_acceptance(tmp_path):
         "cleanup_complete":True,"journal_reference":"synthetic-j"}
     report=cp.inspect_completed_probe(root,generation="a"*64,completion=execution,seconds=4)
     assert report["status"]=="observed-not-accepted"
-    assert report["isolation"]["host_library_fallback"] is False
+    assert report["isolation"] is None
     (root/"links.txt").write_bytes(b"/host/usr/lib/libc.so\n")
     with pytest.raises(ImageBuildError,match="Host include/library"):
         cp.inspect_completed_probe(root,generation="a"*64,completion=execution,seconds=4)
