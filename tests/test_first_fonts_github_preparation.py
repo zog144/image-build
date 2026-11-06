@@ -107,5 +107,5 @@ def test_signed_compiler_base_kind_is_not_invented_by_offline_review():
     assert data["accepted_generation"] is None
     assert m.load()["native_gates"]["accepted_signed_compiler_base_generation"] is None
     assert m.load()["reviewer"]["compiler_base_reader_revision"]==(
-        "bf0b37fea1767bf7ab02ca2d1a0d5487d4b6")
+        "bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6")
     assert m.load()["reviewer"]["host_deploy_task_c_revision"]==m.HOST_TASK_C
