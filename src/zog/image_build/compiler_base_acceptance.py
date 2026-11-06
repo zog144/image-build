@@ -179,11 +179,8 @@ def validate_probe(probe, claim):
         "runtime_id","invocation_id","journal_reference")) or
         e["exit_code"]!=0 or e["cleanup_complete"] is not True):
         deny("native probe controller execution incomplete")
-    iso=probe["isolation"]
-    if iso!={"read_only_root":True,"network_access":False,
-             "pivot_root":True,"host_mounts_visible":False,
-             "host_include_fallback":False,"host_library_fallback":False}:
-        deny("native probe did not establish selected root isolation")
+    from .compiler_base_isolation import validate as validate_isolation
+    validate_isolation(probe["isolation"], e, claim["installed_paths"])
     for key in ("include_paths","library_paths"):
         paths=probe[key]
         if type(paths) is not list or not paths or len(paths)>80:
