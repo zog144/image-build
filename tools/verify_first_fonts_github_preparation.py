@@ -86,7 +86,7 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
         deny("original source or October pin substituted")
     if record["reviewer"]!={"host_deploy_fonts_catalogue_revision":HOST_FONTS,
                             "host_deploy_task_c_revision":HOST_TASK_C,
-                            "compiler_base_reader_revision":"bf0b37fea1767bf7ab02ca2d1a0d5487d4b6"}:
+                            "compiler_base_reader_revision":"bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"}:
         deny("independently frozen host-deploy source review head changed")
     cat=record["task_catalogue"]
     required_catalogue={
@@ -136,7 +136,7 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     if owner!={"SOURCE":SOURCE,"REPOSITORY":"zog144/image-build",
               "PIN_PATH":p["monthly_pin_path"],"PIN_SHA256":PIN[7:],
               "PIN_DATE":"2026-10-01","TASK":TASK,
-              "READER_SOURCE":"bf0b37fea1767bf7ab02ca2d1a0d5487d4b6"}:
+              "READER_SOURCE":"bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"}:
         deny("PR7 original first-Fonts native owner selects different source/pin/task")
     catalogue=source_constants(fonts_host/"src/zog/host_deploy/gateway/task_catalogue.py",
                                {"SCHEMA","REVIEWED_IMAGE_TASKS"})
