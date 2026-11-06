@@ -31,3 +31,10 @@ def test_bad_observations_denied_even_with_valid_signature(tmp_path,mutation):
     elif mutation=='invented_boolean':i['pivot_root']=True
     elif mutation=='no_witness':i['witness_sha256']=None
     with pytest.raises(ImageBuildError):ca.resolve(b,s,sign())
+
+@pytest.mark.parametrize("field",["uid","gid"])
+def test_nonroot_worker_must_match_selected_runner(tmp_path,field):
+    b,s,c,a,sign=signed_fixture(tmp_path)
+    c["native_probe"]["isolation"][field]=24203
+    with pytest.raises(ImageBuildError,match="observed worker"):
+        ca.resolve(b,s,sign())

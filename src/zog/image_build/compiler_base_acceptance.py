@@ -305,6 +305,11 @@ def resolve(builder, selection, receipt_sha256):
     if claim["required_probe_command_sha256"]!=COMMAND_SHA256:
         deny("native compile/link probe instructions substituted")
     validate_probe(claim["native_probe"],claim)
+    configuration=execute.configuration()
+    observed=claim["native_probe"]["isolation"]
+    if (observed["uid"]!=configuration.get("execution_user_id") or
+        observed["gid"]!=configuration.get("execution_group_id")):
+        deny("observed worker differs from selected execution configuration")
     included=claim["native_probe"]["include_paths"]
     linked=claim["native_probe"]["library_paths"]
     if (("/"+files["libc_header"]["path"] not in included or

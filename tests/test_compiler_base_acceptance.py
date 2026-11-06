@@ -75,7 +75,8 @@ def signed_fixture(tmp_path,kind="image"):
     files={}
     for role,path in ROLES.items():
         files[role]={"path":path,"sha256":ca.digest((root/"root"/path).read_bytes())}
-    cfg={"project_root":"/isolated-native-fixture","sandbox_mode":"pivot-root"}
+    cfg={"project_root":"/isolated-native-fixture","sandbox_mode":"pivot-root",
+         "execution_user_id":24202,"execution_group_id":24202}
     claim={
         "schema":ca.SCHEMA,
         "status":"independently-accepted-for-compiler-use",
