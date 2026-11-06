@@ -65,7 +65,7 @@ jobs:
           python tools/verify_first_fonts_github_preparation.py \
             --fonts-host "$ZOG_HOSTDEPLOY_FONTS_PR7" \
             --taskc-host "$ZOG_HOSTDEPLOY_TASKC_PR26" \
-            --image-build-source "$ZOG_IMAGE_BUILD_SELECTED_SOURCE" \\
+            --image-build-source "$ZOG_IMAGE_BUILD_SELECTED_SOURCE" \
             --signed-reader "$ZOG_IMAGE_BUILD_SIGNED_READER"
           python -m pytest -q tests/test_first_fonts_github_preparation.py
       - name: Source only, zero execution authority
