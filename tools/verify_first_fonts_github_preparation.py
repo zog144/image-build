@@ -16,8 +16,8 @@ RECORD=ROOT/"project/graphics-first-workspace/first-fonts-github-preparation-v1.
 TASK="graphics-fonts-image-v1"
 SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
-HOST_FONTS="78a772a6542dba660ddaa4223b28593c0251f810"
-HOST_TASK_C="c46c6b5819b1f4496de1b860aa2785812244493e"
+HOST_FONTS="745cb7e887fabcea06caf1d7db732b33f9dadca0"
+HOST_TASK_C="02db124609b92396ff89fa628d8ddc9383e05f4b"
 ENTRIES=(
     ("fontconfig-final","fontconfig","fontconfig/stages/final"),
     ("freetype-final","freetype","freetype/stages/final"),
@@ -25,7 +25,7 @@ ENTRIES=(
 )
 TARGETS=("libpng-final","freetype-final","fontconfig-final")
 GATE_KEYS=(
-    "protected_original_operator_approval","accepted_self_hosted_toolchain_generation",
+    "protected_original_operator_approval","accepted_signed_compiler_base_generation",
     "canonical_base_generation_receipt","real_managed_lane_and_host_installation",
     "protected_one_task_catalogue_and_receipt",
     "dedicated_30_plus_2_gib_native_reservation",
@@ -72,7 +72,7 @@ def load_host_protocol(path):
     spec.loader.exec_module(module)
     return module
 
-def verify(record, fonts_host, taskc_host, immutable_producer):
+def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=None):
     """Verify exact source inputs, while refusing all compiler/dispatcher admission."""
     exact(record,("schema","status","task","producer","reviewer","task_catalogue",
                   "gateway","native_gates","budget","submission","output_evidence"),"preparation")
@@ -85,7 +85,8 @@ def verify(record, fonts_host, taskc_host, immutable_producer):
            "monthly_pin_sha256":PIN}:
         deny("original source or October pin substituted")
     if record["reviewer"]!={"host_deploy_fonts_catalogue_revision":HOST_FONTS,
-                            "host_deploy_task_c_revision":HOST_TASK_C}:
+                            "host_deploy_task_c_revision":HOST_TASK_C,
+                            "compiler_base_reader_revision":"bf0b37fea1767bf7ab02ca2d1a0d5487d4b6"}:
         deny("independently frozen host-deploy source review head changed")
     cat=record["task_catalogue"]
     required_catalogue={
@@ -124,11 +125,18 @@ def verify(record, fonts_host, taskc_host, immutable_producer):
     fonts_host=Path(fonts_host).resolve(strict=True)
     taskc_host=Path(taskc_host).resolve(strict=True)
     immutable_producer=Path(immutable_producer).resolve(strict=True)
+    if signed_reader is None:
+        deny("independently pinned compiler reader source is absent")
+    signed_reader=Path(signed_reader).resolve(strict=True)
+    reader_source=signed_reader/"src/zog/image_build/compiler_base_acceptance.py"
+    if not reader_source.is_file() or "image-build-compiler-base-acceptance-v1" not in reader_source.read_text():
+        deny("signed dual-kind compiler-base acceptance reader not selected")
     owner=source_constants(fonts_host/"src/zog/host_deploy/gateway/graphics_catalogue_owner.py",
-          {"SOURCE","REPOSITORY","PIN_PATH","PIN_SHA256","PIN_DATE","TASK"})
+          {"SOURCE","REPOSITORY","PIN_PATH","PIN_SHA256","PIN_DATE","TASK","READER_SOURCE"})
     if owner!={"SOURCE":SOURCE,"REPOSITORY":"zog144/image-build",
               "PIN_PATH":p["monthly_pin_path"],"PIN_SHA256":PIN[7:],
-              "PIN_DATE":"2026-10-01","TASK":TASK}:
+              "PIN_DATE":"2026-10-01","TASK":TASK,
+              "READER_SOURCE":"bf0b37fea1767bf7ab02ca2d1a0d5487d4b6"}:
         deny("PR7 original first-Fonts native owner selects different source/pin/task")
     catalogue=source_constants(fonts_host/"src/zog/host_deploy/gateway/task_catalogue.py",
                                {"SCHEMA","REVIEWED_IMAGE_TASKS"})
@@ -206,10 +214,11 @@ def verify(record, fonts_host, taskc_host, immutable_producer):
         deny("original issue-opened OIDC/FIFO single-submission contract changed")
     if (not all(s in owner_ipc for s in (
             "SOCK_STREAM","preflight-original","submit-original",
+            "observe-original",
             "SO_PEERCRED","original_request_sha256",
             "origin_issue_number","origin_trigger_actor",
             "protected graphical operation owner unavailable or invalid",
-        )) or '    _deny()\n\n# Important: the above preflight API is intentionally held' not in owner_ipc):
+        )) or 'APPROVED_PIN_SHA256 = None' not in (taskc_host/"src/zog/host_deploy/gateway/graphics_owner_trust_history.py").read_text()):
         deny("Task C original preflight protected owner hold was erased")
     if not all(s in attester for s in (
          'EVIDENCE = "image-build-verified-graphical-predecessor-v1"',
@@ -238,6 +247,7 @@ if __name__=="__main__":
     parser.add_argument("--fonts-host",required=True)
     parser.add_argument("--taskc-host",required=True)
     parser.add_argument("--image-build-source",required=True)
+    parser.add_argument("--signed-reader",required=True)
     args=parser.parse_args()
-    print(json.dumps(verify(load(),args.fonts_host,args.taskc_host,args.image_build_source),
+    print(json.dumps(verify(load(),args.fonts_host,args.taskc_host,args.image_build_source,args.signed_reader),
                      sort_keys=True))
