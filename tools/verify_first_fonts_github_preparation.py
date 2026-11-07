@@ -155,7 +155,7 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     } or not all(x in isolation_text for x in (
          "'/proc': 'proc'", "'/sys': 'sysfs'",
          "elif path in PSEUDO:", "if path=='/':",
-         "and 1<=len(mounts)<=40:",
+         "or not 1<=len(mounts)<=40:",
     ))):
         deny("current compiler reader lacks reviewed actual mount/worker isolation profile")
     # The catalogue must select exactly the independently reviewed PR29
