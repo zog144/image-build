@@ -16,7 +16,9 @@ RECORD=ROOT/"project/graphics-first-workspace/first-fonts-github-preparation-v1.
 TASK="graphics-fonts-image-v1"
 SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
-HOST_FONTS="745cb7e887fabcea06caf1d7db732b33f9dadca0"
+HOST_FONTS="c69e752033107ffe9e76d2506af446801964ea3d"
+HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
+READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
 HOST_TASK_C="02db124609b92396ff89fa628d8ddc9383e05f4b"
 ENTRIES=(
     ("fontconfig-final","fontconfig","fontconfig/stages/final"),
@@ -72,7 +74,8 @@ def load_host_protocol(path):
     spec.loader.exec_module(module)
     return module
 
-def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=None):
+def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=None,
+           compiler_consumer=None):
     """Verify exact source inputs, while refusing all compiler/dispatcher admission."""
     exact(record,("schema","status","task","producer","reviewer","task_catalogue",
                   "gateway","native_gates","budget","submission","output_evidence"),"preparation")
@@ -85,8 +88,9 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
            "monthly_pin_sha256":PIN}:
         deny("original source or October pin substituted")
     if record["reviewer"]!={"host_deploy_fonts_catalogue_revision":HOST_FONTS,
+                            "host_deploy_compiler_consumer_revision":HOST_CONSUMER,
                             "host_deploy_task_c_revision":HOST_TASK_C,
-                            "compiler_base_reader_revision":"bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"}:
+                            "compiler_base_reader_revision":READER}:
         deny("independently frozen host-deploy source review head changed")
     cat=record["task_catalogue"]
     required_catalogue={
@@ -128,15 +132,56 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     if signed_reader is None:
         deny("independently pinned compiler reader source is absent")
     signed_reader=Path(signed_reader).resolve(strict=True)
+    if compiler_consumer is None:
+        deny("independently reviewed PR29 compiler consumer source is absent")
+    compiler_consumer=Path(compiler_consumer).resolve(strict=True)
     reader_source=signed_reader/"src/zog/image_build/compiler_base_acceptance.py"
-    if not reader_source.is_file() or "image-build-compiler-base-acceptance-v1" not in reader_source.read_text():
-        deny("signed dual-kind compiler-base acceptance reader not selected")
+    isolation_source=signed_reader/"src/zog/image_build/compiler_base_isolation.py"
+    if not reader_source.is_file() or not isolation_source.is_file():
+        deny("current observed-isolation compiler reader source missing")
+    observed_source=reader_source.read_text()
+    isolation_text=isolation_source.read_text()
+    if (not all(x in observed_source for x in (
+         'SCHEMA = "image-build-compiler-base-acceptance-v1"',
+         'BINDING = "image-build-compiler-base-binding-v1"',
+         'from .compiler_base_isolation import validate as validate_isolation',
+         'validate_isolation(probe["isolation"], e, claim["installed_paths"])',
+         'observed["uid"]!=configuration.get("execution_user_id")',
+         'observed["gid"]!=configuration.get("execution_group_id")',
+         'claim["generation_kind"] not in ("toolchain","image")',
+    )) or source_constants(isolation_source,{"SCHEMA","PROFILE"})!={
+         "SCHEMA":"image-build-compiler-isolation-v2",
+         "PROFILE":"selected-root-kernel-mounts-v1",
+    } or not all(x in isolation_text for x in (
+         "'/proc': 'proc'", "'/sys': 'sysfs'",
+         "elif path in PSEUDO:", "if path=='/':",
+         "and 1<=len(mounts)<=40:",
+    ))):
+        deny("current compiler reader lacks reviewed actual mount/worker isolation profile")
+    # The catalogue must select exactly the independently reviewed PR29
+    # signed-acceptance consumer, not a matching-looking legacy implementation.
+    for name in ("graphics_catalogue_owner.py","graphics_base_acceptance.py"):
+        suffix=Path("src/zog/host_deploy/gateway")/name
+        selected=fonts_host/suffix
+        reviewed=compiler_consumer/suffix
+        if (not selected.is_file() or not reviewed.is_file() or
+                selected.read_bytes()!=reviewed.read_bytes()):
+            deny("first-Fonts native catalogue differs from reviewed PR29 consumer source")
+    consumer=(fonts_host/"src/zog/host_deploy/gateway/graphics_base_acceptance.py").read_text()
+    if not all(x in consumer for x in (
+        '"image-build-compiler-isolation-v2"',
+        '"selected-root-kernel-mounts-v1"',
+        'not match(probe["isolation"].get("witness_sha256"),SHA)',
+        '"x86_64-zog-linux-gnu"',
+        '"independent-compiler-capability-observed-not-job-authorization"',
+    )):
+        deny("first-Fonts catalogue retains obsolete compiler consumer/probe contract")
     owner=source_constants(fonts_host/"src/zog/host_deploy/gateway/graphics_catalogue_owner.py",
           {"SOURCE","REPOSITORY","PIN_PATH","PIN_SHA256","PIN_DATE","TASK","READER_SOURCE"})
     if owner!={"SOURCE":SOURCE,"REPOSITORY":"zog144/image-build",
               "PIN_PATH":p["monthly_pin_path"],"PIN_SHA256":PIN[7:],
               "PIN_DATE":"2026-10-01","TASK":TASK,
-              "READER_SOURCE":"bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"}:
+              "READER_SOURCE":READER}:
         deny("PR7 original first-Fonts native owner selects different source/pin/task")
     catalogue=source_constants(fonts_host/"src/zog/host_deploy/gateway/task_catalogue.py",
                                {"SCHEMA","REVIEWED_IMAGE_TASKS"})
@@ -248,6 +293,8 @@ if __name__=="__main__":
     parser.add_argument("--taskc-host",required=True)
     parser.add_argument("--image-build-source",required=True)
     parser.add_argument("--signed-reader",required=True)
+    parser.add_argument("--compiler-consumer",required=True)
     args=parser.parse_args()
-    print(json.dumps(verify(load(),args.fonts_host,args.taskc_host,args.image_build_source,args.signed_reader),
+    print(json.dumps(verify(load(),args.fonts_host,args.taskc_host,args.image_build_source,args.signed_reader,
+                           args.compiler_consumer),
                      sort_keys=True))
