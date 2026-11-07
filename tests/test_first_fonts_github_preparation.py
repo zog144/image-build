@@ -3,6 +3,7 @@ import copy
 import importlib.util
 import json
 import os
+import shutil
 from pathlib import Path
 import pytest
 
@@ -11,12 +12,13 @@ s=importlib.util.spec_from_file_location("zog_fonts_prep",ROOT/"tools/verify_fir
 m=importlib.util.module_from_spec(s)
 s.loader.exec_module(m)
 
-def check(obj=None):
+def check(obj=None, *, fonts_host=None, signed_reader=None, compiler_consumer=None):
     return m.verify(m.load() if obj is None else obj,
-        os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"],
+        os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"] if fonts_host is None else fonts_host,
         os.environ["ZOG_HOSTDEPLOY_TASKC_PR26"],
         os.environ["ZOG_IMAGE_BUILD_SELECTED_SOURCE"],
-        os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"])
+        os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"] if signed_reader is None else signed_reader,
+        os.environ["ZOG_HOSTDEPLOY_COMPILER_CONSUMER_PR29"] if compiler_consumer is None else compiler_consumer)
 
 def test_exact_source_and_request_shape_only_never_compiler_admission():
     value=check()
@@ -106,6 +108,94 @@ def test_signed_compiler_base_kind_is_not_invented_by_offline_review():
     assert data["native_evidence"] is None
     assert data["accepted_generation"] is None
     assert m.load()["native_gates"]["accepted_signed_compiler_base_generation"] is None
-    assert m.load()["reviewer"]["compiler_base_reader_revision"]==(
-        "bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6")
+    assert m.load()["reviewer"]["compiler_base_reader_revision"]==m.READER
+    assert m.load()["reviewer"]["host_deploy_compiler_consumer_revision"]==m.HOST_CONSUMER
+    assert m.load()["reviewer"]["host_deploy_fonts_catalogue_revision"]==m.HOST_FONTS
     assert m.load()["reviewer"]["host_deploy_task_c_revision"]==m.HOST_TASK_C
+
+def test_exact_current_reader_catalogue_and_consumer_are_not_prior_versions():
+    assert m.READER=="1616f192ef9d8964a8f37f32a86c69c0242a213c"
+    assert m.HOST_FONTS=="c69e752033107ffe9e76d2506af446801964ea3d"
+    assert m.HOST_CONSUMER=="b3ac93cd92df1b280f087fbb748263d3371750aa"
+    assert m.SOURCE=="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
+    assert m.PIN=="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
+    assert m.load()["task_catalogue"]["selected_base_generation"] is None
+
+
+@pytest.mark.parametrize("key,old_value", [
+  ("host_deploy_fonts_catalogue_revision","745cb7e887fabcea06caf1d7db732b33f9dadca0"),
+  ("compiler_base_reader_revision","bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"),
+  ("host_deploy_compiler_consumer_revision","745cb7e887fabcea06caf1d7db732b33f9dadca0"),
+])
+def test_previous_source_heads_do_not_reenter_frozen_preparation(key,old_value):
+    record=copy.deepcopy(m.load())
+    record["reviewer"][key]=old_value
+    with pytest.raises(m.FontsNotAdmitted,match="source review head changed"):
+        check(record)
+
+
+def _partial_copy(source,destination,paths):
+    for relative in paths:
+        target=destination/relative
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(source/relative,target)
+    return destination
+
+
+def test_legacy_signed_looking_isolation_reader_is_denied(tmp_path):
+    source=Path(os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"])
+    path=Path("src/zog/image_build/compiler_base_isolation.py")
+    candidate=_partial_copy(source,tmp_path/"old-reader",[
+       Path("src/zog/image_build/compiler_base_acceptance.py"),path])
+    original=(candidate/path).read_text()
+    assert "selected-root-kernel-mounts-v1" in original
+    (candidate/path).write_text(original.replace(
+       "selected-root-kernel-mounts-v1","legacy-no-host-mounts-v1"))
+    with pytest.raises(m.FontsNotAdmitted,match="actual mount/worker isolation"):
+        check(signed_reader=candidate)
+
+
+@pytest.mark.parametrize("substitution",["isolation_profile","witness_requirement","source_abi"])
+def test_updated_pr7_consumer_requires_exact_reviewed_pr29_bytes(tmp_path,substitution):
+    source=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
+    paths=[
+        Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
+        Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
+    ]
+    candidate=_partial_copy(source,tmp_path/"drifted-catalogue",paths)
+    target=candidate/paths[1]
+    text=target.read_text()
+    assert '"selected-root-kernel-mounts-v1"' in text
+    if substitution=="isolation_profile":
+        text=text.replace('"selected-root-kernel-mounts-v1"',
+                          '"legacy-no-host-mounts-v1"')
+    elif substitution=="witness_requirement":
+        text=text.replace('not match(probe["isolation"].get("witness_sha256"),SHA)',
+                          "False")
+    else:
+        text=text.replace('"x86_64-zog-linux-gnu"','"aarch64-linux-gnu"')
+    target.write_text(text)
+    with pytest.raises(m.FontsNotAdmitted,match="differs from reviewed PR29"):
+        check(fonts_host=candidate)
+
+
+def test_current_catalogue_owner_cannot_select_old_reader(tmp_path):
+    source=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
+    paths=[
+        Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
+        Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
+    ]
+    candidate=_partial_copy(source,tmp_path/"stale-owner",paths)
+    owner=candidate/paths[0]
+    owner.write_text(owner.read_text().replace(m.READER,
+                                "bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"))
+    with pytest.raises(m.FontsNotAdmitted,match="differs from reviewed PR29"):
+        check(fonts_host=candidate)
+
+
+def test_unselected_consumer_or_source_missing_denied():
+    with pytest.raises(m.FontsNotAdmitted,match="consumer source is absent"):
+        m.verify(m.load(),os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"],
+                 os.environ["ZOG_HOSTDEPLOY_TASKC_PR26"],
+                 os.environ["ZOG_IMAGE_BUILD_SELECTED_SOURCE"],
+                 os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"],None)
