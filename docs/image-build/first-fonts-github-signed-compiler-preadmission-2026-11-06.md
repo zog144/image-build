@@ -5,9 +5,13 @@
 ## Exact selected source and separate roles
 
 - Producer compiler/original Fonts sources: `zog144/image-build@1f07e83dbd80dacb9bed0d6494c697375f0e26cd`, `project/bootstrap/graphics-fonts.py`, original October source pin `sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36`.
-- Reviewed host-deploy PR #7 one-task definition: `745cb7e887fabcea06caf1d7db732b33f9dadca0`, source-only, root-installed catalogue not yet present.
+- Reviewed host-deploy PR #7 one-task definition: `c69e752033107ffe9e76d2506af446801964ea3d`, source-only, root-installed catalogue not yet present.
 - Reviewed protected Task C gateway PR #26 source: `02db124609b92396ff89fa628d8ddc9383e05f4b`, source-only, native owner not accepted.
-- Independently reviewed image-build PR #18 signed dual-kind compiler reader: **`bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6` (40 hexadecimal characters)**. This is separate from the original producer commit; it is not installed solely because source CI checked it out.
+- Independently reviewed image-build PR #20 signed dual-kind compiler reader with observed-isolation v2: **`1616f192ef9d8964a8f37f32a86c69c0242a213c` (40 hexadecimal characters)**. This is separate from the original producer commit; it is not installed solely because source CI checked it out.
+
+- Independently reviewed host-deploy PR #29 compiler consumer: `b3ac93cd92df1b280f087fbb748263d3371750aa`. The first-Fonts catalogue PR #7 selects exactly this consumer source and PR #20 reader; it must not inherit PR #18's obsolete mount-isolation assertions.
+
+The selected PR #20 reader requires `image-build-compiler-isolation-v2` / `selected-root-kernel-mounts-v1`, including an exact original job/witness digest, observed worker UID/GID matching the selected execution configuration, separate namespaces, and bounded observed pseudo-filesystem/kernel/systemd mounts. It does **not** claim all Host mounts were absent or infer pivot-root isolation from a synthetic boolean. PR #7's PR #29 consumer rejects the legacy signed-looking assertions even if the receipt shape is plausible. Neither a source checkout nor the observer's native reading confers independent signer or compiler task authorization.
 
 The updated `first-fonts-github-preparation-v1.json` retains `status=PREPARED_NOT_SUBMITTABLE`, no original issue/workspace/request/queue acknowledgement or generation ID, zero installed catalogue/receipt and all native gate values `null`. It names the current reviewer commits and the signed reader, rather than the earlier PR7 `78a772a...` / Task C `c46c6b...` and superseded stage-two-only assumption. The old preparation audit remains historical evidence, not a current installed source pin.
 
@@ -37,3 +41,9 @@ Bounded dedicated reservation remains exactly 30 GiB work image + 2 GiB external
 **Next owner:** host-deploy/root-control/host-install Work independently accept original authority, protected issuer and current history, installed source, actual IAM and environment and independently sign/install the exact one-task catalogue. Only then may a separately authorized original GitHub issue be opened for one FIFO/owner-triggered Fonts compilation. No manual direct-SSM workaround, retry after uncertain ACK, or candidate promotion.
 
 **No native operations, EC2/STATE modifications, AWS/SQS/SSM requests, GitHub issue creation, actual compilation or source promotion occurred here.**
+
+## Exact-head request preparation reconciliation — 2026-11-07
+
+The preparation manifest, offline verifier, synthetic tests and GitHub source-only workflow now freeze host-deploy PR #7 `c69e752033107ffe9e76d2506af446801964ea3d`, image-build PR #20 reader `1616f192ef9d8964a8f37f32a86c69c0242a213c`, and a distinct independently reviewed PR #29 consumer `b3ac93cd92df1b280f087fbb748263d3371750aa`. The PR17 workflow checks out and validates **all three immutable Git heads**, compares actual PR #7 consumer/owner source bytes with PR #29, checks the original PR #20 signed observation and bounded mount/worker contract and rejects stale pin, changed source/ABI, substituted witness/profile and false authorization. Separate PR #26 Task C source `02db124609b92396ff89fa628d8ddc9383e05f4b` remains unchanged and held.
+
+The compiler producer remains **exact** `1f07e83dbd80dacb9bed0d6494c697375f0e26cd`; the October original pin SHA-256 remains **exact** `d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36`. The real selected compiler-bearing image retains `kind=image` and historical provenance gaps. No implied acceptance, native Job/Host/certificate, operator approval, queue acknowledgement, issue number, real request ID or output generation is added: every authority and execution slot is `null` or `false`. `PREPARED_NOT_SUBMITTABLE` is a **hard check**, not a promise to submit after source CI. No executable issue body is constructed, no GitHub issue is opened, and no SQS/SSM or native compilation is attempted.
