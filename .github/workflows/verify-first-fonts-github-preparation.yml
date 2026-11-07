@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           repository: zog144/host-deploy
-          ref: 745cb7e887fabcea06caf1d7db732b33f9dadca0
+          ref: c69e752033107ffe9e76d2506af446801964ea3d
           path: dependencies/host-deploy-pr7
           persist-credentials: false
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
@@ -39,8 +39,14 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           repository: zog144/image-build
-          ref: bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6
+          ref: 1616f192ef9d8964a8f37f32a86c69c0242a213c
           path: dependencies/image-build-signed-reader
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/host-deploy
+          ref: b3ac93cd92df1b280f087fbb748263d3371750aa
+          path: dependencies/host-deploy-compiler-consumer-pr29
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
@@ -50,9 +56,10 @@ jobs:
       - name: Verify immutable checkout identities
         run: |
           test "$(git -C dependencies/image-build-source rev-parse HEAD)" = "1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
-          test "$(git -C dependencies/host-deploy-pr7 rev-parse HEAD)" = "745cb7e887fabcea06caf1d7db732b33f9dadca0"
+          test "$(git -C dependencies/host-deploy-pr7 rev-parse HEAD)" = "c69e752033107ffe9e76d2506af446801964ea3d"
           test "$(git -C dependencies/host-deploy-taskc rev-parse HEAD)" = "02db124609b92396ff89fa628d8ddc9383e05f4b"
-          test "$(git -C dependencies/image-build-signed-reader rev-parse HEAD)" = "bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"
+          test "$(git -C dependencies/image-build-signed-reader rev-parse HEAD)" = "1616f192ef9d8964a8f37f32a86c69c0242a213c"
+          test "$(git -C dependencies/host-deploy-compiler-consumer-pr29 rev-parse HEAD)" = "b3ac93cd92df1b280f087fbb748263d3371750aa"
       - name: Exact Fonts catalogue, October source and non-submittable request validation
         env:
           AWS_EC2_METADATA_DISABLED: 'true'
@@ -60,13 +67,15 @@ jobs:
           ZOG_HOSTDEPLOY_TASKC_PR26: dependencies/host-deploy-taskc
           ZOG_IMAGE_BUILD_SELECTED_SOURCE: dependencies/image-build-source
           ZOG_IMAGE_BUILD_SIGNED_READER: dependencies/image-build-signed-reader
+          ZOG_HOSTDEPLOY_COMPILER_CONSUMER_PR29: dependencies/host-deploy-compiler-consumer-pr29
         run: |
           python -m compileall -q tools/verify_first_fonts_github_preparation.py tests/test_first_fonts_github_preparation.py
           python tools/verify_first_fonts_github_preparation.py \
             --fonts-host "$ZOG_HOSTDEPLOY_FONTS_PR7" \
             --taskc-host "$ZOG_HOSTDEPLOY_TASKC_PR26" \
             --image-build-source "$ZOG_IMAGE_BUILD_SELECTED_SOURCE" \
-            --signed-reader "$ZOG_IMAGE_BUILD_SIGNED_READER"
+            --signed-reader "$ZOG_IMAGE_BUILD_SIGNED_READER" \
+            --compiler-consumer "$ZOG_HOSTDEPLOY_COMPILER_CONSUMER_PR29"
           python -m pytest -q tests/test_first_fonts_github_preparation.py
       - name: Source only, zero execution authority
         if: always()
