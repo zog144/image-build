@@ -199,3 +199,43 @@ def test_unselected_consumer_or_source_missing_denied():
                  os.environ["ZOG_HOSTDEPLOY_TASKC_PR26"],
                  os.environ["ZOG_IMAGE_BUILD_SELECTED_SOURCE"],
                  os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"],None)
+
+def test_selected_pr7_package_catalogue_change_is_denied(tmp_path):
+    source=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
+    paths=[
+        Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
+        Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
+        Path("src/zog/host_deploy/gateway/task_catalogue.py"),
+    ]
+    selected=_partial_copy(source,tmp_path/"different-fonts-task",paths)
+    original=selected/paths[2]
+    text=original.read_text()
+    assert '"libpng-final"' in text
+    original.write_text(text.replace('"libpng-final"', '"unreviewed-libpng-final"'))
+    with pytest.raises(m.FontsNotAdmitted,match="recipe selection changed"):
+        check(fonts_host=selected)
+
+
+def test_forged_pr29_consumer_source_is_denied_even_if_pr7_is_unchanged(tmp_path):
+    source=Path(os.environ["ZOG_HOSTDEPLOY_COMPILER_CONSUMER_PR29"])
+    paths=[
+        Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
+        Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
+    ]
+    supposed=_partial_copy(source,tmp_path/"unreviewed-pr29",paths)
+    consumer=supposed/paths[1]
+    consumer.write_text(consumer.read_text().replace(
+        '"selected-root-kernel-mounts-v1"','"legacy-no-host-mounts-v1"'))
+    with pytest.raises(m.FontsNotAdmitted,match="differs from reviewed PR29"):
+        check(compiler_consumer=supposed)
+
+
+def test_source_cannot_rewrite_historical_compiler_image_kind():
+    manifest=m.load()
+    assert manifest["submission"]["enabled"] is False
+    assert manifest["native_gates"]["accepted_signed_compiler_base_generation"] is None
+    assert manifest["output_evidence"]["input_generation_id"] is None
+    assert "accepted_base_kind" not in manifest["task_catalogue"]
+    # The reader and consumer may accept a genuine original kind=image, but
+    # source preparation cannot select any generation or synthesize its kind.
+    assert "toolchain" not in json.dumps(manifest["task_catalogue"])
