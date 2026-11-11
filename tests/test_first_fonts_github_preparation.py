@@ -135,7 +135,14 @@ def test_previous_source_heads_do_not_reenter_frozen_preparation(key,old_value):
 
 
 def _partial_copy(source,destination,paths):
-    for relative in paths:
+    # PR7's root-backed worker quota admission is a mandatory independent
+    # source stage. Keep it present when mutating only the reviewed owner,
+    # catalogue or shared acceptance consumer in synthetic denial fixtures.
+    resource=Path("src/zog/host_deploy/gateway/fonts_resource_admission.py")
+    selected=list(paths)
+    if resource not in selected and (source/resource).is_file():
+        selected.append(resource)
+    for relative in selected:
         target=destination/relative
         target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(source/relative,target)
@@ -275,3 +282,17 @@ def test_current_trusted_task_c_has_no_obsolete_required_native_gates():
                  "selected_compiler_purpose_issuer_and_revocation"):
         assert native[item] is None
     assert m.load()["submission"]["enabled"] is False
+
+
+def test_first_fonts_catalogue_cannot_remove_compiler_receipt_obligation(tmp_path):
+    source=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
+    paths=[Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
+           Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
+           Path("src/zog/host_deploy/gateway/task_catalogue.py")]
+    selected=_partial_copy(source,tmp_path/"removed-task-receipt",paths)
+    catalogue=selected/paths[2]
+    content=catalogue.read_text()
+    assert 'required.add("compiler_base")' in content
+    catalogue.write_text(content.replace('required.add("compiler_base")',"pass"))
+    with pytest.raises(m.FontsNotAdmitted,match="does not freeze independently accepted"):
+        check(fonts_host=selected)
