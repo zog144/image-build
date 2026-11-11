@@ -158,15 +158,22 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
          "or not 1<=len(mounts)<=40:",
     ))):
         deny("current compiler reader lacks reviewed actual mount/worker isolation profile")
-    # The catalogue must select exactly the independently reviewed PR29
-    # signed-acceptance consumer, not a matching-looking legacy implementation.
-    for name in ("graphics_catalogue_owner.py","graphics_base_acceptance.py"):
-        suffix=Path("src/zog/host_deploy/gateway")/name
-        selected=fonts_host/suffix
-        reviewed=compiler_consumer/suffix
-        if (not selected.is_file() or not reviewed.is_file() or
-                selected.read_bytes()!=reviewed.read_bytes()):
-            deny("first-Fonts native catalogue differs from reviewed PR29 consumer source")
+    # The shared compiler ACCEPTANCE consumer is exact PR29 source. The
+    # dedicated one-task PR7 catalogue owner intentionally extends PR29's
+    # original owner: it now freezes compiler_base in the real pipeline.submit,
+    # and its own entire Git source is pinned independently by HOST_FONTS.
+    suffix=Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py")
+    selected=fonts_host/suffix
+    reviewed=compiler_consumer/suffix
+    if (not selected.is_file() or not reviewed.is_file() or
+            selected.read_bytes()!=reviewed.read_bytes()):
+        deny("first-Fonts compiler acceptance consumer differs from reviewed PR29")
+    owner_source=(fonts_host/"src/zog/host_deploy/gateway/graphics_catalogue_owner.py").read_text()
+    catalogue_source=(fonts_host/"src/zog/host_deploy/gateway/task_catalogue.py").read_text()
+    if (('"compiler_base": bound_base["accepted_receipt_sha256"]' not in owner_source
+          or 'required.add("compiler_base")' not in catalogue_source
+          or 'retained_input_evidence["evidence"].get("accepted_receipt_sha256")' not in catalogue_source)):
+        deny("actual first Fonts request does not freeze independently accepted compiler receipt")
     consumer=(fonts_host/"src/zog/host_deploy/gateway/graphics_base_acceptance.py").read_text()
     if not all(x in consumer for x in (
         '"image-build-compiler-isolation-v2"',
