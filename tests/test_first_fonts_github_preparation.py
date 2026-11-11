@@ -216,6 +216,7 @@ def test_selected_pr7_package_catalogue_change_is_denied(tmp_path):
         Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
         Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
         Path("src/zog/host_deploy/gateway/task_catalogue.py"),
+        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
     ]
     selected=_partial_copy(source,tmp_path/"different-fonts-task",paths)
     original=selected/paths[2]
