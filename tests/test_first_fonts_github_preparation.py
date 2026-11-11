@@ -297,3 +297,18 @@ def test_first_fonts_catalogue_cannot_remove_compiler_receipt_obligation(tmp_pat
     catalogue.write_text(content.replace('required.add("compiler_base")',"pass"))
     with pytest.raises(m.FontsNotAdmitted,match="does not freeze independently accepted"):
         check(fonts_host=selected)
+
+
+def test_pr7_root_backed_quota_inspector_requires_exact_reviewed_bytes(tmp_path):
+    selected=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
+    paths=[
+        Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
+        Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
+        Path("src/zog/host_deploy/gateway/task_catalogue.py"),
+        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
+    ]
+    candidate=_partial_copy(selected,tmp_path/"quota-drift",paths)
+    quota=candidate/paths[-1]
+    quota.write_bytes(quota.read_bytes()+b"\n# unauthorized source repin\n")
+    with pytest.raises(m.FontsNotAdmitted,match="quota inspector differs from exact reviewed PR7"):
+        check(fonts_host=candidate)
