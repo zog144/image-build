@@ -183,7 +183,7 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
         deny("first-Fonts compiler acceptance consumer differs from reviewed PR29")
     owner_path=fonts_host/"src/zog/host_deploy/gateway/graphics_catalogue_owner.py"
     owner_bytes=owner_path.read_bytes()
-    git_blob=hashlib.sha1(b"blob "+str(len(owner_bytes)).encode("ascii")+b"\\0"+owner_bytes).hexdigest()
+    git_blob=hashlib.sha1(b"blob "+str(len(owner_bytes)).encode("ascii")+bytes([0])+owner_bytes).hexdigest()
     if git_blob!=OWNER_GIT_BLOB:
         deny("first-Fonts root-backed catalogue owner differs from exact reviewed PR7 source")
     resource_source=(fonts_host/"src/zog/host_deploy/gateway/fonts_resource_admission.py").read_text()
