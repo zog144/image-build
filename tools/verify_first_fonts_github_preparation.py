@@ -19,7 +19,7 @@ PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
 HOST_FONTS="c69e752033107ffe9e76d2506af446801964ea3d"
 HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
-HOST_TASK_C="02db124609b92396ff89fa628d8ddc9383e05f4b"
+HOST_TASK_C="0fd2db17698423d4cd30b296fc9f78e83cee145c"
 ENTRIES=(
     ("fontconfig-final","fontconfig","fontconfig/stages/final"),
     ("freetype-final","freetype","freetype/stages/final"),
@@ -27,17 +27,17 @@ ENTRIES=(
 )
 TARGETS=("libpng-final","freetype-final","fontconfig-final")
 GATE_KEYS=(
-    "protected_original_operator_approval","accepted_signed_compiler_base_generation",
+    "trusted_host_original_request_administrator_authorization","accepted_signed_compiler_base_generation",
     "canonical_base_generation_receipt","real_managed_lane_and_host_installation",
     "protected_one_task_catalogue_and_receipt",
     "dedicated_30_plus_2_gib_native_reservation",
     "six_hour_cpu_and_persistent_write_budget",
-    "authenticated_original_preflight_claim_and_ssm_result",
-    "installed_protected_stream_owner",
-    "independently_nonrollbackable_external_checkpoint",
-    "owner_only_ssm_credentials_and_gateway_iam_denial",
+    "authenticated_original_snapshot_and_ssm_result",
+    "installed_single_trusted_host_gateway",
+    "durable_local_send_once_intent_reboot_recovery",
+    "trusted_host_instance_iam_and_fifo_dispatcher",
     "authenticated_native_source_and_producer_reader",
-    "signed_current_authority_and_revocation",
+    "selected_compiler_purpose_issuer_and_revocation",
     "one_attempt_and_uncertain_ack_reconciliation",
 )
 OUTPUT_NULLS=(
@@ -242,7 +242,12 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
 
     dispatch=(taskc_host/"src/zog/host_deploy/gateway/github_dispatch.py").read_text()
     workflow=(taskc_host/".github/workflows/gateway-issue-dispatch.yml").read_text()
-    owner_ipc=(taskc_host/"src/zog/host_deploy/gateway/graphics_owner_ipc.py").read_text()
+    # Task C is now one trusted Host gateway with existing instance IAM and
+    # fsynced per-operation local send-once claims. Do not reintroduce the
+    # obsolete S3, separately signed Task C installation or SSM-owner IPC.
+    trusted=(taskc_host/"src/zog/host_deploy/gateway/trusted_host_submission.py").read_text()
+    pipeline=(taskc_host/"src/zog/host_deploy/gateway/generic_pipeline.py").read_text()
+    send_once=(taskc_host/"src/zog/host_deploy/gateway/graphics_operation_send_intent.py").read_text()
     attester=(immutable_producer/"src/zog/image_build/graphical_generation_acceptance.py").read_text()
     if (not all(s in dispatch for s in (
         'ISSUE_MARKER = "<!-- zog-gateway-request:v1 -->"',
@@ -257,14 +262,32 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
         'github_dispatch submit',
     ))):
         deny("original issue-opened OIDC/FIFO single-submission contract changed")
-    if (not all(s in owner_ipc for s in (
-            "SOCK_STREAM","preflight-original","submit-original",
-            "observe-original",
-            "SO_PEERCRED","original_request_sha256",
-            "origin_issue_number","origin_trigger_actor",
-            "protected graphical operation owner unavailable or invalid",
-        )) or 'APPROVED_PIN_SHA256 = None' not in (taskc_host/"src/zog/host_deploy/gateway/graphics_owner_trust_history.py").read_text()):
-        deny("Task C original preflight protected owner hold was erased")
+    if (not all(x in trusted for x in (
+            'DOCUMENT = "AWS-RunShellScript"',
+            'from .image_build_dispatch import verify_current_target',
+            'def selected_command(', 'def submit_once(',
+            'return host.submit_command(script, seconds=seconds)',
+        )) or not all(x in pipeline for x in (
+            'def advance(', '_protected_original_identifiers(',
+            'from . import trusted_host_submission as trusted',
+            'send_intent.claim(', 'trusted.submit_once(',
+            'send_intent.record_command(',
+        )) or not all(x in send_once for x in (
+            'host-deploy-generic-operation-send-once-v1',
+            'def claim(', 'def refuse_if_claimed(', 'def require_command(',
+            'os.fsync(',
+        ))):
+        deny("November 11 trusted-Host single-attempt Task C source selection changed")
+    for content in (pipeline, trusted):
+        # Do not reject historical unselected modules; reject use by the
+        # actual selected gateway stage execution route.
+        imports=ast.walk(ast.parse(content))
+        for node in imports:
+            if isinstance(node,ast.ImportFrom) and node.module and any(
+                stale in node.module for stale in (
+                    'graphics_owner_ipc','graphics_owner_trust_history',
+                    'graphics_broker','graphics_s3','owner_checkpoint')):
+                deny("retired S3/broker owner imported into active Task C path")
     if not all(s in attester for s in (
          'EVIDENCE = "image-build-verified-graphical-predecessor-v1"',
          '"output_kind": "image"','"pipeline_id": context["pipeline_id"]',
@@ -278,7 +301,7 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     return {
         "source_contract":"EXACT_FONTS_PLAN_AND_ORIGINAL_PIN",
         "gateway_protocol":"SYNTHETIC_SHAPE_ONLY",
-        "protected_owner":"NATIVE_NOT_INSTALLED",
+        "gateway_installation":"NATIVE_NOT_INSTALLED",
         "native_evidence":None,
         "task":"graphics-fonts-image-v1",
         "submission":"PREPARED_NOT_SUBMITTABLE",
