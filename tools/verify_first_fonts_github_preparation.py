@@ -18,6 +18,7 @@ SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
 HOST_FONTS="ee4a3d58077fac8a578e1c4f96540e1999a9d1ba"
 OWNER_GIT_BLOB="b2148a30bc1a7b074468e463cb9fab1e9abe4ce1"
+RESOURCE_GIT_BLOB="7c8820b3f7685d83ad6a3e31fd43a0b7341fad5b"
 HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
 HOST_TASK_C="0fd2db17698423d4cd30b296fc9f78e83cee145c"
@@ -186,7 +187,14 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     git_blob=hashlib.sha1(b"blob "+str(len(owner_bytes)).encode("ascii")+bytes([0])+owner_bytes).hexdigest()
     if git_blob!=OWNER_GIT_BLOB:
         deny("first-Fonts root-backed catalogue owner differs from exact reviewed PR7 source")
-    resource_source=(fonts_host/"src/zog/host_deploy/gateway/fonts_resource_admission.py").read_text()
+    resource_path=fonts_host/"src/zog/host_deploy/gateway/fonts_resource_admission.py"
+    resource_bytes=resource_path.read_bytes()
+    resource_blob=hashlib.sha1(
+        b"blob "+str(len(resource_bytes)).encode("ascii")+bytes([0])+resource_bytes
+    ).hexdigest()
+    if resource_blob!=RESOURCE_GIT_BLOB:
+        deny("first-Fonts root-backed quota inspector differs from exact reviewed PR7 source")
+    resource_source=resource_bytes.decode("utf-8")
     if not all(token in resource_source for token in (
             'SCHEMA="zog-fonts-root-backed-resource-admission-v1"',
             'WORK_BYTES=30*1024**3', 'EXTERNAL_BYTES=2*1024**3',
