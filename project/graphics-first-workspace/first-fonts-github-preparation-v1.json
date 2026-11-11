@@ -12,7 +12,7 @@
   "reviewer": {
     "host_deploy_fonts_catalogue_revision": "c69e752033107ffe9e76d2506af446801964ea3d",
     "host_deploy_compiler_consumer_revision": "b3ac93cd92df1b280f087fbb748263d3371750aa",
-    "host_deploy_task_c_revision": "02db124609b92396ff89fa628d8ddc9383e05f4b",
+    "host_deploy_task_c_revision": "0fd2db17698423d4cd30b296fc9f78e83cee145c",
     "compiler_base_reader_revision": "1616f192ef9d8964a8f37f32a86c69c0242a213c"
   },
   "task_catalogue": {
@@ -64,18 +64,18 @@
     "admin_operation_opt_in": null
   },
   "native_gates": {
-    "protected_original_operator_approval": null,
+    "trusted_host_original_request_administrator_authorization": null,
     "canonical_base_generation_receipt": null,
     "real_managed_lane_and_host_installation": null,
     "protected_one_task_catalogue_and_receipt": null,
     "dedicated_30_plus_2_gib_native_reservation": null,
     "six_hour_cpu_and_persistent_write_budget": null,
-    "authenticated_original_preflight_claim_and_ssm_result": null,
-    "installed_protected_stream_owner": null,
-    "independently_nonrollbackable_external_checkpoint": null,
-    "owner_only_ssm_credentials_and_gateway_iam_denial": null,
+    "authenticated_original_snapshot_and_ssm_result": null,
+    "installed_single_trusted_host_gateway": null,
+    "durable_local_send_once_intent_reboot_recovery": null,
+    "trusted_host_instance_iam_and_fifo_dispatcher": null,
     "authenticated_native_source_and_producer_reader": null,
-    "signed_current_authority_and_revocation": null,
+    "selected_compiler_purpose_issuer_and_revocation": null,
     "one_attempt_and_uncertain_ack_reconciliation": null,
     "accepted_signed_compiler_base_generation": null
   },
