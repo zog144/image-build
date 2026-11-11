@@ -162,6 +162,7 @@ def test_updated_pr7_consumer_requires_exact_reviewed_pr29_bytes(tmp_path,substi
         Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
         Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
         Path("src/zog/host_deploy/gateway/task_catalogue.py"),
+        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
     ]
     candidate=_partial_copy(source,tmp_path/"drifted-catalogue",paths)
     target=candidate/paths[1]
@@ -191,7 +192,7 @@ def test_current_catalogue_owner_cannot_select_old_reader(tmp_path):
     owner=candidate/paths[0]
     owner.write_text(owner.read_text().replace(m.READER,
                                 "bf0b37fea1767bf7ab02ca2d1c5d1a0d5487d4b6"))
-    with pytest.raises(m.FontsNotAdmitted,match="source/pin/task"):
+    with pytest.raises(m.FontsNotAdmitted,match="exact reviewed PR7 source"):
         check(fonts_host=candidate)
 
 
@@ -248,13 +249,14 @@ def test_first_fonts_real_pipeline_cannot_omit_accepted_compiler_base(tmp_path):
     origin=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
     paths=[Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
            Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
-           Path("src/zog/host_deploy/gateway/task_catalogue.py")]
+           Path("src/zog/host_deploy/gateway/task_catalogue.py"),
+           Path("src/zog/host_deploy/gateway/fonts_resource_admission.py")]
     selected=_partial_copy(origin,tmp_path/"missing-compiler-base",paths)
     owner=selected/paths[0]
     content=owner.read_text()
     assert '"compiler_base": bound_base["accepted_receipt_sha256"]' in content
     owner.write_text(content.replace('"compiler_base": bound_base["accepted_receipt_sha256"],',''))
-    with pytest.raises(m.FontsNotAdmitted,match="does not freeze independently accepted"):
+    with pytest.raises(m.FontsNotAdmitted,match="exact reviewed PR7 source|does not freeze independently accepted"):
         check(fonts_host=selected)
 
 
