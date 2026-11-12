@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           repository: zog144/host-deploy
-          ref: c5baa7fb266882f425f3886c4cebad95d9647913
+          ref: d44a4ad16fea022ca1e7fcd842cceeacd6b05b37
           path: dependencies/host-deploy-pr7
           persist-credentials: false
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
@@ -56,7 +56,7 @@ jobs:
       - name: Verify immutable checkout identities
         run: |
           test "$(git -C dependencies/image-build-source rev-parse HEAD)" = "1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
-          test "$(git -C dependencies/host-deploy-pr7 rev-parse HEAD)" = "c5baa7fb266882f425f3886c4cebad95d9647913"
+          test "$(git -C dependencies/host-deploy-pr7 rev-parse HEAD)" = "d44a4ad16fea022ca1e7fcd842cceeacd6b05b37"
           test "$(git -C dependencies/host-deploy-taskc rev-parse HEAD)" = "0fd2db17698423d4cd30b296fc9f78e83cee145c"
           test "$(git -C dependencies/image-build-signed-reader rev-parse HEAD)" = "1616f192ef9d8964a8f37f32a86c69c0242a213c"
           test "$(git -C dependencies/host-deploy-compiler-consumer-pr29 rev-parse HEAD)" = "b3ac93cd92df1b280f087fbb748263d3371750aa"
