@@ -254,8 +254,7 @@ def test_first_fonts_real_pipeline_cannot_omit_accepted_compiler_base(tmp_path):
     origin=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
     paths=[Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
            Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
-           Path("src/zog/host_deploy/gateway/task_catalogue.py"),
-           Path("src/zog/host_deploy/gateway/fonts_resource_admission.py")]
+           Path("src/zog/host_deploy/gateway/task_catalogue.py")]
     selected=_partial_copy(origin,tmp_path/"missing-compiler-base",paths)
     owner=selected/paths[0]
     content=owner.read_text()
