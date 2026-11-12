@@ -16,8 +16,8 @@ RECORD=ROOT/"project/graphics-first-workspace/first-fonts-github-preparation-v1.
 TASK="graphics-fonts-image-v1"
 SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
-HOST_FONTS="ee4a3d58077fac8a578e1c4f96540e1999a9d1ba"
-OWNER_GIT_BLOB="b2148a30bc1a7b074468e463cb9fab1e9abe4ce1"
+HOST_FONTS="277da9174f633d09c792dce595ff76ab1e6a0298"
+OWNER_GIT_BLOB="da84649531c2b69a5f961eefeb21a3276eaeed39"
 RESOURCE_GIT_BLOB="7c8820b3f7685d83ad6a3e31fd43a0b7341fad5b"
 HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
@@ -115,6 +115,8 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
             "catalogue_directory":"/var/lib/zog/fonts",
             "work_directory":"/var/lib/zog/fonts/work",
             "external_directory":"/var/lib/zog/fonts/external",
+            "inspection_host":"compiler-host",
+            "gateway_quota_required":False,
             "native_quota_observed":False,
             "native_worker_mounts_observed":False,
             "native_deadline_observed":False,
