@@ -127,6 +127,34 @@ def test_runtime_requirements_are_operation_aware():
     ]
 
 
+def test_status_operation_requires_exact_build_record_without_provenance_flag(tmp_path):
+    """The status path must not silently become dependency-free."""
+    status = requirements_for("pipeline.inspect")
+    assert status["bindings"]["provenance"] is False
+    assert [part["component"] for part in status["components"]] == ["build-record"]
+    assert status["components"][0]["validated_revision"] == (
+        "a866c9c4b0dd385045f00ce2de7d809f5b67c104"
+    )
+    missing, missing_report = _run("--operation", "pipeline.inspect")
+    assert missing.returncode == 3
+    assert missing_report["ready"] is False
+    assert missing_report["failures"][0]["component"] == "build-record"
+    companion = tmp_path / "pinned-build-record"
+    _fake_build_record(companion)
+    passed, report = _run(
+        "--operation", "pipeline.inspect",
+        "--component-root", "build-record=" + str(companion),
+        pythonpath=[companion / "src"],
+    )
+    assert passed.returncode == 0, passed.stderr
+    assert report["ready"] is True
+    assert report["checks"][0]["version"] == "0.8.2"
+    assert report["checks"][0]["validated_revision"] == (
+        "a866c9c4b0dd385045f00ce2de7d809f5b67c104"
+    )
+    assert not list(companion.rglob("__pycache__"))
+
+
 def test_missing_build_record_fails_before_remote_cli_state_exists(tmp_path):
     result, report = _run(
         "--operation",
