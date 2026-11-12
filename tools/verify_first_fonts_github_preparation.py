@@ -1,0 +1,480 @@
+"""Offline, read-only FIRST Fonts GitHub-trigger source preparation.
+
+This module deliberately NEVER writes an executable issue envelope, opens an
+issue, requests AWS credentials, invokes SQS/SSM or converts source-only
+review data to installed owner authority. All authentic native evidence
+slots must remain absent until a separately approved Work handoff.
+"""
+import ast
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+
+ROOT=Path(__file__).resolve().parents[1]
+RECORD=ROOT/"project/graphics-first-workspace/first-fonts-github-preparation-v1.json"
+TASK="graphics-fonts-image-v1"
+SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
+PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
+HOST_FONTS="4956d926b56def821e6a57025b803ef21f2ca330"
+OWNER_GIT_BLOB="bdd2bb6bdf7f337a8e174be5f3dbea02819288d8"
+HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
+READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
+COMPILER_RUNTIME="40b6e88a005298924a9369f3c1131efcae36c67d"
+BUILD_RECORD_RUNTIME="a866c9c4b0dd385045f00ce2de7d809f5b67c104"
+HOST_TASK_C="e3bc72f49391b99c96d5b9a44f99d6659bc31c59"
+ENTRIES=(
+    ("fontconfig-final","fontconfig","fontconfig/stages/final"),
+    ("freetype-final","freetype","freetype/stages/final"),
+    ("libpng-final","libpng","libpng/stages/final"),
+)
+TARGETS=("libpng-final","freetype-final","fontconfig-final")
+GATE_KEYS=(
+    "trusted_host_original_request_administrator_authorization","accepted_signed_compiler_base_generation",
+    "canonical_base_generation_receipt","real_managed_lane_and_host_installation",
+    "protected_one_task_catalogue_and_receipt",
+    "authenticated_original_snapshot_and_ssm_result",
+    "installed_single_trusted_host_gateway",
+    "durable_local_send_once_intent_reboot_recovery",
+    "trusted_host_instance_iam_and_fifo_dispatcher",
+    "authenticated_native_source_and_producer_reader",
+    "selected_compiler_purpose_issuer_and_revocation",
+    "one_attempt_and_uncertain_ack_reconciliation",
+)
+OUTPUT_NULLS=(
+    "pipeline_id","original_request_id","recipe_snapshot","input_generation_id",
+    "output_generation_id","generation_manifest_sha256",
+    "acceptance_receipt_sha256","producer_receipt_sha256",
+    "installed_verification_execution","build_record_root","trace_provenance",
+)
+
+class FontsNotAdmitted(ValueError):pass
+def deny(why):
+    raise FontsNotAdmitted("Fonts GitHub source PREPARED_NOT_SUBMITTABLE: "+why)
+def load():
+    return json.loads(RECORD.read_bytes())
+def exact(obj,fields,what):
+    if type(obj) is not dict or set(obj)!=set(fields):
+        deny("missing or unreviewed "+what+" fields")
+def literal(path):
+    return ast.literal_eval(Path(path).read_text())
+def source_constants(path,keys):
+    tree=ast.parse(Path(path).read_text())
+    found={}
+    for node in tree.body:
+        if isinstance(node,(ast.Assign,ast.AnnAssign)):
+            targets=node.targets if isinstance(node,ast.Assign) else [node.target]
+            for target in targets:
+                if isinstance(target,ast.Name) and target.id in keys:
+                    found[target.id]=ast.literal_eval(node.value)
+    if set(found)!=set(keys):deny("source owner constants missing")
+    return found
+def load_host_protocol(path):
+    spec=importlib.util.spec_from_file_location("reviewed_host_gateway_protocol",path)
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=None,
+           compiler_consumer=None, compiler_runtime=None, build_record_source=None):
+    """Verify exact source inputs, while refusing all compiler/dispatcher admission."""
+    exact(record,("schema","status","task","producer","reviewer","task_catalogue",
+                  "gateway","native_gates","submission","output_evidence"),"preparation")
+    if record["schema"]!="zog-fonts-github-trigger-preparation-v1" or record["status"]!="PREPARED_NOT_SUBMITTABLE" or record["task"]!=TASK:
+        deny("source preparation promoted or wrong task")
+    p=record["producer"]
+    if p!={"repository":"zog144/image-build","source_revision":SOURCE,
+           "source_plan_path":"project/bootstrap/graphics-fonts.py",
+           "monthly_pin_path":"project/pins/2026-10-01/commit-pin.py",
+           "monthly_pin_sha256":PIN}:
+        deny("original source or October pin substituted")
+    if record["reviewer"]!={"host_deploy_fonts_catalogue_revision":HOST_FONTS,
+                            "host_deploy_compiler_consumer_revision":HOST_CONSUMER,
+                            "host_deploy_task_c_revision":HOST_TASK_C,
+                            "compiler_base_reader_revision":READER,
+                            "compiler_execution_runtime_revision":COMPILER_RUNTIME,
+                            "build_record_companion_revision":BUILD_RECORD_RUNTIME}:
+        deny("independently frozen host-deploy source review head changed")
+    cat=record["task_catalogue"]
+    required_catalogue={
+        "schema":2,"only_task":TASK,"entries":[list(e) for e in ENTRIES],
+        "targets":list(TARGETS),"arguments_mode":"image",
+        "selected_base_generation":None,"selected_managed_lane":None,
+        "selected_host":None,"installed_catalogue_sha256":None,
+        "installed_catalogue_receipt_sha256":None,
+    }
+    if cat!=required_catalogue:deny("unreviewed graphical task, fabricated base, or catalogue receipt")
+    if record["native_gates"]!={k:None for k in GATE_KEYS}:
+        deny("native owner admission fabricated by source readiness record")
+    if record["submission"]!={"enabled":False,"auto_retry":False,
+                                "manual_direct_ssm_allowed":False,
+                                "github_issue_created":False,
+                                "submitted_sqs_message":False,
+                                "acceptance_claimed":False}:
+        deny("source preparation confused with request or approved submission")
+    g=record["gateway"]
+    if g!={"event":"issues.opened","origin_repository":"zog144/host-deploy",
+           "operation":"build.submit","source_repository":"zog144/image-build",
+           "source_commit":SOURCE,"request_schema":1,"request_id":None,
+           "workspace_id":None,"issue_number":None,"actor":None,
+           "request_sha256":None,"queue_receipt":None,
+           "dispatcher_selected_revision":None,"admin_operation_opt_in":None}:
+        deny("invented original GitHub request, actor or FIFO acknowledgement")
+    o=record["output_evidence"]
+    if o!={**{k:None for k in OUTPUT_NULLS},
+           "schema":"image-build-verified-graphical-predecessor-v1",
+           "output_kind":"image","actual_immutable_generation_verified":False}:
+        deny("signed-looking generation receipt or pipeline ID fabricated")
+
+    fonts_host=Path(fonts_host).resolve(strict=True)
+    taskc_host=Path(taskc_host).resolve(strict=True)
+    immutable_producer=Path(immutable_producer).resolve(strict=True)
+    if signed_reader is None:
+        deny("independently pinned compiler reader source is absent")
+    signed_reader=Path(signed_reader).resolve(strict=True)
+    if compiler_consumer is None:
+        deny("independently reviewed PR29 compiler consumer source is absent")
+    compiler_consumer=Path(compiler_consumer).resolve(strict=True)
+    if compiler_runtime is None or build_record_source is None:
+        deny("exact compiler runtime or pinned build-record source is absent")
+    compiler_runtime=Path(compiler_runtime).resolve(strict=True)
+    build_record_source=Path(build_record_source).resolve(strict=True)
+    reader_source=signed_reader/"src/zog/image_build/compiler_base_acceptance.py"
+    isolation_source=signed_reader/"src/zog/image_build/compiler_base_isolation.py"
+    if not reader_source.is_file() or not isolation_source.is_file():
+        deny("current observed-isolation compiler reader source missing")
+    observed_source=reader_source.read_text()
+    isolation_text=isolation_source.read_text()
+    if (not all(x in observed_source for x in (
+         'SCHEMA = "image-build-compiler-base-acceptance-v1"',
+         'BINDING = "image-build-compiler-base-binding-v1"',
+         'from .compiler_base_isolation import validate as validate_isolation',
+         'validate_isolation(probe["isolation"], e, claim["installed_paths"])',
+         'observed["uid"]!=configuration.get("execution_user_id")',
+         'observed["gid"]!=configuration.get("execution_group_id")',
+         'claim["generation_kind"] not in ("toolchain","image")',
+    )) or source_constants(isolation_source,{"SCHEMA","PROFILE"})!={
+         "SCHEMA":"image-build-compiler-isolation-v2",
+         "PROFILE":"selected-root-kernel-mounts-v1",
+    } or not all(x in isolation_text for x in (
+         "'/proc': 'proc'", "'/sys': 'sysfs'",
+         "elif path in PSEUDO:", "if path=='/':",
+         "or not 1<=len(mounts)<=40:",
+    ))):
+        deny("current compiler reader lacks reviewed actual mount/worker isolation profile")
+    # The original 1f07... recipe/provenance snapshot cannot itself accept
+    # compiler_base, or a compiler-bearing kind=image. The separately pinned
+    # PR20 *installed execution implementation* must implement the complete
+    # selected operation; checking its receipt reader alone is insufficient.
+    # Native Work must later attest these exact installed executable bytes.
+    runtime_contracts={
+        "src/zog/image_build/remote_operations.py":(
+            'receipt=arguments.get("compiler_base")',
+            'from .compiler_base_acceptance import resolve',
+            'compiler_base=base_evidence)',
+            '**({"compiler_base": receipt} if receipt is not None else {})',
+            'compiler_base_authority=getattr(self.builder,"compiler_base_authority",None)',
+        ),
+        "src/zog/image_build/pipeline.py":(
+            'from .compiler_base_acceptance import resolve',
+            "compiler_base=record['arguments'].get('compiler_base')",
+            "compiler_base_authority_identity=digest(canonical({",
+        ),
+        "src/zog/image_build/engine.py":(
+            'accepted_compiler=resolve_compiler(self,toolchain,compiler_base)',
+            'if requires_compiler and accepted_compiler is None:',
+            'compiler_base=accepted_compiler)',
+            '"compiler_base": accepted_compiler',
+            'current=resolve_compiler(self,toolchain,compiler_base)',
+        ),
+        "src/zog/image_build/graphical_composition.py":(
+            'accepted_image=(base.manifest.get("kind") == "image"',
+            'compiler_base.get("generation_kind") == "image"',
+            'compiler_base.get("generation_id") == base.generation',
+        ),
+        "src/zog/image_build/graphical_generation_acceptance.py":(
+            'CONTEXT_COMPILER_BASE = "image-build-graphical-predecessor-attestation-context-v2"',
+            'accepted_compiler=resolve_compiler(builder,base_selection,context["compiler_base"])',
+            'generation_inputs.get("compiler_base") != accepted_compiler',
+        ),
+        "src/zog/image_build/first_fonts_producer_contract.py":(
+            'SOURCE_REVISION = "1f07e83dbd80dacb9bed0d6494c697375f0e26cd"',
+            'def verify_fonts_output(',
+            'acceptance_receipt_sha256=trusted_context["compiler_base"]',
+            'evidence.get("compiler_base_acceptance_sha256") != trusted_context["compiler_base"]',
+        ),
+    }
+    for relative,required_lines in runtime_contracts.items():
+        file=compiler_runtime/relative
+        if not file.is_file() or file.is_symlink():
+            deny("actual current compiler runtime source missing: "+relative)
+        text=file.read_text()
+        if not all(line in text for line in required_lines):
+            deny("selected compiler execution or output contract differs: "+relative)
+
+    # The independently reviewed receipt reader remains source-pinned even
+    # though the status-capable execution runtime is a separate successor.
+    for name in ("compiler_base_acceptance.py", "compiler_base_isolation.py"):
+        relative=Path("src/zog/image_build")/name
+        if (not (compiler_runtime/relative).is_file()
+                or (compiler_runtime/relative).read_bytes() != (signed_reader/relative).read_bytes()):
+            deny("compiler runtime differs from reviewed acceptance/isolation reader")
+    requirements=compiler_runtime/"src/zog/image_build/runtime_requirements.py"
+    preflight=compiler_runtime/"src/zog/image_build/runtime_preflight.py"
+    if not requirements.is_file() or not preflight.is_file():
+        deny("selected compiler runtime status dependency missing")
+    declaration=source_constants(requirements,{"BUILD_RECORD"})["BUILD_RECORD"]
+    if (declaration.get("repository")!="zog144/build-record"
+            or declaration.get("validated_revision")!=BUILD_RECORD_RUNTIME
+            or declaration.get("version")!="0.8.2"
+            or declaration.get("source_subdir")!="src"
+            or 'if provenance or operation == "pipeline.inspect":' not in requirements.read_text()
+            or "_build_record_smoke(module)" not in preflight.read_text()):
+        deny("status preflight does not require the pinned build-record library")
+    metadata=build_record_source/"pyproject.toml"
+    package=build_record_source/"src/zog/build_record/__init__.py"
+    if (not metadata.is_file() or not package.is_file()
+            or 'version = "0.8.2"' not in metadata.read_text()
+            or '__version__ = "0.8.2"' not in package.read_text()):
+        deny("selected build-record is not the reviewed 0.8.2 source")
+    for checkout in (fonts_host,taskc_host):
+        lane_source=(checkout/"src/zog/host_deploy/image_build_lanes.py").read_text()
+        if not all(item in lane_source for item in (
+            'FIRST_FONTS_PRODUCER_REVISION = "'+SOURCE+'"',
+            'TOOLCHAIN_BUILD_RECORD_COMPATIBILITY = "'+BUILD_RECORD_RUNTIME+'"',
+            "FIRST_FONTS_BUILD_RECORD_COMPATIBILITY",
+            "companions/build-record")):
+            deny("gateway first Fonts compiler companion differs from selected pin")
+    taskc_exec=(taskc_host/"src/zog/host_deploy/gateway/image_build_execution.py").read_text()
+    if not all(item in taskc_exec for item in (
+            "def producer_runtime_preflight(",
+            "required_components = report.get",
+            "producer preflight omitted pinned build-record requirement",
+            "status --porcelain=v1 --untracked-files=all")):
+        deny("trusted Host does not preflight the pinned status runtime")
+    # The shared compiler ACCEPTANCE consumer is exact PR29 source. The
+    # dedicated one-task PR7 catalogue owner intentionally extends PR29's
+    # original owner: it now freezes compiler_base in the real pipeline.submit,
+    # and its own entire Git source is pinned independently by HOST_FONTS.
+    suffix=Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py")
+    selected=fonts_host/suffix
+    reviewed=compiler_consumer/suffix
+    if (not selected.is_file() or not reviewed.is_file() or
+            selected.read_bytes()!=reviewed.read_bytes()):
+        deny("first-Fonts compiler acceptance consumer differs from reviewed PR29")
+    owner_path=fonts_host/"src/zog/host_deploy/gateway/graphics_catalogue_owner.py"
+    owner_bytes=owner_path.read_bytes()
+    git_blob=hashlib.sha1(b"blob "+str(len(owner_bytes)).encode("ascii")+bytes([0])+owner_bytes).hexdigest()
+    if git_blob!=OWNER_GIT_BLOB:
+        deny("first-Fonts root-backed catalogue owner differs from exact reviewed PR7 source")
+    owner_source=owner_bytes.decode("utf-8")
+    if not all(line in owner_source for line in (
+        'STORE = Path("/var/lib/host-deploy-gateway")',
+        '"compiler_base": bound_base["accepted_receipt_sha256"]',
+        'accepted_base_generation_id',
+        'os.O_EXCL', 'os.fsync(',
+    )):
+        deny("gateway Fonts catalogue installation or compiler receipt binding changed")
+    if (any(s in owner_source for s in (
+        "graphics-foundation-approval-v1.json",
+        "fonts_resource_admission", "actual_reservation",
+        "read_resource_observation", "execution_limit_seconds",
+        "dedicated_storage_bytes", "work_bytes", "external_bytes"))):
+        deny("obsolete Fonts approval, quota or execution limit reintroduced")
+    owner_tree=ast.parse(owner_source)
+    installer=next((node for node in owner_tree.body
+        if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef))
+        and node.name=="install_native"),None)
+    if installer is None:
+        deny("no trusted gateway catalogue installer")
+    for call in (node for node in ast.walk(installer) if isinstance(node,ast.Call)):
+        name=(call.func.attr if isinstance(call.func,ast.Attribute)
+              else call.func.id if isinstance(call.func,ast.Name) else "")
+        if name in {"inspect_native","checked","statvfs","statfs","reserve",
+                    "read_resource_observation"}:
+            deny("gateway installer improperly inspects compiler-Host quota")
+    catalogue_source=(fonts_host/"src/zog/host_deploy/gateway/task_catalogue.py").read_text()
+    if (('"compiler_base": bound_base["accepted_receipt_sha256"]' not in owner_source
+          or 'required.add("compiler_base")' not in catalogue_source
+          or 'retained_input_evidence["evidence"].get("accepted_receipt_sha256")' not in catalogue_source)):
+        deny("actual first Fonts request does not freeze independently accepted compiler receipt")
+    consumer=(fonts_host/"src/zog/host_deploy/gateway/graphics_base_acceptance.py").read_text()
+    if not all(x in consumer for x in (
+        '"image-build-compiler-isolation-v2"',
+        '"selected-root-kernel-mounts-v1"',
+        'not match(probe["isolation"].get("witness_sha256"),SHA)',
+        '"x86_64-zog-linux-gnu"',
+        '"independent-compiler-capability-observed-not-job-authorization"',
+    )):
+        deny("first-Fonts catalogue retains obsolete compiler consumer/probe contract")
+    owner=source_constants(fonts_host/"src/zog/host_deploy/gateway/graphics_catalogue_owner.py",
+          {"SOURCE","REPOSITORY","PIN_PATH","PIN_SHA256","PIN_DATE","TASK","READER_SOURCE"})
+    if owner!={"SOURCE":SOURCE,"REPOSITORY":"zog144/image-build",
+              "PIN_PATH":p["monthly_pin_path"],"PIN_SHA256":PIN[7:],
+              "PIN_DATE":"2026-10-01","TASK":TASK,
+              "READER_SOURCE":READER}:
+        deny("PR7 original first-Fonts native owner selects different source/pin/task")
+    catalogue=source_constants(fonts_host/"src/zog/host_deploy/gateway/task_catalogue.py",
+                               {"SCHEMA","REVIEWED_IMAGE_TASKS"})
+    if catalogue["SCHEMA"]!=2:
+        deny("first task catalogue schema was changed")
+    entry=catalogue["REVIEWED_IMAGE_TASKS"][TASK]
+    if entry!={"entries":ENTRIES,"targets":TARGETS}:
+        deny("actual reviewed PR7 Fonts recipe selection changed")
+    plan=literal(immutable_producer/p["source_plan_path"])
+    if plan.get("schema")!=1 or plan.get("architecture")!="x86_64":
+        deny("source Fonts bootstrap plan differs")
+    stages=plan.get("stages")
+    if type(stages) is not list or [(x.get("id"),x.get("project"),x.get("recipe"))
+               for x in stages]!=[ENTRIES[2],ENTRIES[1],ENTRIES[0]]:
+        deny("actual producer build-stage ordering differs")
+    if plan.get("targets")!=list(TARGETS):
+        deny("original immutable source target ordering differs")
+    pin=immutable_producer/p["monthly_pin_path"]
+    if not pin.is_file() or pin.is_symlink() or ("sha256:"+hashlib.sha256(pin.read_bytes()).hexdigest())!=PIN:
+        deny("original October monthly pin bytes differ")
+
+    protocol=load_host_protocol(taskc_host/"src/zog/host_deploy/gateway/protocol.py")
+    if protocol.BUILD_TASKS!={"graphics-fonts-image-v1","graphics-xcb-core-image-v1",
+           "graphics-x11-core-image-v1","xcb-support-image-v1"}:
+        deny("actual task allowlist changed without independent review")
+    if protocol.ORIGIN_REPOSITORY!="zog144/host-deploy" or protocol.SOURCE_REPOSITORIES!={"zog144/image-build"}:
+        deny("original GitHub issue provenance or producer repository changed")
+    if "build.submit" not in protocol.OPERATIONS:
+        deny("typed build.submit no longer reviewed")
+    # Verify only synthetic shape. This request is not returned, serialized,
+    # queued, reported as accepted, or usable as an actual GitHub issue.
+    synthetic={
+        "schema":1,"request_id":"11"*16,"workspace_id":"22"*16,
+        "operation":"build.submit","source":{"repository":"zog144/image-build","commit":SOURCE},
+        "origin":{"repository":"zog144/host-deploy","issue_number":1,
+                  "trigger_actor":"source-fixture"},
+        "parameters":{"lane":"source-fixture","task":TASK},
+    }
+    protocol.validate_request(synthetic)
+    for field,value in [
+        ("source",{"repository":"zog144/image-build","commit":"b0f53dbdec0e88b9b37feb5317398db3d20507dd"}),
+        ("parameters",{"lane":"source-fixture","task":"mesa-final"}),
+    ]:
+        altered=dict(synthetic)
+        altered[field]=value
+        if field=="source":
+            # The generic protocol allows a syntactically valid *other* commit;
+            # the reviewed owner and immutable catalogue selection must veto it.
+            if altered["source"]["commit"]==SOURCE:
+                deny("source substitution negative is broken")
+        else:
+            try:
+                protocol.validate_request(altered)
+            except protocol.RequestProtocolError:
+                pass
+            else:
+                deny("unreviewed task unexpectedly accepted by original gateway")
+
+    dispatch=(taskc_host/"src/zog/host_deploy/gateway/github_dispatch.py").read_text()
+    workflow=(taskc_host/".github/workflows/gateway-issue-dispatch.yml").read_text()
+    dispatch_file=taskc_host/"src/zog/host_deploy/gateway/github_dispatch.py"
+    first_fonts=source_constants(dispatch_file, {"FIRST_FONTS_TASK", "FIRST_FONTS_SOURCE"})
+    if first_fonts != {
+        "FIRST_FONTS_TASK": TASK,
+        "FIRST_FONTS_SOURCE": {"repository": "zog144/image-build", "commit": SOURCE},
+    }:
+        deny("GitHub issue handler no longer selects original immutable Fonts source")
+    config=(taskc_host/"src/zog/host_deploy/gateway/github_configuration.py").read_text()
+    template=(taskc_host/".github/ISSUE_TEMPLATE/first-fonts-gateway.md").read_text()
+    if (not all(token in config for token in (
+            "GITHUB_RUN_ATTEMPT", "GITHUB_TRIGGERING_ACTOR",
+            "GITHUB_REPOSITORY_ID", "ZOG_GATEWAY_FONTS_ENABLED",
+            "first Fonts issue forwarding is disabled",
+        )) or '<!-- zog-gateway-request:v1 -->' not in template
+            or '"task": "graphics-fonts-image-v1"' not in template
+            or '"source"' in template or '"request_id"' in template):
+        deny("first Fonts issue template or explicit administrator opt-in changed")
+    # Task C is now one trusted Host gateway with existing instance IAM and
+    # fsynced per-operation local send-once claims. Do not reintroduce the
+    # obsolete S3, separately signed Task C installation or SSM-owner IPC.
+    trusted=(taskc_host/"src/zog/host_deploy/gateway/trusted_host_submission.py").read_text()
+    pipeline=(taskc_host/"src/zog/host_deploy/gateway/generic_pipeline.py").read_text()
+    send_once=(taskc_host/"src/zog/host_deploy/gateway/graphics_operation_send_intent.py").read_text()
+    attester=(immutable_producer/"src/zog/image_build/graphical_generation_acceptance.py").read_text()
+    if (not all(s in dispatch for s in (
+        'ISSUE_MARKER = "<!-- zog-gateway-request:v1 -->"',
+        'event.get("action") != "opened"',
+        '"origin" in intent',
+        'MessageDeduplicationId=request["request_id"]',
+        '"total_max_attempts": 1',
+        'def first_fonts_request_id(issue_number):',
+        'request["request_id"] = first_fonts_request_id(issue_number)',
+        'request["source"] = dict(FIRST_FONTS_SOURCE)',
+        'if "source" in intent or "request_id" in intent:',
+    )) or not all(s in workflow for s in (
+        'issues:\\n    types: [opened]'.replace('\\n', '\n'),
+        'github.run_attempt == 1',
+        "vars.ZOG_GATEWAY_SUBMIT_ENABLED == 'true'",
+        'ZOG_GATEWAY_FONTS_ENABLED: ${{ vars.ZOG_GATEWAY_FONTS_ENABLED }}',
+        'GITHUB_EVENT_PATH',
+        'id-token: write','github_configuration',
+        'github_dispatch submit',
+    ))):
+        deny("original issue-opened OIDC/FIFO single-submission contract changed")
+    if (not all(x in trusted for x in (
+            'DOCUMENT = "AWS-RunShellScript"',
+            'from .image_build_dispatch import verify_current_target',
+            'def selected_command(', 'def submit_once(',
+            'return host.submit_command(script, seconds=seconds)',
+        )) or not all(x in pipeline for x in (
+            'def advance(', '_protected_original_identifiers(',
+            'from . import trusted_host_submission as trusted',
+            'send_intent.claim(', 'trusted.submit_once(',
+            'send_intent.record_command(',
+        )) or not all(x in send_once for x in (
+            'host-deploy-generic-operation-send-once-v1',
+            'def claim(', 'def refuse_if_claimed(', 'def require_command(',
+            'os.fsync(',
+        ))):
+        deny("November 11 trusted-Host single-attempt Task C source selection changed")
+    for content in (pipeline, trusted):
+        # Do not reject historical unselected modules; reject use by the
+        # actual selected gateway stage execution route.
+        imports=ast.walk(ast.parse(content))
+        for node in imports:
+            if isinstance(node,ast.ImportFrom) and node.module and any(
+                stale in node.module for stale in (
+                    'graphics_owner_ipc','graphics_owner_trust_history',
+                    'graphics_broker','graphics_s3','owner_checkpoint')):
+                deny("retired S3/broker owner imported into active Task C path")
+    if not all(s in attester for s in (
+         'EVIDENCE = "image-build-verified-graphical-predecessor-v1"',
+         '"output_kind": "image"','"pipeline_id": context["pipeline_id"]',
+         '"acceptance_receipt_sha256": pointer["record"]',
+         '"producer_receipt_sha256": producer_receipt',
+         '"generation_manifest_sha256": _sha256(manifest_raw)',
+         '"uncertainty": False','"missing_evidence_count": 0',
+         'def attest_native(', 'os.geteuid() != 0',
+    )):
+        deny("original source cannot attest accepted distinct Fonts output")
+    return {
+        "source_contract":"EXACT_FONTS_PLAN_AND_ORIGINAL_PIN",
+        "gateway_protocol":"SYNTHETIC_SHAPE_ONLY",
+        "gateway_installation":"NATIVE_NOT_INSTALLED",
+        "native_evidence":None,
+        "task":"graphics-fonts-image-v1",
+        "submission":"PREPARED_NOT_SUBMITTABLE",
+        "accepted_generation":None
+    }
+
+
+if __name__=="__main__":
+    import argparse
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--fonts-host",required=True)
+    parser.add_argument("--taskc-host",required=True)
+    parser.add_argument("--image-build-source",required=True)
+    parser.add_argument("--signed-reader",required=True)
+    parser.add_argument("--compiler-consumer",required=True)
+    parser.add_argument("--compiler-runtime",required=True)
+    parser.add_argument("--build-record-source",required=True)
+    args=parser.parse_args()
+    print(json.dumps(verify(load(),args.fonts_host,args.taskc_host,args.image_build_source,args.signed_reader,
+                           args.compiler_consumer,args.compiler_runtime,args.build_record_source),
+                     sort_keys=True))
