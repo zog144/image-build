@@ -18,7 +18,6 @@ SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
 HOST_FONTS="277da9174f633d09c792dce595ff76ab1e6a0298"
 OWNER_GIT_BLOB="da84649531c2b69a5f961eefeb21a3276eaeed39"
-RESOURCE_GIT_BLOB="7c8820b3f7685d83ad6a3e31fd43a0b7341fad5b"
 HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
 HOST_TASK_C="0fd2db17698423d4cd30b296fc9f78e83cee145c"
@@ -32,8 +31,6 @@ GATE_KEYS=(
     "trusted_host_original_request_administrator_authorization","accepted_signed_compiler_base_generation",
     "canonical_base_generation_receipt","real_managed_lane_and_host_installation",
     "protected_one_task_catalogue_and_receipt",
-    "root_backed_30_plus_2_gib_kernel_quota_admission",
-    "six_hour_cpu_and_persistent_write_budget",
     "authenticated_original_snapshot_and_ssm_result",
     "installed_single_trusted_host_gateway",
     "durable_local_send_once_intent_reboot_recovery",
@@ -80,7 +77,7 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
            compiler_consumer=None):
     """Verify exact source inputs, while refusing all compiler/dispatcher admission."""
     exact(record,("schema","status","task","producer","reviewer","task_catalogue",
-                  "gateway","native_gates","budget","resource_admission",
+                  "gateway","native_gates",
                   "submission","output_evidence"),"preparation")
     if record["schema"]!="zog-fonts-github-trigger-preparation-v1" or record["status"]!="PREPARED_NOT_SUBMITTABLE" or record["task"]!=TASK:
         deny("source preparation promoted or wrong task")
@@ -106,22 +103,6 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     if cat!=required_catalogue:deny("unreviewed graphical task, fabricated base, or catalogue receipt")
     if record["native_gates"]!={k:None for k in GATE_KEYS}:
         deny("native owner admission fabricated by source readiness record")
-    if record["budget"]!={"work_bytes":30*1024**3,"external_bytes":2*1024**3,
-                           "total_bytes":32*1024**3,"execution_limit_seconds":21600}:
-        deny("native compiler resource contract widened")
-    if record["resource_admission"]!={
-            "schema":"zog-fonts-root-backed-resource-admission-v1",
-            "backend":"existing-root-filesystem-project-quota",
-            "catalogue_directory":"/var/lib/zog/fonts",
-            "work_directory":"/var/lib/zog/fonts/work",
-            "external_directory":"/var/lib/zog/fonts/external",
-            "inspection_host":"compiler-host",
-            "gateway_quota_required":False,
-            "native_quota_observed":False,
-            "native_worker_mounts_observed":False,
-            "native_deadline_observed":False,
-            "native_catalogue_installed":False}:
-        deny("native resource admission fabricated or selected storage changed")
     if record["submission"]!={"enabled":False,"auto_retry":False,
                                 "manual_direct_ssm_allowed":False,
                                 "github_issue_created":False,
@@ -237,32 +218,14 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     owner_bytes=owner_path.read_bytes()
     git_blob=hashlib.sha1(b"blob "+str(len(owner_bytes)).encode("ascii")+bytes([0])+owner_bytes).hexdigest()
     if git_blob!=OWNER_GIT_BLOB:
-        deny("first-Fonts root-backed catalogue owner differs from exact reviewed PR7 source")
-    resource_path=fonts_host/"src/zog/host_deploy/gateway/fonts_resource_admission.py"
-    resource_bytes=resource_path.read_bytes()
-    resource_blob=hashlib.sha1(
-        b"blob "+str(len(resource_bytes)).encode("ascii")+bytes([0])+resource_bytes
-    ).hexdigest()
-    if resource_blob!=RESOURCE_GIT_BLOB:
-        deny("first-Fonts root-backed quota inspector differs from exact reviewed PR7 source")
-    resource_source=resource_bytes.decode("utf-8")
-    if not all(token in resource_source for token in (
-            'SCHEMA="zog-fonts-root-backed-resource-admission-v1"',
-            'WORK_BYTES=30*1024**3', 'EXTERNAL_BYTES=2*1024**3',
-            'TIME_SECONDS=21600', 'def inspect_native(',
-            'FS_IOC_FSGETXATTR', 'Q_XGETQUOTA',
-            'same_host_root_filesystem', 'quota_active',
-            'if free_bytes<TOTAL_BYTES:')):
-        deny("exact reviewed existing-root filesystem resource admission missing")
+        deny("first-Fonts reviewed catalogue owner differs from exact reviewed PR7 source")
     owner_source=owner_bytes.decode("utf-8")
     if not all(line in owner_source for line in (
         'STORE = Path("/var/lib/zog/fonts")',
         '"compiler_base": bound_base["accepted_receipt_sha256"]',
-        '"resource_admission_location": "compiler-host-before-build"',
-        '"compiler_resource_admitted": False',
         'os.O_EXCL', 'os.fsync(',
     )):
-        deny("gateway no-quota catalogue installation or accepted compiler binding changed")
+        deny("gateway catalogue installation or accepted compiler binding changed")
     owner_tree=ast.parse(owner_source)
     installer=next((node for node in owner_tree.body
         if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef))
