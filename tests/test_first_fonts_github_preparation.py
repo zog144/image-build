@@ -12,13 +12,16 @@ s=importlib.util.spec_from_file_location("zog_fonts_prep",ROOT/"tools/verify_fir
 m=importlib.util.module_from_spec(s)
 s.loader.exec_module(m)
 
-def check(obj=None, *, fonts_host=None, signed_reader=None, compiler_consumer=None):
+def check(obj=None, *, fonts_host=None, signed_reader=None, compiler_consumer=None,
+          compiler_runtime=None, build_record=None):
     return m.verify(m.load() if obj is None else obj,
         os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"] if fonts_host is None else fonts_host,
         os.environ["ZOG_HOSTDEPLOY_TASKC_PR26"],
         os.environ["ZOG_IMAGE_BUILD_SELECTED_SOURCE"],
         os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"] if signed_reader is None else signed_reader,
-        os.environ["ZOG_HOSTDEPLOY_COMPILER_CONSUMER_PR29"] if compiler_consumer is None else compiler_consumer)
+        os.environ["ZOG_HOSTDEPLOY_COMPILER_CONSUMER_PR29"] if compiler_consumer is None else compiler_consumer,
+        os.environ["ZOG_IMAGE_BUILD_COMPILER_RUNTIME"] if compiler_runtime is None else compiler_runtime,
+        os.environ["ZOG_BUILD_RECORD_COMPANION"] if build_record is None else build_record)
 
 def test_exact_source_and_request_shape_only_never_compiler_admission():
     value=check()
@@ -34,6 +37,8 @@ def test_exact_source_and_request_shape_only_never_compiler_admission():
  ("producer","monthly_pin_sha256","sha256:"+"f"*64),
  ("reviewer","host_deploy_fonts_catalogue_revision","f"*40),
  ("reviewer","host_deploy_task_c_revision","f"*40),
+ ("reviewer","compiler_execution_runtime_revision","f"*40),
+ ("reviewer","build_record_companion_revision","f"*40),
  ("gateway","source_commit","b0f53dbdec0e88b9b37feb5317398db3d20507dd"),
  ("gateway","operation","toolchain.submit"),
  ("gateway","event","workflow_dispatch"),
@@ -111,9 +116,17 @@ def test_signed_compiler_base_kind_is_not_invented_by_offline_review():
     assert m.load()["reviewer"]["host_deploy_fonts_catalogue_revision"]==m.HOST_FONTS
     assert m.load()["reviewer"]["host_deploy_task_c_revision"]==m.HOST_TASK_C
 
+def test_first_fonts_runtime_source_and_build_record_are_separately_pinned():
+    assert m.COMPILER_RUNTIME == "40b6e88a005298924a9369f3c1131efcae36c67d"
+    assert m.BUILD_RECORD_RUNTIME == "a866c9c4b0dd385045f00ce2de7d809f5b67c104"
+    assert m.load()["reviewer"]["compiler_execution_runtime_revision"] == m.COMPILER_RUNTIME
+    assert m.load()["reviewer"]["build_record_companion_revision"] == m.BUILD_RECORD_RUNTIME
+    assert m.load()["status"] == "PREPARED_NOT_SUBMITTABLE"
+
+
 def test_exact_current_reader_catalogue_and_consumer_are_not_prior_versions():
     assert m.READER=="1616f192ef9d8964a8f37f32a86c69c0242a213c"
-    assert m.HOST_FONTS=="35e6d14c85b6ec0fe0e404efc4e684304609fd4b"
+    assert m.HOST_FONTS=="3ee7f24b0869feead798e35d75722d63e2e5b7c9"
     assert m.HOST_CONSUMER=="b3ac93cd92df1b280f087fbb748263d3371750aa"
     assert m.SOURCE=="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
     assert m.PIN=="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
