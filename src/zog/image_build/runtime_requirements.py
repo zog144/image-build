@@ -85,7 +85,10 @@ def requirements_for(
 
     components = []
     external = []
-    if provenance:
+    # Pipeline inspection reads retained provenance even for a status-only
+    # invocation without an explicit provenance CLI binding. A status probe
+    # must not pass readiness when the selected build-record library is absent.
+    if provenance or operation == "pipeline.inspect":
         components.append(_copy(BUILD_RECORD))
     if controller:
         components.append(_copy(BOX_CONTROL))
@@ -120,6 +123,11 @@ def describe():
                 "components": [_copy(BUILD_RECORD)],
                 "external": [],
             },
+            "pipeline_status": {
+                "enabled_by": "pipeline.inspect (including status-only access)",
+                "components": [_copy(BUILD_RECORD)],
+                "external": [],
+            },
             "controller": {
                 "enabled_by": "controller-config CLI binding",
                 "components": [_copy(BOX_CONTROL)],
@@ -134,6 +142,7 @@ def describe():
         "notes": [
             "Declared component dependencies describe the aggregate image-build component closure; operation-specific requirements are narrower.",
             "The validated sibling revisions are compatibility checkpoints, not moving branch references. The consumer still freezes the exact staged source revision.",
+            "Pipeline status requires the exact build-record companion regardless of an optional provenance CLI flag.",
             "The preflight is read-only and runs before provenance/controller initialization.",
         ],
     }
