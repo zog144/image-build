@@ -312,3 +312,61 @@ def test_pr7_root_backed_quota_inspector_requires_exact_reviewed_bytes(tmp_path)
     quota.write_bytes(quota.read_bytes()+b"\n# unauthorized source repin\n")
     with pytest.raises(m.FontsNotAdmitted,match="quota inspector differs from exact reviewed PR7"):
         check(fonts_host=candidate)
+
+@pytest.mark.parametrize("module,required", [
+    ("remote_operations.py",'receipt=arguments.get("compiler_base")'),
+    ("pipeline.py","compiler_base=record['arguments'].get('compiler_base')"),
+    ("engine.py",'accepted_compiler=resolve_compiler(self,toolchain,compiler_base)'),
+    ("graphical_composition.py",'accepted_image=(base.manifest.get("kind") == "image"'),
+    ("graphical_generation_acceptance.py",'generation_inputs.get("compiler_base") != accepted_compiler'),
+    ("first_fonts_producer_contract.py",'acceptance_receipt_sha256=trusted_context["compiler_base"]'),
+])
+def test_accepted_reader_without_real_compiler_execution_is_denied(tmp_path,module,required):
+    """PR20's receipt-only observation is not a producer that can compile Fonts."""
+    source=Path(os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"])
+    names=[
+        "compiler_base_acceptance.py","compiler_base_isolation.py",
+        "remote_operations.py","pipeline.py","engine.py",
+        "graphical_composition.py","graphical_generation_acceptance.py",
+        "first_fonts_producer_contract.py",
+    ]
+    path=Path("src/zog/image_build")
+    candidate=_partial_copy(source,tmp_path/"incomplete-compiler-runtime",
+                            [path/name for name in names])
+    selected=candidate/path/module
+    original=selected.read_text()
+    assert required in original
+    selected.write_text(original.replace(required,"REMOVED_NATIVE_COMPILER_CONTRACT"))
+    with pytest.raises(m.FontsNotAdmitted,match="execution or output contract differs"):
+        check(signed_reader=candidate)
+
+
+def test_gateway_small_catalogue_does_not_claim_compiler_resource_admission():
+    record=m.load()
+    assert record["status"]=="PREPARED_NOT_SUBMITTABLE"
+    assert record["resource_admission"]["inspection_host"]=="compiler-host"
+    assert record["resource_admission"]["gateway_quota_required"] is False
+    assert record["resource_admission"]["native_quota_observed"] is False
+    assert record["resource_admission"]["native_catalogue_installed"] is False
+    record=copy.deepcopy(record)
+    record["resource_admission"]["gateway_quota_required"]=True
+    with pytest.raises(m.FontsNotAdmitted,match="native resource admission fabricated"):
+        check(record)
+
+
+def test_selected_gateway_installer_cannot_smuggle_compiler_quota_read(tmp_path):
+    source=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
+    paths=[
+        Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
+        Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
+        Path("src/zog/host_deploy/gateway/task_catalogue.py"),
+        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
+    ]
+    candidate=_partial_copy(source,tmp_path/"unexpected-gateway-quota",paths)
+    selected=candidate/paths[0]
+    text=selected.read_text()
+    assert "def install_native(" in text
+    selected.write_text(text.replace("def install_native(", "def install_native(",
+        1).replace("    root = STORE\n", "    quota.inspect_native()\n    root = STORE\n",1))
+    with pytest.raises(m.FontsNotAdmitted,match="exact reviewed PR7 source"):
+        check(fonts_host=candidate)
