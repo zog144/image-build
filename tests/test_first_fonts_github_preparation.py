@@ -79,6 +79,14 @@ def test_no_claim_can_turn_source_only_native_gate_true(gate):
     with pytest.raises(m.FontsNotAdmitted,match="native owner admission"):
         check(x)
 
+@pytest.mark.parametrize("extra", ["budget", "resource_admission"])
+def test_obsolete_resource_policy_cannot_be_added_back_to_preparation(extra):
+    x=copy.deepcopy(m.load())
+    x[extra]={"unreviewed":True}
+    with pytest.raises(m.FontsNotAdmitted,match="missing or unreviewed preparation fields"):
+        check(x)
+
+
 def test_no_original_github_request_issue_envelope_in_repository():
     raw=m.RECORD.read_text()
     assert "<!-- zog-gateway-request:v1 -->" not in raw
