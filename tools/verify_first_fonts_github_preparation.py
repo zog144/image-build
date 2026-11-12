@@ -211,6 +211,47 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
         text=file.read_text()
         if not all(line in text for line in required_lines):
             deny("selected compiler execution or output contract differs: "+relative)
+
+    # The independently reviewed receipt reader remains source-pinned even
+    # though the status-capable execution runtime is a separate successor.
+    for name in ("compiler_base_acceptance.py", "compiler_base_isolation.py"):
+        relative=Path("src/zog/image_build")/name
+        if (not (compiler_runtime/relative).is_file()
+                or (compiler_runtime/relative).read_bytes() != (signed_reader/relative).read_bytes()):
+            deny("compiler runtime differs from reviewed acceptance/isolation reader")
+    requirements=compiler_runtime/"src/zog/image_build/runtime_requirements.py"
+    preflight=compiler_runtime/"src/zog/image_build/runtime_preflight.py"
+    if not requirements.is_file() or not preflight.is_file():
+        deny("selected compiler runtime status dependency missing")
+    declaration=source_constants(requirements,{"BUILD_RECORD"})["BUILD_RECORD"]
+    if (declaration.get("repository")!="zog144/build-record"
+            or declaration.get("validated_revision")!=BUILD_RECORD_RUNTIME
+            or declaration.get("version")!="0.8.2"
+            or declaration.get("source_subdir")!="src"
+            or 'if provenance or operation == "pipeline.inspect":' not in requirements.read_text()
+            or "_build_record_smoke(module)" not in preflight.read_text()):
+        deny("status preflight does not require the pinned build-record library")
+    metadata=build_record_source/"pyproject.toml"
+    package=build_record_source/"src/zog/build_record/__init__.py"
+    if (not metadata.is_file() or not package.is_file()
+            or 'version = "0.8.2"' not in metadata.read_text()
+            or '__version__ = "0.8.2"' not in package.read_text()):
+        deny("selected build-record is not the reviewed 0.8.2 source")
+    for checkout in (fonts_host,taskc_host):
+        lane_source=(checkout/"src/zog/host_deploy/image_build_lanes.py").read_text()
+        if not all(item in lane_source for item in (
+            'FIRST_FONTS_PRODUCER_REVISION = "'+SOURCE+'"',
+            'TOOLCHAIN_BUILD_RECORD_COMPATIBILITY = "'+BUILD_RECORD_RUNTIME+'"',
+            "FIRST_FONTS_BUILD_RECORD_COMPATIBILITY",
+            "companions/build-record")):
+            deny("gateway first Fonts compiler companion differs from selected pin")
+    taskc_exec=(taskc_host/"src/zog/host_deploy/gateway/image_build_execution.py").read_text()
+    if not all(item in taskc_exec for item in (
+            "def producer_runtime_preflight(",
+            "required_components = report.get",
+            "producer preflight omitted pinned build-record requirement",
+            "status --porcelain=v1 --untracked-files=all")):
+        deny("trusted Host does not preflight the pinned status runtime")
     # The shared compiler ACCEPTANCE consumer is exact PR29 source. The
     # dedicated one-task PR7 catalogue owner intentionally extends PR29's
     # original owner: it now freezes compiler_base in the real pipeline.submit,
