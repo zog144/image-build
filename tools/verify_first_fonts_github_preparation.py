@@ -22,7 +22,7 @@ HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
 COMPILER_RUNTIME="40b6e88a005298924a9369f3c1131efcae36c67d"
 BUILD_RECORD_RUNTIME="a866c9c4b0dd385045f00ce2de7d809f5b67c104"
-HOST_TASK_C="e4ac0873367cdb8a0ebe8aec34387c87d99c81e9"
+HOST_TASK_C="cdbf97facb07979d1ad19dcb5791211c90146f5f"
 ENTRIES=(
     ("fontconfig-final","fontconfig","fontconfig/stages/final"),
     ("freetype-final","freetype","freetype/stages/final"),
@@ -373,6 +373,23 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
 
     dispatch=(taskc_host/"src/zog/host_deploy/gateway/github_dispatch.py").read_text()
     workflow=(taskc_host/".github/workflows/gateway-issue-dispatch.yml").read_text()
+    dispatch_file=taskc_host/"src/zog/host_deploy/gateway/github_dispatch.py"
+    first_fonts=source_constants(dispatch_file, {"FIRST_FONTS_TASK", "FIRST_FONTS_SOURCE"})
+    if first_fonts != {
+        "FIRST_FONTS_TASK": TASK,
+        "FIRST_FONTS_SOURCE": {"repository": "zog144/image-build", "commit": SOURCE},
+    }:
+        deny("GitHub issue handler no longer selects original immutable Fonts source")
+    config=(taskc_host/"src/zog/host_deploy/gateway/github_configuration.py").read_text()
+    template=(taskc_host/".github/ISSUE_TEMPLATE/first-fonts-gateway.md").read_text()
+    if (not all(token in config for token in (
+            "GITHUB_RUN_ATTEMPT", "GITHUB_TRIGGERING_ACTOR",
+            "GITHUB_REPOSITORY_ID", "ZOG_GATEWAY_FONTS_ENABLED",
+            "first Fonts issue forwarding is disabled",
+        )) or '<!-- zog-gateway-request:v1 -->' not in template
+            or '"task": "graphics-fonts-image-v1"' not in template
+            or '"source"' in template or '"request_id"' in template):
+        deny("first Fonts issue template or explicit administrator opt-in changed")
     # Task C is now one trusted Host gateway with existing instance IAM and
     # fsynced per-operation local send-once claims. Do not reintroduce the
     # obsolete S3, separately signed Task C installation or SSM-owner IPC.
@@ -386,9 +403,16 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
         '"origin" in intent',
         'MessageDeduplicationId=request["request_id"]',
         '"total_max_attempts": 1',
+        'def first_fonts_request_id(issue_number):',
+        'request["request_id"] = first_fonts_request_id(issue_number)',
+        'request["source"] = dict(FIRST_FONTS_SOURCE)',
+        'if "source" in intent or "request_id" in intent:',
     )) or not all(s in workflow for s in (
-        'types: [opened]','github.run_attempt == 1',
+        'issues:\\n    types: [opened]'.replace('\\n', '\n'),
+        'github.run_attempt == 1',
         "vars.ZOG_GATEWAY_SUBMIT_ENABLED == 'true'",
+        'ZOG_GATEWAY_FONTS_ENABLED: ${{ vars.ZOG_GATEWAY_FONTS_ENABLED }}',
+        'GITHUB_EVENT_PATH',
         'id-token: write','github_configuration',
         'github_dispatch submit',
     ))):
