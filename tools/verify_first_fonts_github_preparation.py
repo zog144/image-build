@@ -16,11 +16,13 @@ RECORD=ROOT/"project/graphics-first-workspace/first-fonts-github-preparation-v1.
 TASK="graphics-fonts-image-v1"
 SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
-HOST_FONTS="35e6d14c85b6ec0fe0e404efc4e684304609fd4b"
+HOST_FONTS="3ee7f24b0869feead798e35d75722d63e2e5b7c9"
 OWNER_GIT_BLOB="b1446781fccba653ff0146a6d15f6cda35ad8ffa"
 HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
-HOST_TASK_C="0fd2db17698423d4cd30b296fc9f78e83cee145c"
+COMPILER_RUNTIME="40b6e88a005298924a9369f3c1131efcae36c67d"
+BUILD_RECORD_RUNTIME="a866c9c4b0dd385045f00ce2de7d809f5b67c104"
+HOST_TASK_C="e4ac0873367cdb8a0ebe8aec34387c87d99c81e9"
 ENTRIES=(
     ("fontconfig-final","fontconfig","fontconfig/stages/final"),
     ("freetype-final","freetype","freetype/stages/final"),
@@ -74,7 +76,7 @@ def load_host_protocol(path):
     return module
 
 def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=None,
-           compiler_consumer=None):
+           compiler_consumer=None, compiler_runtime=None, build_record_source=None):
     """Verify exact source inputs, while refusing all compiler/dispatcher admission."""
     exact(record,("schema","status","task","producer","reviewer","task_catalogue",
                   "gateway","native_gates","submission","output_evidence"),"preparation")
@@ -89,7 +91,9 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     if record["reviewer"]!={"host_deploy_fonts_catalogue_revision":HOST_FONTS,
                             "host_deploy_compiler_consumer_revision":HOST_CONSUMER,
                             "host_deploy_task_c_revision":HOST_TASK_C,
-                            "compiler_base_reader_revision":READER}:
+                            "compiler_base_reader_revision":READER,
+                            "compiler_execution_runtime_revision":COMPILER_RUNTIME,
+                            "build_record_companion_revision":BUILD_RECORD_RUNTIME}:
         deny("independently frozen host-deploy source review head changed")
     cat=record["task_catalogue"]
     required_catalogue={
@@ -131,6 +135,10 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
     if compiler_consumer is None:
         deny("independently reviewed PR29 compiler consumer source is absent")
     compiler_consumer=Path(compiler_consumer).resolve(strict=True)
+    if compiler_runtime is None or build_record_source is None:
+        deny("exact compiler runtime or pinned build-record source is absent")
+    compiler_runtime=Path(compiler_runtime).resolve(strict=True)
+    build_record_source=Path(build_record_source).resolve(strict=True)
     reader_source=signed_reader/"src/zog/image_build/compiler_base_acceptance.py"
     isolation_source=signed_reader/"src/zog/image_build/compiler_base_isolation.py"
     if not reader_source.is_file() or not isolation_source.is_file():
@@ -197,7 +205,7 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
         ),
     }
     for relative,required_lines in runtime_contracts.items():
-        file=signed_reader/relative
+        file=compiler_runtime/relative
         if not file.is_file() or file.is_symlink():
             deny("actual current compiler runtime source missing: "+relative)
         text=file.read_text()
@@ -399,7 +407,9 @@ if __name__=="__main__":
     parser.add_argument("--image-build-source",required=True)
     parser.add_argument("--signed-reader",required=True)
     parser.add_argument("--compiler-consumer",required=True)
+    parser.add_argument("--compiler-runtime",required=True)
+    parser.add_argument("--build-record-source",required=True)
     args=parser.parse_args()
     print(json.dumps(verify(load(),args.fonts_host,args.taskc_host,args.image_build_source,args.signed_reader,
-                           args.compiler_consumer),
+                           args.compiler_consumer,args.compiler_runtime,args.build_record_source),
                      sort_keys=True))
