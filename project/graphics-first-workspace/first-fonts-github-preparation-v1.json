@@ -10,7 +10,7 @@
     "monthly_pin_sha256": "sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
   },
   "reviewer": {
-    "host_deploy_fonts_catalogue_revision": "ee4a3d58077fac8a578e1c4f96540e1999a9d1ba",
+    "host_deploy_fonts_catalogue_revision": "277da9174f633d09c792dce595ff76ab1e6a0298",
     "host_deploy_compiler_consumer_revision": "b3ac93cd92df1b280f087fbb748263d3371750aa",
     "host_deploy_task_c_revision": "0fd2db17698423d4cd30b296fc9f78e83cee145c",
     "compiler_base_reader_revision": "1616f192ef9d8964a8f37f32a86c69c0242a213c"
@@ -118,6 +118,8 @@
     "native_quota_observed": false,
     "native_worker_mounts_observed": false,
     "native_deadline_observed": false,
-    "native_catalogue_installed": false
+    "native_catalogue_installed": false,
+    "inspection_host": "compiler-host",
+    "gateway_quota_required": false
   }
 }
