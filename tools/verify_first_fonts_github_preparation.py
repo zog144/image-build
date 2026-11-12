@@ -16,13 +16,13 @@ RECORD=ROOT/"project/graphics-first-workspace/first-fonts-github-preparation-v1.
 TASK="graphics-fonts-image-v1"
 SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
-HOST_FONTS="3ee7f24b0869feead798e35d75722d63e2e5b7c9"
-OWNER_GIT_BLOB="b1446781fccba653ff0146a6d15f6cda35ad8ffa"
+HOST_FONTS="4956d926b56def821e6a57025b803ef21f2ca330"
+OWNER_GIT_BLOB="bdd2bb6bdf7f337a8e174be5f3dbea02819288d8"
 HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
 COMPILER_RUNTIME="40b6e88a005298924a9369f3c1131efcae36c67d"
 BUILD_RECORD_RUNTIME="a866c9c4b0dd385045f00ce2de7d809f5b67c104"
-HOST_TASK_C="cdbf97facb07979d1ad19dcb5791211c90146f5f"
+HOST_TASK_C="e3bc72f49391b99c96d5b9a44f99d6659bc31c59"
 ENTRIES=(
     ("fontconfig-final","fontconfig","fontconfig/stages/final"),
     ("freetype-final","freetype","freetype/stages/final"),
