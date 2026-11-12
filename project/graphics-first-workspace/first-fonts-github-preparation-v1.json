@@ -10,7 +10,7 @@
     "monthly_pin_sha256": "sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
   },
   "reviewer": {
-    "host_deploy_fonts_catalogue_revision": "c5baa7fb266882f425f3886c4cebad95d9647913",
+    "host_deploy_fonts_catalogue_revision": "d44a4ad16fea022ca1e7fcd842cceeacd6b05b37",
     "host_deploy_compiler_consumer_revision": "b3ac93cd92df1b280f087fbb748263d3371750aa",
     "host_deploy_task_c_revision": "0fd2db17698423d4cd30b296fc9f78e83cee145c",
     "compiler_base_reader_revision": "1616f192ef9d8964a8f37f32a86c69c0242a213c"
