@@ -121,7 +121,7 @@ def test_signed_compiler_base_kind_is_not_invented_by_offline_review():
 
 def test_exact_current_reader_catalogue_and_consumer_are_not_prior_versions():
     assert m.READER=="1616f192ef9d8964a8f37f32a86c69c0242a213c"
-    assert m.HOST_FONTS=="56127435d1e2ec24892e44ee92ab97f005ead4fe"
+    assert m.HOST_FONTS=="c5baa7fb266882f425f3886c4cebad95d9647913"
     assert m.HOST_CONSUMER=="b3ac93cd92df1b280f087fbb748263d3371750aa"
     assert m.SOURCE=="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
     assert m.PIN=="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
