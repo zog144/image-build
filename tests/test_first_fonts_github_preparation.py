@@ -126,7 +126,7 @@ def test_first_fonts_runtime_source_and_build_record_are_separately_pinned():
 
 def test_exact_current_reader_catalogue_and_consumer_are_not_prior_versions():
     assert m.READER=="1616f192ef9d8964a8f37f32a86c69c0242a213c"
-    assert m.HOST_FONTS=="3ee7f24b0869feead798e35d75722d63e2e5b7c9"
+    assert m.HOST_FONTS=="4956d926b56def821e6a57025b803ef21f2ca330"
     assert m.HOST_CONSUMER=="b3ac93cd92df1b280f087fbb748263d3371750aa"
     assert m.SOURCE=="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
     assert m.PIN=="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
