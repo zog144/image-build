@@ -1,0 +1,13 @@
+# First Fonts — no approval file, quota scheme or special deadline (2026-11-12)
+
+**PR #17 is source-only and remains PREPARED_NOT_SUBMITTABLE. No compiler action or AWS command has been made.**
+
+The exact catalogue consumer in host-deploy PR #7 is `35e6d14c85b6ec0fe0e404efc4e684304609fd4b`. Its one-task Fonts definition is installed by the trusted gateway administrator into the existing `/var/lib/host-deploy-gateway` systemd StateDirectory. There are exactly two installed files: `first-fonts-catalogue-v1.json` and `first-fonts-catalogue-receipt-v1.json`. The former standalone `/var/lib/zog/fonts/graphics-foundation-approval-v1.json` is deleted from the install contract, with no replacement policy file.
+
+The accepted compiler input comes from the retained managed lane and actual signed compiler-purpose receipt, selected by the supervised install call's `lane_name` and `generation_id`. The existing trusted readers validate source revision, original October pin contents, compiler generation and original kind, receipt digest, issuer, producer binding and Host/installation identity. The selected generation and monthly pin therefore have *specific verification uses* in the actual task catalogue; duplicating them in a separate approval JSON was unnecessary.
+
+There is **no first-Fonts 30 GiB work + 2 GiB external requirement**, **no XFS/project-quota scheme**, **no first-Fonts free-space reservation/readback**, and **no special 21,600-second execution deadline** in the catalogue installer or GitHub source-preparation contract. The obsolete dedicated budget/resource objects and synthetic gate flags were removed rather than left pending or false. The compiler still follows ordinary Zog operation lifecycle, source and recipe allowlisting, native compiler acceptance, AWS SSM authorization and durable no-retry journal behavior. Unrelated older fresh-bootstrap budget modules are not selected by this first-Fonts path.
+
+The source-preparation record retains only frozen source/reviewer identities, one-task recipe shape, null native acceptance and output slots, and the **no-dispatch** contract. It does not create or authorize a GitHub issue, SQS message, SSM command, catalogue installation, or generated output.
+
+**Work next:** install the exact PR #7 package on `host-registry` with the ordinary host-install service StateDirectory; select a real compiler generation and lane through the trusted reader callbacks, verify the installed catalogue's returned SHA-256 and receipt, and separately authorize one GitHub Actions→FIFO SQS→trusted-Host SSM Fonts request. No new Fonts policy file, XFS quota, special disk budget, separate AWS role or execution deadline needs to be configured.
