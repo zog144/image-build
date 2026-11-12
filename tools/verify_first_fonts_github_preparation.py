@@ -174,6 +174,55 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
          "or not 1<=len(mounts)<=40:",
     ))):
         deny("current compiler reader lacks reviewed actual mount/worker isolation profile")
+    # The original 1f07... recipe/provenance snapshot cannot itself accept
+    # compiler_base, or a compiler-bearing kind=image. The separately pinned
+    # PR20 *installed execution implementation* must implement the complete
+    # selected operation; checking its receipt reader alone is insufficient.
+    # Native Work must later attest these exact installed executable bytes.
+    runtime_contracts={
+        "src/zog/image_build/remote_operations.py":(
+            'receipt=arguments.get("compiler_base")',
+            'from .compiler_base_acceptance import resolve',
+            'compiler_base=base_evidence)',
+            '**({"compiler_base": receipt} if receipt is not None else {})',
+            'compiler_base_authority=getattr(self.builder,"compiler_base_authority",None)',
+        ),
+        "src/zog/image_build/pipeline.py":(
+            'from .compiler_base_acceptance import resolve',
+            "compiler_base=record['arguments'].get('compiler_base')",
+            "compiler_base_authority_identity=digest(canonical({",
+        ),
+        "src/zog/image_build/engine.py":(
+            'accepted_compiler=resolve_compiler(self,toolchain,compiler_base)',
+            'if requires_compiler and accepted_compiler is None:',
+            'compiler_base=accepted_compiler)',
+            '"compiler_base": accepted_compiler',
+            'current=resolve_compiler(self,toolchain,compiler_base)',
+        ),
+        "src/zog/image_build/graphical_composition.py":(
+            'accepted_image=(base.manifest.get("kind") == "image"',
+            'compiler_base.get("generation_kind") == "image"',
+            'compiler_base.get("generation_id") == base.generation',
+        ),
+        "src/zog/image_build/graphical_generation_acceptance.py":(
+            'CONTEXT_COMPILER_BASE = "image-build-graphical-predecessor-attestation-context-v2"',
+            'accepted_compiler=resolve_compiler(builder,base_selection,context["compiler_base"])',
+            'generation_inputs.get("compiler_base") != accepted_compiler',
+        ),
+        "src/zog/image_build/first_fonts_producer_contract.py":(
+            'SOURCE_REVISION = "1f07e83dbd80dacb9bed0d6494c697375f0e26cd"',
+            'def verify_fonts_output(',
+            'acceptance_receipt_sha256=trusted_context["compiler_base"]',
+            'evidence.get("compiler_base_acceptance_sha256") != trusted_context["compiler_base"]',
+        ),
+    }
+    for relative,required_lines in runtime_contracts.items():
+        file=signed_reader/relative
+        if not file.is_file() or file.is_symlink():
+            deny("actual current compiler runtime source missing: "+relative)
+        text=file.read_text()
+        if not all(line in text for line in required_lines):
+            deny("selected compiler execution or output contract differs: "+relative)
     # The shared compiler ACCEPTANCE consumer is exact PR29 source. The
     # dedicated one-task PR7 catalogue owner intentionally extends PR29's
     # original owner: it now freezes compiler_base in the real pipeline.submit,
@@ -206,6 +255,26 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
             'if free_bytes<TOTAL_BYTES:')):
         deny("exact reviewed existing-root filesystem resource admission missing")
     owner_source=owner_bytes.decode("utf-8")
+    if not all(line in owner_source for line in (
+        'STORE = Path("/var/lib/zog/fonts")',
+        '"compiler_base": bound_base["accepted_receipt_sha256"]',
+        '"resource_admission_location": "compiler-host-before-build"',
+        '"compiler_resource_admitted": False',
+        'os.O_EXCL', 'os.fsync(',
+    )):
+        deny("gateway no-quota catalogue installation or accepted compiler binding changed")
+    owner_tree=ast.parse(owner_source)
+    installer=next((node for node in owner_tree.body
+        if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef))
+        and node.name=="install_native"),None)
+    if installer is None:
+        deny("no trusted gateway catalogue installer")
+    for call in (node for node in ast.walk(installer) if isinstance(node,ast.Call)):
+        name=(call.func.attr if isinstance(call.func,ast.Attribute)
+              else call.func.id if isinstance(call.func,ast.Name) else "")
+        if name in {"inspect_native","checked","statvfs","statfs","reserve",
+                    "read_resource_observation"}:
+            deny("gateway installer improperly inspects compiler-Host quota")
     catalogue_source=(fonts_host/"src/zog/host_deploy/gateway/task_catalogue.py").read_text()
     if (('"compiler_base": bound_base["accepted_receipt_sha256"]' not in owner_source
           or 'required.add("compiler_base")' not in catalogue_source
