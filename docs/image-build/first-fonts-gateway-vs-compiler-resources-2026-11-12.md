@@ -14,6 +14,15 @@ The separate `fonts_resource_admission` module is available as a **compiler-Host
 
 At present, source checks do **not** establish a live image-build preallocation gate consuming this native observation, so Work must validate this boundary before authorizing a real job. A successful gateway catalogue install cannot imply runtime resource admission.
 
+
+## Selected producer recipe versus selected executable runtime
+
+The immutable original **recipe/provenance producer** at `1f07e83dbd80dacb9bed0d6494c697375f0e26cd` must not be rewritten or reclassified. Its old `remote_operations._pipeline_arguments`, `ImageBuild._ensure`, `PipelineMixin` and native attester **cannot** by themselves accept the new `compiler_base` request or an accepted compiler-bearing `kind=image`. Merely pinning a source reader alongside the original producer would therefore be incompatible with a real Fonts submission.
+
+The separately reviewed PR #20 source `1616f192ef9d8964a8f37f32a86c69c0242a213c` contains the actual compatible remote-operation parser, durable pipeline, compiler-enabled execution, package/output generation bindings, image-aware graphical composition and native **v2** output attester, in addition to the observed-isolation reader. PR #17's source verifier now checks every one of these actual execution files from the immutable PR #20 checkout and rejects a selected reader with missing execution/attester functionality. The selected catalogue's `arguments.compiler_base` SHA must reach that installed PR #20-compatible runtime as an original server-frozen task input; it may not be silently dropped to satisfy the older implementation.
+
+**Native installation HOLD:** source CI does not prove which Python executable, project source tree, controller runner, trusted compiler-purpose issuer, selected recipe checkout or v2 attester Work has installed. Before any build, Work must independently verify an exact PR #20-compatible *execution* runtime and approved source/provenance split, not just a side-by-side verifier file. Do not submit via the old `1f07e83d...` execution implementation or relabel the original compiler generation to evade its stage-two guard.
+
 ## Exact frozen source and CI
 
 - Original image-build producer `1f07e83dbd80dacb9bed0d6494c697375f0e26cd`, immutable October source pin `d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36`.
