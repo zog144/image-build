@@ -146,8 +146,13 @@ def test_previous_source_heads_do_not_reenter_frozen_preparation(key,old_value):
 
 
 def _partial_copy(source,destination,paths):
-    # Only copy the files under test. No quota/approval source is required.
-    for relative in paths:
+    # Preserve selected lane compatibility evidence in synthetic host-deploy
+    # source drift fixtures. No quota or approval source is required.
+    included=list(paths)
+    lane=Path("src/zog/host_deploy/image_build_lanes.py")
+    if lane not in included and (source/lane).is_file():
+        included.append(lane)
+    for relative in included:
         target=destination/relative
         target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(source/relative,target)
