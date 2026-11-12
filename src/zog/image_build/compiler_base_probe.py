@@ -126,9 +126,9 @@ def inspect_completed_probe(root,*,generation,completion,seconds,selected_root=N
         "source_sha256":SOURCE_SHA256,"command_sha256":COMMAND_SHA256,
         "elapsed_seconds":seconds,
         "controller_execution":completion,
-        "isolation":{"read_only_root":True,"network_access":False,
-                     "pivot_root":True,"host_mounts_visible":False,
-                     "host_include_fallback":False,"host_library_fallback":False},
+        # Output parsing cannot witness namespaces, mounts or root-changing
+        # syscalls. A separate native owner must supply authenticated evidence.
+        "isolation":None,
         "include_paths":includes,"library_paths":libs,
         "linked_executable_sha256":_sha(image),
     }

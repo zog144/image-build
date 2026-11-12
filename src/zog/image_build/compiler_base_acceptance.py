@@ -179,11 +179,8 @@ def validate_probe(probe, claim):
         "runtime_id","invocation_id","journal_reference")) or
         e["exit_code"]!=0 or e["cleanup_complete"] is not True):
         deny("native probe controller execution incomplete")
-    iso=probe["isolation"]
-    if iso!={"read_only_root":True,"network_access":False,
-             "pivot_root":True,"host_mounts_visible":False,
-             "host_include_fallback":False,"host_library_fallback":False}:
-        deny("native probe did not establish selected root isolation")
+    from .compiler_base_isolation import validate as validate_isolation
+    validate_isolation(probe["isolation"], e, claim["installed_paths"])
     for key in ("include_paths","library_paths"):
         paths=probe[key]
         if type(paths) is not list or not paths or len(paths)>80:
@@ -308,6 +305,11 @@ def resolve(builder, selection, receipt_sha256):
     if claim["required_probe_command_sha256"]!=COMMAND_SHA256:
         deny("native compile/link probe instructions substituted")
     validate_probe(claim["native_probe"],claim)
+    configuration=execute.configuration()
+    observed=claim["native_probe"]["isolation"]
+    if (observed["uid"]!=configuration.get("execution_user_id") or
+        observed["gid"]!=configuration.get("execution_group_id")):
+        deny("observed worker differs from selected execution configuration")
     included=claim["native_probe"]["include_paths"]
     linked=claim["native_probe"]["library_paths"]
     if (("/"+files["libc_header"]["path"] not in included or
