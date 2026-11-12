@@ -16,8 +16,8 @@ RECORD=ROOT/"project/graphics-first-workspace/first-fonts-github-preparation-v1.
 TASK="graphics-fonts-image-v1"
 SOURCE="1f07e83dbd80dacb9bed0d6494c697375f0e26cd"
 PIN="sha256:d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
-HOST_FONTS="277da9174f633d09c792dce595ff76ab1e6a0298"
-OWNER_GIT_BLOB="da84649531c2b69a5f961eefeb21a3276eaeed39"
+HOST_FONTS="56127435d1e2ec24892e44ee92ab97f005ead4fe"
+OWNER_GIT_BLOB="b1446781fccba653ff0146a6d15f6cda35ad8ffa"
 HOST_CONSUMER="b3ac93cd92df1b280f087fbb748263d3371750aa"
 READER="1616f192ef9d8964a8f37f32a86c69c0242a213c"
 HOST_TASK_C="0fd2db17698423d4cd30b296fc9f78e83cee145c"
@@ -221,11 +221,15 @@ def verify(record, fonts_host, taskc_host, immutable_producer, signed_reader=Non
         deny("first-Fonts reviewed catalogue owner differs from exact reviewed PR7 source")
     owner_source=owner_bytes.decode("utf-8")
     if not all(line in owner_source for line in (
-        'STORE = Path("/var/lib/zog/fonts")',
+        'STORE = Path("/var/lib/host-deploy-gateway")',
         '"compiler_base": bound_base["accepted_receipt_sha256"]',
         'os.O_EXCL', 'os.fsync(',
     )):
         deny("gateway catalogue installation or accepted compiler binding changed")
+    if ("APPROVAL = " in owner_source or "APPROVAL_SCHEMA = " in owner_source
+            or "graphics-foundation-approval-v1.json" in owner_source
+            or "execution_limit_seconds" in owner_source):
+        deny("selected gateway owner still requires obsolete approval or resource policy")
     owner_tree=ast.parse(owner_source)
     installer=next((node for node in owner_tree.body
         if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef))
