@@ -312,9 +312,10 @@ def test_first_fonts_catalogue_cannot_remove_compiler_receipt_obligation(tmp_pat
 ])
 def test_accepted_reader_without_real_compiler_execution_is_denied(tmp_path,module,required):
     """PR20's receipt-only observation is not a producer that can compile Fonts."""
-    source=Path(os.environ["ZOG_IMAGE_BUILD_SIGNED_READER"])
+    source=Path(os.environ["ZOG_IMAGE_BUILD_COMPILER_RUNTIME"])
     names=[
         "compiler_base_acceptance.py","compiler_base_isolation.py",
+        "runtime_requirements.py","runtime_preflight.py",
         "remote_operations.py","pipeline.py","engine.py",
         "graphical_composition.py","graphical_generation_acceptance.py",
         "first_fonts_producer_contract.py",
@@ -327,7 +328,28 @@ def test_accepted_reader_without_real_compiler_execution_is_denied(tmp_path,modu
     assert required in original
     selected.write_text(original.replace(required,"REMOVED_NATIVE_COMPILER_CONTRACT"))
     with pytest.raises(m.FontsNotAdmitted,match="execution or output contract differs"):
-        check(signed_reader=candidate)
+        check(compiler_runtime=candidate)
+
+
+def test_status_runtime_cannot_drop_build_record_dependency(tmp_path):
+    source=Path(os.environ["ZOG_IMAGE_BUILD_COMPILER_RUNTIME"])
+    names=[
+        "compiler_base_acceptance.py","compiler_base_isolation.py",
+        "runtime_requirements.py","runtime_preflight.py",
+        "remote_operations.py","pipeline.py","engine.py",
+        "graphical_composition.py","graphical_generation_acceptance.py",
+        "first_fonts_producer_contract.py",
+    ]
+    directory=Path("src/zog/image_build")
+    candidate=_partial_copy(source,tmp_path/"runtime-status-drift",
+                            [directory/name for name in names])
+    source_file=candidate/directory/"runtime_requirements.py"
+    text=source_file.read_text()
+    assert 'if provenance or operation == "pipeline.inspect":' in text
+    source_file.write_text(text.replace(
+        'if provenance or operation == "pipeline.inspect":',"if provenance:"))
+    with pytest.raises(m.FontsNotAdmitted,match="status preflight"):
+        check(compiler_runtime=candidate)
 
 
 def test_no_unapproved_fonts_budget_or_policy_record():
