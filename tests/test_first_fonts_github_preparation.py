@@ -61,10 +61,8 @@ def test_exact_source_and_request_shape_only_never_compiler_admission():
  ("submission","github_issue_created",True),
  ("submission","submitted_sqs_message",True),
  ("submission","acceptance_claimed",True),
- ("budget","work_bytes",31*1024**3),
- ("budget","execution_limit_seconds",21601)
 ])
-def test_fabricated_request_identity_authority_or_wider_budget_rejected(part,key,value):
+def test_fabricated_request_identity_or_authority_rejected(part,key,value):
     x=copy.deepcopy(m.load())
     x[part][key]=value
     with pytest.raises(m.FontsNotAdmitted,match="PREPARED_NOT_SUBMITTABLE"):
@@ -135,14 +133,7 @@ def test_previous_source_heads_do_not_reenter_frozen_preparation(key,old_value):
 
 
 def _partial_copy(source,destination,paths):
-    # PR7's root-backed worker quota admission is a mandatory independent
-    # source stage. Keep it present when mutating only the reviewed owner,
-    # catalogue or shared acceptance consumer in synthetic denial fixtures.
-    resource=Path("src/zog/host_deploy/gateway/fonts_resource_admission.py")
-    selected=list(paths)
-    if resource not in selected and (source/resource).is_file():
-        selected.append(resource)
-    for relative in selected:
+    for relative in paths:
         target=destination/relative
         target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(source/relative,target)
@@ -169,7 +160,6 @@ def test_updated_pr7_consumer_requires_exact_reviewed_pr29_bytes(tmp_path,substi
         Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
         Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
         Path("src/zog/host_deploy/gateway/task_catalogue.py"),
-        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
     ]
     candidate=_partial_copy(source,tmp_path/"drifted-catalogue",paths)
     target=candidate/paths[1]
@@ -216,7 +206,6 @@ def test_selected_pr7_package_catalogue_change_is_denied(tmp_path):
         Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
         Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
         Path("src/zog/host_deploy/gateway/task_catalogue.py"),
-        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
     ]
     selected=_partial_copy(source,tmp_path/"different-fonts-task",paths)
     original=selected/paths[2]
@@ -299,20 +288,6 @@ def test_first_fonts_catalogue_cannot_remove_compiler_receipt_obligation(tmp_pat
         check(fonts_host=selected)
 
 
-def test_pr7_root_backed_quota_inspector_requires_exact_reviewed_bytes(tmp_path):
-    selected=Path(os.environ["ZOG_HOSTDEPLOY_FONTS_PR7"])
-    paths=[
-        Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
-        Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
-        Path("src/zog/host_deploy/gateway/task_catalogue.py"),
-        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
-    ]
-    candidate=_partial_copy(selected,tmp_path/"quota-drift",paths)
-    quota=candidate/paths[-1]
-    quota.write_bytes(quota.read_bytes()+b"\n# unauthorized source repin\n")
-    with pytest.raises(m.FontsNotAdmitted,match="quota inspector differs from exact reviewed PR7"):
-        check(fonts_host=candidate)
-
 @pytest.mark.parametrize("module,required", [
     ("remote_operations.py",'receipt=arguments.get("compiler_base")'),
     ("pipeline.py","compiler_base=record['arguments'].get('compiler_base')"),
@@ -341,17 +316,15 @@ def test_accepted_reader_without_real_compiler_execution_is_denied(tmp_path,modu
         check(signed_reader=candidate)
 
 
-def test_gateway_small_catalogue_does_not_claim_compiler_resource_admission():
+def test_source_preparation_has_no_unapproved_fonts_resource_gate():
     record=m.load()
     assert record["status"]=="PREPARED_NOT_SUBMITTABLE"
-    assert record["resource_admission"]["inspection_host"]=="compiler-host"
-    assert record["resource_admission"]["gateway_quota_required"] is False
-    assert record["resource_admission"]["native_quota_observed"] is False
-    assert record["resource_admission"]["native_catalogue_installed"] is False
-    record=copy.deepcopy(record)
-    record["resource_admission"]["gateway_quota_required"]=True
-    with pytest.raises(m.FontsNotAdmitted,match="native resource admission fabricated"):
-        check(record)
+    assert "budget" not in record
+    assert "resource_admission" not in record
+    assert not set(record["native_gates"]) & {
+        "root_backed_30_plus_2_gib_kernel_quota_admission",
+        "six_hour_cpu_and_persistent_write_budget",
+    }
 
 
 def test_selected_gateway_installer_cannot_smuggle_compiler_quota_read(tmp_path):
@@ -360,7 +333,6 @@ def test_selected_gateway_installer_cannot_smuggle_compiler_quota_read(tmp_path)
         Path("src/zog/host_deploy/gateway/graphics_catalogue_owner.py"),
         Path("src/zog/host_deploy/gateway/graphics_base_acceptance.py"),
         Path("src/zog/host_deploy/gateway/task_catalogue.py"),
-        Path("src/zog/host_deploy/gateway/fonts_resource_admission.py"),
     ]
     candidate=_partial_copy(source,tmp_path/"unexpected-gateway-quota",paths)
     selected=candidate/paths[0]
