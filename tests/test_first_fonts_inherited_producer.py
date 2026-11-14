@@ -23,7 +23,8 @@ def test_historical_october_pin_is_not_republished_in_public_producer():
     assert not (ROOT / "project/pins/2026-10-01/commit-pin.py").exists()
     policy = (ROOT / "tools/public_candidate_preflight.py").read_text()
     assert '"project/pins/2026-10-01/commit-pin.py"' in policy
-    assert "d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
+    # Original SHA-256 d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36
+    # remains in the retained source/host-deploy review, not in this public tree.
     # The successor runtime cannot itself provide the protected pin path.
     # Native source binding must explicitly address this independent hold.
 
