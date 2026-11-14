@@ -37,7 +37,7 @@
       "-o",
       "pipefail",
       "-c",
-      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" cmake --install build-llvm --prefix /usr\ntest -x build-llvm/bin/llvm-tblgen\ninstall -Dm755 build-llvm/bin/llvm-tblgen \"$DESTDIR/usr/bin/llvm-tblgen\"\ntest -x \"$DESTDIR/usr/bin/llvm-tblgen\"\ntest -x \"$DESTDIR/usr/bin/llvm-config\"\n# Verify libLLVM runtime output and its ELF closure before native admission.\ninstall -Dm644 \"upstream/llvm-21.1.6.src/LICENSE.TXT\" \"$DESTDIR/usr/share/licenses/llvm/LICENSE.TXT\"\ninstall -Dm644 \"upstream/llvm-21.1.6.src/lib/Support/BLAKE3/LICENSE\" \"$DESTDIR/usr/share/licenses/llvm/BLAKE3-LICENSE\""
+      "test -n \"${DESTDIR:-}\"; DESTDIR=\"$DESTDIR\" cmake --install build-llvm --prefix /usr\ntest -x build-llvm/bin/llvm-tblgen\ninstall -Dm755 build-llvm/bin/llvm-tblgen \"$DESTDIR/usr/bin/llvm-tblgen\"\ntest -x \"$DESTDIR/usr/bin/llvm-tblgen\"\ntest -x \"$DESTDIR/usr/bin/llvm-config\"\ntest -e \"$DESTDIR/usr/lib/libLLVM.so\"\n# Verify installed libLLVM ELF/linkage closure independently before native admission.\ninstall -Dm644 \"upstream/llvm-21.1.6.src/LICENSE.TXT\" \"$DESTDIR/usr/share/licenses/llvm/LICENSE.TXT\"\ninstall -Dm644 \"upstream/llvm-21.1.6.src/lib/Support/BLAKE3/LICENSE\" \"$DESTDIR/usr/share/licenses/llvm/BLAKE3-LICENSE\""
     ]
   ]
 }
