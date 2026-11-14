@@ -7,7 +7,7 @@
       "-o",
       "pipefail",
       "-c",
-      "command -v meson; command -v ninja\npkg-config --exists x11 xext\nmeson setup build-xxf86vm upstream/libXxf86vm-1.1.7 --prefix=/usr --libdir=lib --buildtype=release -Dauto_features=disabled"
+      "command -v meson; command -v ninja\npkg-config --exists x11 xext\nmeson setup --wrap-mode=nofallback build-xxf86vm upstream/libXxf86vm-1.1.7 --prefix=/usr --libdir=lib --buildtype=release -Dauto_features=disabled"
     ]
   ],
   "build": [
