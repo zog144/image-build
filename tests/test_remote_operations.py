@@ -1563,3 +1563,130 @@ def test_worker_dispatcher_uses_same_machine_contract():
     from zog.image_build.worker_contracts import modules
 
     assert WORKERS == modules()
+
+
+def _retained_pin_artifact(state, raw):
+    from zog.image_build.remote_operations import (
+        _validated_retained_monthly_provenance_pin,
+    )
+    digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+    artifact = state / "image-build/build-record/artifacts" / digest[7:]
+    artifact.parent.mkdir(parents=True, exist_ok=True)
+    artifact.write_bytes(raw)
+    artifact.chmod(0o600)
+    return artifact, digest, _validated_retained_monthly_provenance_pin
+
+
+def test_retained_pin_is_hash_checked_without_installing_it_in_executable_checkout(tmp_path):
+    state = tmp_path / "state"
+    original = repr({"schema": 1, "date": "2026-10-01", "packages": {}}).encode()
+    artifact, digest, validate = _retained_pin_artifact(state, original)
+    old_path = "project/pins/2026-10-01/commit-pin.py"
+    new_checkout = tmp_path / "executable"
+    new_checkout.mkdir()
+    assert not (new_checkout / old_path).exists()
+    result = validate(state, artifact, digest, old_path)
+    assert result == {"path": artifact, "digest": digest,
+                      "month": "2026-10-01", "repository_path": old_path}
+    with pytest.raises(ImageBuildError, match="source path"):
+        validate(state, artifact, digest, "project/pins/2026-09-01/commit-pin.py")
+    with pytest.raises(ImageBuildError, match="content-addressed"):
+        validate(state, artifact, "sha256:" + "0"*64, old_path)
+    with pytest.raises(ImageBuildError, match="content-addressed"):
+        validate(state, new_checkout / old_path, digest, old_path)
+    artifact.write_bytes(original + b"\n")
+    with pytest.raises(ImageBuildError, match="SHA-256 binding"):
+        validate(state, artifact, digest, old_path)
+    artifact.unlink()
+    artifact.symlink_to(tmp_path / "outside")
+    with pytest.raises(ImageBuildError, match="symlink"):
+        validate(state, artifact, digest, old_path)
+
+
+def test_retained_pin_materializes_recipe_snapshot_without_original_checkout_pin(tmp_path):
+    repository, packages, builder, _ = setup_repo(tmp_path)
+    original = repository / "project/pins/2026-10-01/commit-pin.py"
+    artifact, digest, validate = _retained_pin_artifact(builder.state, original.read_bytes())
+    old_path = "project/pins/2026-10-01/commit-pin.py"
+    assert validate(builder.state, artifact, digest, old_path)["month"] == "2026-10-01"
+    original.unlink()
+    from zog.image_build.pins import load as load_pin
+    from zog.image_build.metadata import identity
+    pin = {"month": "2026-10-01", "path": old_path, "digest": digest,
+           "repository": "zog144/image-build", "revision": "1"*40}
+    class Captured:
+        pass
+    builder.provenance = Captured()
+    builder.provenance.pin = pin
+    remote = RemoteOperations(builder, repository_root=repository,
+                              source_repository="zog144/image-build",
+                              source_revision="2"*40, monthly_pin_path=artifact)
+    result = remote.execute(request(
+        "retained-pin-snapshot", "recipes.snapshot",
+        {"entries": recipe_entries("library"), "pin_date": "2026-10-01"},
+        revision="2"*40,
+    ))
+    assert result["status"] == "completed", result
+    materialized = (builder.state / "image-build/recipe-snapshots/snapshots"
+                    / result["recipe_identity"][7:] / "package/commit-pin.py")
+    selected = load_pin(materialized)
+    assert selected["monthly_identity"] == identity(load_pin(artifact))
+    assert (repository / "project/pins/2026-10-01/commit-pin.py").exists() is False
+
+
+def test_retained_pin_cli_rejects_incomplete_origin_and_disconnected_provenance(tmp_path, monkeypatch):
+    from zog.image_build import remote_operations
+    valid = tmp_path / "request.json"
+    valid.write_text("{}")
+    args = ["remote_operations", "--repository-root", str(tmp_path),
+            "--source-repository", "zog144/image-build",
+            "--source-revision", "2"*40,
+            "--package-dir", str(tmp_path), "--state-dir", str(tmp_path),
+            "--retained-pin-source-revision", "1"*40, str(valid)]
+    monkeypatch.setattr("sys.argv", args)
+    with pytest.raises(SystemExit, match="together"):
+        remote_operations.main()
+    args[-1:-1] = ["--retained-pin-repository-path", "project/pins/2026-10-01/commit-pin.py"]
+    monkeypatch.setattr("sys.argv", args)
+    with pytest.raises(SystemExit, match="distinct immutable source revision and provenance"):
+        remote_operations.main()
+
+
+def test_retained_pin_new_executable_cli_captures_original_revision_not_its_own(tmp_path, monkeypatch, capsys):
+    from zog.image_build import remote_operations, provenance
+    source = tmp_path / "new-source"
+    (source / "project/package").mkdir(parents=True)
+    state = tmp_path / "state"
+    pipeline_id = "a" * 32
+    _prepared_inspection_state(state, pipeline_id)
+    original = repr({"schema":1,"date":"2026-10-01","packages":{}}).encode()
+    artifact,digest,validate=_retained_pin_artifact(state,original)
+    path = tmp_path / "request.json"
+    path.write_text(json.dumps(request("retained-pin-cli", "pipeline.inspect",
+                                       {"pipeline_id":pipeline_id},revision="2"*40)))
+    _FakeRemoteProvenance.captures=[]
+    monkeypatch.setattr(provenance,"Provenance",_FakeRemoteProvenance)
+    monkeypatch.setattr("sys.argv",[
+        "remote_operations","--repository-root",str(source),
+        "--source-repository","zog144/image-build",
+        "--source-revision","2"*40,
+        "--package-dir",str(source/"project/package"),
+        "--state-dir",str(state),
+        "--provenance-host-id","host",
+        "--provenance-project-id","project",
+        "--provenance-pin",str(artifact),
+        "--expected-pin-digest",digest,
+        "--retained-pin-source-revision","1"*40,
+        "--retained-pin-repository-path","project/pins/2026-10-01/commit-pin.py",
+        str(path),
+    ])
+    remote_operations.main()
+    result=json.loads(capsys.readouterr().out)
+    assert result["operation_type"]=="pipeline.inspect"
+    assert result["status"]=="pending"
+    assert _FakeRemoteProvenance.captures == [{
+        "month":"2026-10-01","repository":"zog144/image-build",
+        "revision":"1"*40,"path":"project/pins/2026-10-01/commit-pin.py",
+        "digest":digest,
+    }]
+    assert not (source/"project/pins/2026-10-01/commit-pin.py").exists()

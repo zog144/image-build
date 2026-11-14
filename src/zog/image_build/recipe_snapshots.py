@@ -160,7 +160,7 @@ def _materialize_one(catalogue, destination, entry):
         (target / SOURCE_PROVENANCE).chmod(0o644)
 
 
-def materialize(catalogue, entries, destination, *, pin_date=None):
+def materialize(catalogue, entries, destination, *, pin_date=None, monthly_pin_path=None):
     """Create/recover a self-contained selected recipe directory."""
     catalogue = Path(catalogue).resolve()
     destination = Path(destination)
@@ -172,7 +172,8 @@ def materialize(catalogue, entries, destination, *, pin_date=None):
     from .pins import snapshot as snapshot_pin, validate as validate_pin
 
     pin = snapshot_pin(
-        catalogue, entries, destination, pin_date=pin_date
+        catalogue, entries, destination, pin_date=pin_date,
+        monthly_pin_path=monthly_pin_path
     )
     for entry in entries:
         _materialize_one(catalogue, destination, entry)
@@ -313,6 +314,7 @@ class RecipeSnapshotStore:
         source_repository,
         source_revision,
         expected_monthly_identity=None,
+        monthly_pin_path=None,
     ):
         entries = normalize_entries(entries)
         if not isinstance(operation_id, str) or not operation_id:
@@ -336,6 +338,7 @@ class RecipeSnapshotStore:
                 entries,
                 package_dir,
                 pin_date=pin_date,
+                monthly_pin_path=monthly_pin_path,
             )
             # A remotely submitted snapshot must be closed over all build,
             # runtime and test dependencies. Stage workers may materialize a

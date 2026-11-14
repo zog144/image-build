@@ -150,6 +150,58 @@ def _validated_monthly_provenance_pin(
     }
 
 
+
+def _validated_retained_monthly_provenance_pin(
+    state_dir, pin_path, expected_digest, repository_path
+):
+    """Use an *already captured* original pin artifact, never a synthetic checkout.
+
+    Only the content-addressed build-record artifact in the existing persistent
+    image-build state is accepted. The original repository-relative source path
+    is retained as provenance, distinct from the new executable checkout.
+    """
+    if not isinstance(expected_digest, str) or not re.fullmatch(
+        r"sha256:[0-9a-f]{64}", expected_digest
+    ):
+        raise ImageBuildError("retained provenance pin requires exact SHA-256")
+    if (
+        not isinstance(repository_path, str)
+        or not re.fullmatch(r"project/pins/\d{4}-\d{2}-01/commit-pin\.py", repository_path)
+    ):
+        raise ImageBuildError("retained provenance pin requires reviewed repository path")
+    state = Path(state_dir).absolute()
+    expected = state / "image-build/build-record/artifacts" / expected_digest[7:]
+    actual = Path(pin_path).absolute()
+    if actual != expected:
+        raise ImageBuildError("retained pin must be the existing content-addressed state artifact")
+    if state.is_symlink() or not state.is_dir():
+        raise ImageBuildError("retained pin state directory is missing or linked")
+    current = state
+    for component in ("image-build", "build-record", "artifacts", expected_digest[7:]):
+        current = current / component
+        if current.is_symlink():
+            raise ImageBuildError("retained pin artifact may not traverse a symlink")
+    try:
+        st = actual.lstat()
+    except OSError as exc:
+        raise ImageBuildError("retained original pin artifact is missing") from exc
+    if (not stat.S_ISREG(st.st_mode) or st.st_nlink != 1
+            or st.st_mode & 0o022 or st.st_size > 1024 * 1024):
+        raise ImageBuildError("retained pin artifact has unsafe type, mode or size")
+    if not os.access(actual, os.R_OK, effective_ids=True):
+        raise ImageBuildError("retained pin artifact inaccessible to the effective process")
+    from .pins import load as load_monthly_pin
+    monthly = load_monthly_pin(actual)
+    if "monthly_identity" in monthly:
+        raise ImageBuildError("recipe-snapshot pin is not original retained provenance")
+    if repository_path != f"project/pins/{monthly['date']}/commit-pin.py":
+        raise ImageBuildError("retained pin date differs from original source path")
+    if "sha256:" + _sha256(actual) != expected_digest:
+        raise ImageBuildError("retained original pin bytes differ from SHA-256 binding")
+    return {"path": actual, "repository_path": repository_path,
+            "digest": expected_digest, "month": monthly["date"]}
+
+
 def _validated_observed_state_dir(control_state, observed_state):
     """Return a canonical external state root without creating or changing it."""
     control = Path(control_state)
@@ -191,8 +243,10 @@ class RemoteOperations:
         source_repository,
         source_revision,
         observed_state_dir=None,
+        monthly_pin_path=None,
     ):
         self.builder = builder
+        self.monthly_pin_path = Path(monthly_pin_path) if monthly_pin_path is not None else None
         self.repository_root = Path(repository_root).resolve()
         self.source_repository = source_repository
         self.source_revision = source_revision
@@ -377,19 +431,28 @@ class RemoteOperations:
                 )
             pin_date = month
             monthly_path = (
-                Path(self.builder.package_dir).resolve().parent
-                / "pins"
-                / month
-                / "commit-pin.py"
+                self.monthly_pin_path
+                if self.monthly_pin_path is not None
+                else (Path(self.builder.package_dir).resolve().parent
+                      / "pins" / month / "commit-pin.py")
             )
-            try:
-                relative = monthly_path.resolve(strict=True).relative_to(
-                    self.repository_root
-                ).as_posix()
-            except (OSError, ValueError) as error:
-                raise ImageBuildError(
-                    "recipe snapshot monthly pin is outside deployed repository"
-                ) from error
+            if self.monthly_pin_path is not None:
+                relative = bound.get("path")
+                # Main validated this exact state artifact before constructing
+                # the adapter; repeat the independent bytes and date check.
+                if not monthly_path.is_relative_to(self.repository_root):
+                    _validated_retained_monthly_provenance_pin(
+                        self.control_state, monthly_path, bound.get("digest"), relative
+                    )
+            else:
+                try:
+                    relative = monthly_path.resolve(strict=True).relative_to(
+                        self.repository_root
+                    ).as_posix()
+                except (OSError, ValueError) as error:
+                    raise ImageBuildError(
+                        "recipe snapshot monthly pin is outside deployed repository"
+                    ) from error
             if (
                 relative != bound.get("path")
                 or "sha256:" + _sha256(monthly_path)
@@ -433,6 +496,7 @@ class RemoteOperations:
                     source_repository=self.source_repository,
                     source_revision=self.source_revision,
                     expected_monthly_identity=expected_monthly_identity,
+                    monthly_pin_path=self.monthly_pin_path,
                 )
             self._write_binding(
                 directory,
@@ -1582,8 +1646,6 @@ class RemoteOperations:
             }
             adapter = BoxControlExecutionAdapter(
                 execute.control,
-                execution_user_id=execute.execution_user_id,
-                execution_group_id=execute.execution_group_id,
                 startup_timeout_seconds=execute.startup_timeout_seconds,
                 termination_grace_seconds=execute.termination_grace_seconds,
                 wait_timeout_seconds=execute.wait_timeout_seconds,
@@ -1825,6 +1887,8 @@ def main():
         help="absolute path to the original reviewed monthly provenance pin inside --repository-root",
     )
     parser.add_argument("--expected-pin-digest")
+    parser.add_argument("--retained-pin-source-revision")
+    parser.add_argument("--retained-pin-repository-path")
     parser.add_argument("request", type=Path)
     args = parser.parse_args()
 
@@ -1842,6 +1906,13 @@ def main():
     if (args.provenance_host_id is None) != (args.provenance_project_id is None):
         raise SystemExit("provenance host/project identities must be supplied together")
     provenance_enabled = args.provenance_host_id is not None
+    retained = args.retained_pin_source_revision is not None
+    if retained != (args.retained_pin_repository_path is not None):
+        raise SystemExit("retained pin origin revision and path must be supplied together")
+    if retained and (not provenance_enabled
+                     or not _REVISION.fullmatch(args.retained_pin_source_revision)
+                     or args.retained_pin_source_revision == args.source_revision):
+        raise SystemExit("retained pin requires distinct immutable source revision and provenance")
     if provenance_enabled:
         if args.provenance_pin is None or args.expected_pin_digest is None:
             raise SystemExit(
@@ -1857,10 +1928,13 @@ def main():
         )
     if provenance_enabled:
         try:
-            validated_pin = _validated_monthly_provenance_pin(
-                args.repository_root,
-                args.provenance_pin,
-                args.expected_pin_digest,
+            validated_pin = (
+                _validated_retained_monthly_provenance_pin(
+                    args.state_dir, args.provenance_pin, args.expected_pin_digest,
+                    args.retained_pin_repository_path
+                ) if retained else _validated_monthly_provenance_pin(
+                    args.repository_root, args.provenance_pin, args.expected_pin_digest
+                )
             )
         except ImageBuildError as error:
             raise SystemExit(str(error)) from error
@@ -1869,16 +1943,19 @@ def main():
             args.state_dir,
             validated_pin["path"],
             repository=args.source_repository,
-            revision=args.source_revision,
+            revision=(args.retained_pin_source_revision if retained else args.source_revision),
             repository_path=validated_pin["repository_path"],
         )
         # Re-read source evidence after capture so a concurrent path/byte change
         # cannot silently replace the lane-bound monthly pin.
         try:
-            rechecked = _validated_monthly_provenance_pin(
-                args.repository_root,
-                args.provenance_pin,
-                args.expected_pin_digest,
+            rechecked = (
+                _validated_retained_monthly_provenance_pin(
+                    args.state_dir, args.provenance_pin, args.expected_pin_digest,
+                    args.retained_pin_repository_path
+                ) if retained else _validated_monthly_provenance_pin(
+                    args.repository_root, args.provenance_pin, args.expected_pin_digest
+                )
             )
         except ImageBuildError as error:
             raise SystemExit(str(error)) from error
@@ -1888,7 +1965,7 @@ def main():
             or pin.get("path") != validated_pin["repository_path"]
             or pin.get("month") != validated_pin["month"]
             or pin.get("repository") != args.source_repository
-            or pin.get("revision") != args.source_revision
+            or pin.get("revision") != (args.retained_pin_source_revision if retained else args.source_revision)
         ):
             raise SystemExit(
                 "captured monthly provenance pin differs from deployed source binding"
@@ -1914,6 +1991,7 @@ def main():
         source_repository=args.source_repository,
         source_revision=args.source_revision,
         observed_state_dir=args.observed_state_dir,
+        monthly_pin_path=validated_pin["path"] if provenance_enabled else None,
     )
     result = adapter.execute(json.loads(args.request.read_text()))
     print(json.dumps(result, sort_keys=True))

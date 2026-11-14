@@ -614,7 +614,7 @@ def test_configuration_rejects_nested_state_and_root_execution(tmp_path):
     from zog.image_build.configuration import configured_runner
     project = tmp_path/'project'
     raw = dict(project_root=str(project), socket_path='/run/zog/root-control.sock',
-               execution_user_id=1001, execution_group_id=1001, startup_timeout_seconds=5,
+               startup_timeout_seconds=5,
                execution_timeout_seconds=30, termination_grace_seconds=3, wait_timeout_seconds=0,
                transport_timeout_seconds=10, resource_limits={'thread-count-maximum':32,'memory-maximum-bytes':100000000})
     path = tmp_path/'config.json'; path.write_text(json.dumps(raw))
@@ -622,8 +622,8 @@ def test_configuration_rejects_nested_state_and_root_execution(tmp_path):
         configured_runner(path, project/'state/image-build')
     runner = configured_runner(path, project/'state')
     assert runner.timeout == 30 and runner.execute.wait_timeout_seconds == 0
-    raw['execution_user_id'] = 0; path.write_text(json.dumps(raw))
-    with pytest.raises(ImageBuildError, match='nonzero'):
+    raw['execution_user_id'] = 24202; path.write_text(json.dumps(raw))
+    with pytest.raises(ImageBuildError, match='missing or unsupported'):
         configured_runner(path, project/'state')
 
 

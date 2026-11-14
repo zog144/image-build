@@ -28,7 +28,7 @@ def validate(directory, packages):
     return record
 
 
-def snapshot(catalogue, entries, destination, pin_date=None):
+def snapshot(catalogue, entries, destination, pin_date=None, *, monthly_pin_path=None):
     pins = Path(catalogue).parent/'pins'
     selected = pin_date or literal(pins/'current.py')['date']
     try:
@@ -37,7 +37,7 @@ def snapshot(catalogue, entries, destination, pin_date=None):
             raise ValueError('not a monthly date')
     except (TypeError, ValueError) as error:
         raise ImageBuildError('invalid pin date') from error
-    monthly = load(pins/selected/'commit-pin.py')
+    monthly = load(Path(monthly_pin_path) if monthly_pin_path is not None else pins/selected/'commit-pin.py')
     if monthly['date'] != selected:
         raise ImageBuildError('pin directory/date mismatch')
     packages = {}
