@@ -440,9 +440,10 @@ class RemoteOperations:
                 relative = bound.get("path")
                 # Main validated this exact state artifact before constructing
                 # the adapter; repeat the independent bytes and date check.
-                _validated_retained_monthly_provenance_pin(
-                    self.control_state, monthly_path, bound.get("digest"), relative
-                ) if not monthly_path.is_relative_to(self.repository_root) else None
+                if not monthly_path.is_relative_to(self.repository_root):
+                    _validated_retained_monthly_provenance_pin(
+                        self.control_state, monthly_path, bound.get("digest"), relative
+                    )
             else:
                 try:
                     relative = monthly_path.resolve(strict=True).relative_to(
