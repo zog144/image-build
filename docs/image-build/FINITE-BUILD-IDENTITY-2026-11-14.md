@@ -1,0 +1,5 @@
+# Finite-build controller configuration: inherited identity
+
+The controller configuration and image-build adapter no longer carry a selectable execution UID/GID. All finite compilation operations are submitted to box-control/root-control without identity-selection fields. A legacy controller.json containing either `execution_user_id` or `execution_group_id` is rejected by `configured_runner`, not silently accepted or rewritten. The running service process's existing effective identity applies; the privileged root-control backend does not switch into a fabricated build-owner/worker account. This is an intentional source-schema break and requires an explicit updated controller.json with a new digest from host-deploy.
+
+Current root-control keeps finite-service cgroup limits and controlled filesystem mounts. Future normal application execution under box-control can supply application-level isolation instead of bespoke worker accounts. Do not treat source-only tests as native installed credential acceptance.
