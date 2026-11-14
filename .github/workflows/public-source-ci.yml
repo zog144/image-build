@@ -58,7 +58,11 @@ jobs:
             tests/test_verification_environment.py \
             tests/test_licensing.py \
             tests/test_host_fixture.py \
-            tests/test_worker_identity.py
+            tests/test_worker_identity.py \
+            tests/test_first_fonts_inherited_producer.py
+
+      - name: Verify retained October pin separation without compiling
+        run: python -m pytest -q -p no:cacheprovider tests/test_remote_operations.py -k retained_pin
 
       - name: Build from the exact indexed source tree outside the checkout
         run: |
