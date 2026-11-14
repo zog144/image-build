@@ -1,0 +1,20 @@
+[
+  "wrong-archive",
+  "missing-compiler-unit",
+  "changed-object-byte",
+  "host-include",
+  "host-compiler",
+  "mismatched-compile-object",
+  "missing-source-map",
+  "extra-destdir-file",
+  "missing-installed-file",
+  "changed-installed-byte",
+  "unlisted-elf",
+  "forged-needed",
+  "host-library",
+  "wrong-library-soname",
+  "wrong-notice",
+  "missing-notice",
+  "self-authorized",
+  "bad-sidecar"
+]

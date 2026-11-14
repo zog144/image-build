@@ -134,14 +134,70 @@ Acceptance:
 
 Host-welcome must not embed another browser engine merely for its welcome screen.
 
-## Follow-on — TurboVNC and VirtualGL
+## First interactive Workspace — TurboVNC and Mesa software OpenGL
 
-TurboVNC 3.3.1 and VirtualGL 3.1.5 are source-pinned for the follow-on comparison.
-Their source/component licenses still need complete file/component review before
-binary publication.
+**Decision (2026-10-31): Mesa software OpenGL is a required dependency of the
+first interactive TurboVNC Workspace, not an optional post-Workspace milestone.**
+The first Workspace gate includes basic X11/2D operation **and** working software
+OpenGL/GLX for applications that need it. The Mesa runtime and its dependencies
+must come from reviewed, immutable Zog source builds; no distribution/host GL
+fallback may satisfy this gate.
 
-Remote TurboVNC workspace acceptance remains a separate concept from a physical
-local seat. It must not be used as evidence that greetd/PAM/logind/local DRM works.
+Three source-pinned recipe drafts are now recorded under `project/graphics-drafts/llvm`, `project/graphics-drafts/mesa`, and `project/graphics-drafts/mesa-demos`, with `project/pins/2026-11-01/graphics-source-pin.py` as a supplementary-only review ledger. All remain `catalogue-only` / **native HOLD** until their unpinned dependencies, original archive notices and installed-file closure are independently accepted. The frozen October inputs remain unchanged.
+
+The initial Mesa profile is intentionally narrow:
+
+- CPU Gallium `swrast` with **llvmpipe** as the required software renderer;
+  softpipe may be retained as a diagnostic fallback but does not replace
+  llvmpipe acceptance.
+- X11/GLX/OpenGL integration usable by the exact selected TurboVNC/Xvnc build;
+  pin the corresponding loader, GL dispatch, and userspace ABI contracts.
+- Freeze the actual selected upstream Mesa release and checksum, full dependency
+  closure, license notices and built-library inventory before recipe admission.
+  **LLVM is a required source-built llvmpipe/JIT dependency**, not an implied
+  capability of the existing toolchain. Review LLVM version, x86 backend,
+  Python/Mako/PyYAML, libdrm and other Meson feature dependencies explicitly.
+- For the first gate disable hardware GPU drivers, Vulkan, DRI3 GPU path,
+  optional Wayland/GBM/DRM device access, VirtualGL GPU redirection, and
+  privileged graphics devices unless a selected upstream build demonstrably
+  needs a narrower exception. Do not confuse a userspace libdrm build
+  prerequisite with authorization to expose a DRM device.
+- Publish Mesa and TurboVNC as immutable application-software artifacts/views
+  (and explicitly bind any necessary compatible rootfs libraries). They do
+  **not** become dependencies of Basic/console-first boot.
+- Source-pin and build the narrow `mesa-demos` utility needed for the smoke
+  (`glxgears`, optionally `glxinfo`); these are not supplied by Mesa itself.
+  Do not run an untracked host-installed `glxgears`.
+
+**Minimal first-Workspace acceptance (2026-10-31 scope decision):**
+On an inexpensive, small-core-count CPU-only Host, start the accepted
+TurboVNC/Xvnc Workspace through station-access/noVNC, show an ordinary
+X11 desktop, then launch `glxgears` inside the Workspace. Confirm its
+window is visible, animated for a short smoke interval, and neither
+`glxgears` nor the X server crashes. Record a basic `glxinfo -B`
+renderer check if available (llvmpipe is the intended Mesa software
+renderer) and ensure runtime library/driver paths resolve from the
+immutable Zog software view rather than host graphics libraries.
+
+This is **integration smoke acceptance**, not development or
+certification of Mesa/VirtualGL graphics internals. No minimum FPS,
+frame-time target, 3D compatibility suite, cross-instance scaling
+study, 16/32-core instance, GPU, benchmark run, or prolonged soak is
+required. Low FPS on a small CPU instance is expected and acceptable.
+Keep normal source-pin, build verification, installed-file/ELF closure,
+license and isolation checks; avoid inventing a graphics-quality gate.
+
+TurboVNC 3.3.1 is already source-pinned, but its build recipe, Mesa integration
+and binary licensing review remain pending. This decision is a **planning and
+acceptance change**, not evidence that Mesa/LLVM has been compiled or that
+the first Workspace has run.
+
+### Follow-on — GPU acceleration through VirtualGL
+
+VirtualGL 3.1.5 remains separately source-pinned and follow-on. Hardware DRI,
+GPU-device policy, local/physical-seat Xorg and Wayland remain separate future
+milestones. Remote TurboVNC Workspace acceptance does not imply that
+greetd/PAM/logind/local DRM or physical-seat access works.
 
 ## Chromium and Wayland
 

@@ -1,0 +1,10 @@
+# Data only; parsed with ast.literal_eval.
+{
+  "schema": 1,
+  "version": "9.0.0",
+  "homepage": "https://mesa3d.org",
+  "release_url": "https://archive.mesa3d.org/demos/mesa-demos-9.0.0.tar.xz",
+  "sha256": "3046a3d26a7b051af7ebdd257a5f23bfeb160cad6ed952329cdff1e9f1ed496b",
+  "verification_status": "maintained-Yocto-release-SHA256",
+  "notice_hash_status": "pending-exact-archive-inspection"
+}
