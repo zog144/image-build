@@ -1652,7 +1652,7 @@ def test_retained_pin_cli_rejects_incomplete_origin_and_disconnected_provenance(
         remote_operations.main()
 
 
-def test_new_executable_cli_captures_original_pin_revision_not_its_own(tmp_path, monkeypatch, capsys):
+def test_retained_pin_new_executable_cli_captures_original_revision_not_its_own(tmp_path, monkeypatch, capsys):
     from zog.image_build import remote_operations, provenance
     source = tmp_path / "new-source"
     (source / "project/package").mkdir(parents=True)
