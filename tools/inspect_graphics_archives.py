@@ -258,13 +258,17 @@ def inspect_one(name, entry, output, fetch=True):
             # build metadata, not merely as C files or a guessed build target.
             if build_targets.get("src/xdemos/meson.build") != ["glxgears", "glxinfo"]:
                 raise ValueError("pinned mesa-demos Meson does not select both GLX smoke utilities")
-            expected_demos = ("glxgears glxinfo", "usr/bin/glxgears", "usr/bin/glxinfo")
             draft = ast.literal_eval((ROOT / "project/graphics-drafts/mesa-demos"
                                       / "stages/final/build.py").read_text())
             selection = draft["build"][0][-1]
             install = draft["install"][0][-1]
-            if expected_demos[0] not in selection or any(
-                    value not in install for value in expected_demos[1:]):
+            manifest = ast.literal_eval((ROOT / "project/graphics-drafts/mesa-demos"
+                                         / "stages/final/produce-manifest.py").read_text())
+            if ("glxgears glxinfo" not in selection
+                    or "for tool in glxgears glxinfo" not in install
+                    or '"$DESTDIR/usr/bin/$tool"' not in install
+                    or not {"usr/bin/glxgears", "usr/bin/glxinfo"}.issubset(
+                        manifest["required"])):
                 raise ValueError("selected mesa-demos source targets are not both packaged")
         elif name == "libdrm":
             inspected = [p for p in record["members"]
