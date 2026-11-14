@@ -83,3 +83,55 @@ The supplementary November pin remains review-only and **no files were promoted 
 The Mesa draft now declares the required inherited `x11-xcb`, XCB GLX/SHM/DRI3/Present/Sync/XFixes/RandR, xshmfence, Xxf86vm and libdrm pkg-config modules. Its `configure` step explicitly requires them; the pre-existing libX11 output manifest already names `libX11-xcb.so`. The libxshmfence draft additionally requires its installed `xshmfence.pc`. The mesa-demos configure step requires both `gl` and `glx` pkg-config modules, then installs only Zog-built `glxgears` and `glxinfo`. These exact interfaces must be proved in the real compiler software view; merely declaring the modules in source metadata is not installed verification.
 
 Public source CI [41313406115](https://github.com/zog144/image-build/actions/runs/41313406115) passed 242 local/source tests (one skipped) and 1,794-file public preflight with zero findings; independent pinned archive/option inspection [41313401603](https://github.com/zog144/image-build/actions/runs/41313401603) passed. Neither workflow is native-compilation or redistribution acceptance.
+
+
+## Source implementation reconciliation — 2026-11-14
+
+The PR #8 description originally characterized recipes as outstanding. That
+description is stale: source-pinned, **noncanonical** final-stage drafts already
+exist for LLVM 21.1.6, Mesa 25.3.0, independently pinned mesa-demos 9.0.0,
+libdrm 2.4.128, libxshmfence 1.3.3, libXxf86vm 1.1.7, Mako 1.4.3 and
+pure-Python PyYAML 6.0.3. Reuse them; do not create alternate recipes, new
+build users, storage devices, network services, or a separate compilation host.
+
+The selected source dependency order is LLVM X86 shared/RTTI with the existing
+zlib native-environment, the three GLX support libraries with inherited X11/XCB
+and pkgconf dependencies, then Mesa Gallium swrast/llvmpipe GLX using the
+already pinned canonical Python, MarkupSafe, setuptools, wheel, installer,
+packaging, CMake, Ninja, Meson and pkgconf source projects. The two build-only
+Python drafts remain held until their source-transformation and installed-wheel
+evidence is reviewed; their presence is **not** proof that Python packages are
+available on the native compiler Host.
+
+Mesa is *not* the source of `glxgears`. The separately pinned mesa-demos
+build selects only `glxgears` and `glxinfo`; these are installed under
+`usr/bin` with a two-file manifest, not taken from the Host. The original
+9.0.0 Meson file in the SHA-256-verified upstream archive is now required by
+source CI to name both selected targets; missing or renamed targets fail the
+source-inspection gate. LLVM installation now requires `usr/lib/libLLVM.so`,
+and demos installation checks each staged executable. These are **future
+native install assertions**, not successful install observations.
+
+The existing Mesa, mesa-demos, libdrm and libXxf86vm Meson drafts now use
+`--wrap-mode=nofallback`, so a missing declared dependency cannot cause an
+automatic Meson subproject replacement. Combined with the already authored
+toolchain root/import checker, this preserves the no-unpinned-Host-dependency
+contract; no new system services, accounts or privileged resources are
+introduced. The selected code paths remain CPU-only: software Gallium
+`swrast` with LLVM llvmpipe; no hardware GPU driver, Vulkan, EGL, GBM,
+Wayland or `/dev/dri` grant.
+
+**What remains after source preparation:** actual native LLVM/Mesa/glx utilities
+configuration and compilation; observed installed `DESTDIR` files and ELF
+needed-library/GLX-driver closure; accepted source-to-object and license notice
+review; source-built Python build-tool availability; immutable application
+software publication; and the single small-Host Xvnc/noVNC visual smoke. These
+cannot be inferred from source CI and still require separate native admission.
+
+**Single modest native smoke:** launch a regular Zog Workspace on a CPU-only
+Host (roughly 2–4 cores), see the Zog-built `glxgears` window animate
+briefly without process or X-server crash, and capture `glxinfo -B`
+to confirm the software renderer if available. Confirm loaded library/driver
+paths belong to the immutable Zog view. Do **not** impose FPS targets, long
+soak tests, expensive EC2 instance sizes, or a hardware graphics requirement.
+No build or Host action was taken in this source reconciliation.
