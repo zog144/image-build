@@ -253,6 +253,19 @@ def inspect_one(name, entry, output, fetch=True):
                             or p.endswith("/src/xdemos/glxinfo.c")]
             if len(source_paths) != 2:
                 raise ValueError("demo rights source headers are missing")
+            # These are the *only* utilities required by the first Workspace.
+            # Verify their names occur in this exact checked upstream Meson
+            # build metadata, not merely as C files or a guessed build target.
+            if build_targets.get("src/xdemos/meson.build") != ["glxgears", "glxinfo"]:
+                raise ValueError("pinned mesa-demos Meson does not select both GLX smoke utilities")
+            expected_demos = ("glxgears glxinfo", "usr/bin/glxgears", "usr/bin/glxinfo")
+            draft = ast.literal_eval((ROOT / "project/graphics-drafts/mesa-demos"
+                                      / "stages/final/build.py").read_text())
+            selection = draft["build"][0][-1]
+            install = draft["install"][0][-1]
+            if expected_demos[0] not in selection or any(
+                    value not in install for value in expected_demos[1:]):
+                raise ValueError("selected mesa-demos source targets are not both packaged")
         elif name == "libdrm":
             inspected = [p for p in record["members"]
                          if p.endswith("/xf86drm.c") or p.endswith("/xf86drm.h")]
