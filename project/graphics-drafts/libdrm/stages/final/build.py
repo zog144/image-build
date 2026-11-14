@@ -7,7 +7,7 @@
       "-o",
       "pipefail",
       "-c",
-      "command -v meson; command -v ninja; command -v pkg-config\nmeson setup build-libdrm upstream/libdrm-2.4.128 --prefix=/usr --libdir=lib --buildtype=release -Dintel=disabled -Dradeon=disabled -Damdgpu=disabled -Dnouveau=disabled -Dvmwgfx=disabled -Domap=disabled -Dexynos=disabled -Dfreedreno=disabled -Dtegra=disabled -Dvc4=disabled -Detnaviv=disabled -Dcairo-tests=disabled -Dman-pages=disabled -Dvalgrind=disabled -Dinstall-test-programs=False -Dudev=False -Dtests=False -Dauto_features=disabled"
+      "command -v meson; command -v ninja; command -v pkg-config\nmeson setup --wrap-mode=nofallback build-libdrm upstream/libdrm-2.4.128 --prefix=/usr --libdir=lib --buildtype=release -Dintel=disabled -Dradeon=disabled -Damdgpu=disabled -Dnouveau=disabled -Dvmwgfx=disabled -Domap=disabled -Dexynos=disabled -Dfreedreno=disabled -Dtegra=disabled -Dvc4=disabled -Detnaviv=disabled -Dcairo-tests=disabled -Dman-pages=disabled -Dvalgrind=disabled -Dinstall-test-programs=False -Dudev=False -Dtests=False -Dauto_features=disabled"
     ]
   ],
   "build": [
