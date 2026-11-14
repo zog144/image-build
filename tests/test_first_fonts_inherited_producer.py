@@ -16,12 +16,17 @@ def git_blob(path):
     return hashlib.sha1(b"blob " + str(len(payload)).encode() + b"\0" + payload).hexdigest()
 
 
-def test_original_october_pin_was_copied_byte_for_byte_not_regenerated():
-    pin = ROOT / "project/pins/2026-10-01/commit-pin.py"
-    assert git_blob(pin) == "ce222f7e0d7d29d018cbaae86e1c1ab3959865fc"
-    assert hashlib.sha256(pin.read_bytes()).hexdigest() == (
-        "d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
-    )
+def test_historical_october_pin_is_not_republished_in_public_producer():
+    # Public export preflight has always forbidden this private historical
+    # file. The exact original byte digest remains retained separately; it
+    # must not be re-created or smuggled into the successor source tree.
+    assert not (ROOT / "project/pins/2026-10-01/commit-pin.py").exists()
+    policy = (ROOT / "tools/public_candidate_preflight.py").read_text()
+    assert '"project/pins/2026-10-01/commit-pin.py"' in policy
+    assert "d3104eeddbbbe63fe3279c58ce9807f3b5250632ecdca4826abc028bcf923b36"
+    # The successor runtime cannot itself provide the protected pin path.
+    # Native source binding must explicitly address this independent hold.
+
 
 
 def test_exact_original_fonts_recipe_selection_is_unchanged():
