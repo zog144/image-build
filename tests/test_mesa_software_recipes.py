@@ -189,3 +189,43 @@ def test_real_inherited_zlib_source_stage_remains_frozen_input_not_host_fallback
         record=stage(name,"dependencies.py")
         assert "zlib-native-environment" in record["build"]
         assert "zlib-final" not in record["build"]
+
+
+@pytest.mark.parametrize("name", ("mesa", "mesa-demos", "libdrm", "libXxf86vm"))
+def test_selected_meson_dependencies_cannot_download_or_substitute_unpinned_wraps(name):
+    command = stage(name, "build.py")["configure"][0][-1]
+    assert "meson setup --wrap-mode=nofallback " in command
+    assert "apt " not in command and "dnf " not in command
+    assert "subprojects download" not in command
+    assert "curl " not in command and "wget " not in command
+
+
+def test_first_workspace_glx_pair_is_source_selected_and_packaged_without_host_tools():
+    demos = stage("mesa-demos", "build.py")
+    manifest = stage("mesa-demos", "produce-manifest.py")
+    assert "glxgears glxinfo" in demos["build"][0][-1]
+    assert "for tool in glxgears glxinfo" in demos["install"][0][-1]
+    assert '"$DESTDIR/usr/bin/$tool"' in demos["install"][0][-1]
+    assert {"usr/bin/glxgears", "usr/bin/glxinfo"} <= set(manifest["required"])
+    assert "usr/bin/glxgears" not in stage("mesa", "produce-manifest.py")["required"]
+    inspector = (PROJECT.parent / "tools/inspect_graphics_archives.py").read_text()
+    assert 'build_targets.get("src/xdemos/meson.build") != ["glxgears", "glxinfo"]' in inspector
+    assert "pinned mesa-demos Meson does not select both GLX smoke utilities" in inspector
+
+
+def test_existing_python_build_inputs_use_explicit_canonical_predecessors():
+    # The native hold is about admission/evidence, not a request for another
+    # Python installation, a second MarkupSafe, or runner-provided pip modules.
+    canonical = PROJECT / "package"
+    sources = stage("mako", "dependencies.py")
+    yaml = stage("pyyaml", "dependencies.py")
+    for name in ("python", "python-setuptools", "python-wheel",
+                 "python-installer", "python-packaging", "python-markupsafe"):
+        assert (canonical / name / "upstream.py").is_file(), name
+    assert "python-markupsafe-final" in sources["build"]
+    assert "python-markupsafe-final" in sources["runtime"]
+    assert "python-wheel-final" in yaml["build"]
+    assert "python-final" in yaml["build"]
+    assert "python-markupsafe-final" not in yaml["build"]
+    assert "mako-final" in stage("mesa", "dependencies.py")["build"]
+    assert "pyyaml-final" in stage("mesa", "dependencies.py")["build"]
