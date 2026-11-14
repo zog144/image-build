@@ -105,7 +105,8 @@ available on the native compiler Host.
 
 Mesa is *not* the source of `glxgears`. The separately pinned mesa-demos
 build selects only `glxgears` and `glxinfo`; these are installed under
-`usr/bin` with a two-file manifest, not taken from the Host. The original
+`usr/bin` with two required executable manifest entries and separate notice files,
+not taken from the Host. The original
 9.0.0 Meson file in the SHA-256-verified upstream archive is now required by
 source CI to name both selected targets; missing or renamed targets fail the
 source-inspection gate. LLVM installation now requires `usr/lib/libLLVM.so`,
