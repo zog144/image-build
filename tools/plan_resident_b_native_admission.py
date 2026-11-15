@@ -52,6 +52,26 @@ def _read_file(path, *, limit=None):
     return path.read_bytes()
 
 
+def _stable_file_sha256(path):
+    """Bounded-memory readback, refusing mutable or non-regular archive input."""
+    path = Path(path)
+    if path.is_symlink() or not path.is_file():
+        deny("canonical archive must be a regular non-linked file")
+    before = path.stat()
+    if before.st_nlink != 1 or before.st_size <= 0:
+        deny("canonical archive inode differs")
+    sha = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1048576), b""):
+            sha.update(chunk)
+    after = path.stat()
+    if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns,
+        before.st_ctime_ns) != (after.st_dev, after.st_ino, after.st_size,
+                              after.st_mtime_ns, after.st_ctime_ns):
+        deny("canonical archive changed during readback")
+    return "sha256:" + sha.hexdigest()
+
+
 def _selected_generation(project, generation):
     if (not isinstance(generation, str) or not re.fullmatch(r"[0-9a-f]{64}", generation)
             or Path(project).is_symlink()):
@@ -88,25 +108,25 @@ def _canonical_predecessor(state, selection, pinned):
     if not isinstance(archive, dict) or not HEX.fullmatch(archive.get("digest", "")):
         deny("canonical predecessor archive lacks a Build Record artifact digest")
     archive_path = p.root / "artifacts" / archive["digest"][7:]
-    raw = _read_file(archive_path)
+    archive_digest = _stable_file_sha256(archive_path)
     manifest_bytes = _read_file(selection.root.parent / "manifest.json", limit=50 * 1024 * 1024)
     receipts = selection.manifest.get("packages")
     if not isinstance(receipts, dict) or not receipts:
         deny("canonical predecessor package receipts missing")
     receipt_digest = digest(canonical(receipts))
-    if (digest(raw) != archive["digest"]
-            or digest(raw) != pinned["canonical_archive_sha256"]
+    if (archive_digest != archive["digest"]
+            or archive_digest != pinned["canonical_archive_sha256"]
             or digest(manifest_bytes) != pinned["canonical_manifest_sha256"]
             or receipt_digest != pinned["installed_package_receipts_sha256"]):
         deny("selected canonical archive, manifest or installed receipts differ")
     if (selection.root.parent / "manifest.json").read_bytes() != manifest_bytes
-            or archive_path.read_bytes() != raw):
+            or _stable_file_sha256(archive_path) != archive_digest):
         deny("canonical predecessor changed during readback")
     return {
         "generation": selection.generation,
         "generation_record": pointer["record"],
         "manifest_sha256": digest(manifest_bytes),
-        "archive_sha256": digest(raw),
+        "archive_sha256": archive_digest,
         "package_receipts_sha256": receipt_digest,
         "packages": receipts,
         "root_outputs": selection.manifest["outputs"],
