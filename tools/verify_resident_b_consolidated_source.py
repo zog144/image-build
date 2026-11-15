@@ -58,7 +58,7 @@ def verify(*, selection=None):
         "schema", "status", "lineage", "python_controllers", "source_tools",
         "controllers", "resident_utilities", "python_runtime_boundary",
         "retained_evidence", "native_authority", "remaining_native_checks",
-        "native_input", "package_closure",
+        "native_input", "package_closure", "native_admission",
     } or record["schema"] != "zog-resident-b-consolidated-source-selection-v1"
             or record["status"] != "SOURCE_CANDIDATE_PINNED_NATIVE_HOLD"):
         refuse("invalid source selection schema or false native promotion")
@@ -188,6 +188,8 @@ def verify(*, selection=None):
     native = module_from_spec(native_spec)
     native_spec.loader.exec_module(native)
     native_result = native.verify(selection=record)
+    if record["native_admission"]["authority"]["native_build_permitted"] is not False:
+        refuse("native receipt source attempted to grant compiler dispatch")
     if (native_result["stage_count"] != 29
             or native_result["native_packages_verified"] is not False
             or native_result["compiler_authorized"] is not False):
