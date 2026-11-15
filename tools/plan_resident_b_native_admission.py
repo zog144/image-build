@@ -172,6 +172,12 @@ def _stage_files_match(receipt, root_map):
             or not receipt["outputs"]
             or not isinstance(receipt.get("provenance"), dict)):
         return False
+    provenance = receipt["provenance"]
+    if (set(provenance) != {"output", "result"}
+            or any(type(provenance[k]) is not str
+                   or not HEX.fullmatch(provenance[k])
+                   for k in ("output", "result"))):
+        return False
     for item in receipt["outputs"]:
         if (not isinstance(item, dict)
                 or root_map.get(item.get("path")) != item):
