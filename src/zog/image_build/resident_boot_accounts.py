@@ -170,6 +170,31 @@ def _initialize_base(root, mode):
     staging_sync(root)
 
 
+def _clear_sysusers_transients(root, expected_overlay):
+    """Do not publish sysusers' temporary lock or backup account databases.
+
+    Only remove new files with these exact upstream temporary names. A file
+    inherited from the verified parent/overlay is never silently removed.
+    """
+    inherited = {r["path"] for r in expected_overlay}
+    removed = []
+    for relative in ("etc/.pwd.lock", "etc/passwd-", "etc/group-",
+                     "etc/shadow-", "etc/gshadow-"):
+        target = root / relative
+        if not target.exists() and not target.is_symlink():
+            continue
+        if relative in inherited:
+            continue
+        info = target.lstat()
+        if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)
+                or info.st_nlink != 1 or info.st_uid != os.geteuid()
+                or stat.S_IMODE(info.st_mode) & 0o022):
+            raise ImageBuildError("unreviewed sysusers transient refused: " + relative)
+        target.unlink()
+        removed.append(relative)
+    return removed
+
+
 def _normalize_unpublished_shadow_modes(root):
     """Make newly generated mode-0000 shadow files owner-readable for hashing.
 
@@ -285,6 +310,7 @@ def materialize(root, work, composition, binding):
                 )):
             raise ImageBuildError("retained account preparation changed")
         base_mode = prepared["base"]["mode"]
+        _clear_sysusers_transients(root, composition["expected_outputs"])
         _normalize_unpublished_shadow_modes(root)
         _delta(composition["expected_outputs"], staging_inventory(root),
                base_mode=base_mode)
@@ -308,6 +334,7 @@ def materialize(root, work, composition, binding):
             or materialized["after"]["group_sha256"] !=
             verified["before"]["group_sha256"]):
         raise ImageBuildError("resident account database changed after materialization")
+    _clear_sysusers_transients(root, composition["expected_outputs"])
     _normalize_unpublished_shadow_modes(root)
     staging_sync(root)
     outputs = staging_inventory(root)
