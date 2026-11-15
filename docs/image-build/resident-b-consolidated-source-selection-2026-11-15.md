@@ -76,3 +76,66 @@ or hardware GPU requirement is introduced.
 No package compilation, EC2 change, Task C admission, SSM/SQS dispatch,
 rootfs publication, Resident B boot, or service enablement occurred during this
 source consolidation.
+
+
+## Intended native input generation and complete package-source closure
+
+**Source-selected input:** the already published and targeted-verified immutable
+Boot A successor `273de2a04a8a0b8d4db3005bca078639f3c2fdcd6f9e24a9619d2b0ca6947aab`,
+producer `68d6397ca20c4651df8f13c8a840dc8f77d55034`, retained
+parent `45a81ec3ea473bfa397e546b5c0ec1ae306bf00cb864eaa9a86d94c13c623f2e`.
+It is the *same* exact generation selected in
+[host-install PR #39](https://github.com/zog144/host-install/pull/39)
+at reviewed commit `c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a`.
+Its source handoff reports a 40,974-entry inventory and 27 provenance records.
+The failed predecessor `5af34ec67cbfdcd1e7936bf70e3cf2f5c6945c7e3de5f95993918325f6e29c44`
+and its failed native switch-root result remain untouched.
+
+**Important evidence boundary:** selecting the corrected Boot A `kind=image`
+generation as Resident B's *intended native build predecessor* neither
+verifies the actual package contents of that generation nor proves a successful
+resident boot. Its exact canonical archive SHA-256 and installed package
+receipt are not available in this source handoff, so those slots stay `null`
+in the selection. The image-build Work owner must read back exact retained
+generation/archive/installed contents before using it. No new acceptance
+certificate, installation source or authority mechanism was invented.
+
+**Package graph:** the same selection now fixes 21 top-level package roots,
+covering the separate Python 3.12 controller stack and incumbent Python 3.15
+utilities, OpenSSL/SQLite, controller source/wheels, CA certificates, D-Bus,
+systemd networking and iproute2. Existing
+`project/package/*/stages/final/dependencies.py` are recursively evaluated,
+including the real build-only `systemd-test-environment` and
+`pyelftools-build` definitions. This resolves to **29 distinct source
+stages**, pinned by
+`sha256:4b99171aadafa0e094115045736c75e2e0642c46b85f40f9f9d813e2fe85f236`.
+
+The 29 source stage names, in canonical sorted order, are:
+`box-control-final`, `ca-certificates-final`, `dbus-final`,
+`expat-final`, `gdbm-final`, `host-discover-final`,
+`host-identify-final`, `host-install-final`, `iproute2-final`,
+`libffi-final`, `openssl-final`, `pkgconf-final`,
+`pyelftools-build`, `python-cryptography-final`, `python-final`,
+`python-resident312-final`, `readline-final`,
+`resident312-dbus-next-final`, `resident312-flit-core-final`,
+`resident312-image-build-final`, `resident312-installer-final`,
+`resident312-packaging-final`, `resident312-setuptools-final`,
+`resident312-wheel-final`, `root-control-final`, `sqlite-final`,
+`systemd-final`, `systemd-test-environment`, `tzdata-final`.
+
+**This is a source dependency closure, not a fabricated native package
+closure.** The native owner must compare the actual predecessor generation's
+installed package records and exact bytes against this graph, decide which
+outputs are already present and which source stages require new builds, and
+check installed ELF/wheel/CA/STATE/identity closure. There is no basis in
+the source-only record to mark an edge as an accepted inherited package.
+Both `predecessor_package_receipts_verified` and
+`package_binary_closure_verified` remain false; no native build or
+activation is authorized.
+
+`tools/verify_resident_b_native_input_closure.py` is read-only and checks
+the exact source generation, upstream host-install plan (when supplied),
+complete graph and its digest; `tests/test_resident_b_native_input_closure.py`
+denies substituted generations, dishonest receipt claims, omitted package
+stages, a missing predecessor and cycles. The source-selection CI checks the
+exact host-install PR #39 checkout alongside the original Resident B packages.
