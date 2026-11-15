@@ -6,12 +6,14 @@ the live adapter reuses compiler_base_acceptance.resolve in the native Host.
 import copy
 import importlib.util
 import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
 SCRIPT = ROOT / "tools/plan_resident_b_native_admission.py"
 spec = importlib.util.spec_from_file_location("resident_b_admission", SCRIPT)
 planner = importlib.util.module_from_spec(spec)
