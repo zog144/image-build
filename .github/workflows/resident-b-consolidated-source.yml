@@ -48,9 +48,19 @@ jobs:
           ref: d9dfd6c02a5a96750f1213bf663cdceab72f1efd
           path: companions/root-control
           persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/host-install
+          ref: c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a
+          path: companions/host-install-boot-a-successor
+          persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: ${{ matrix.python }}
+      - name: Check selected Boot A successor and recursively measure package stage graph
+        run: |
+          test "$(git -C companions/host-install-boot-a-successor rev-parse HEAD)" = c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a
+          python tools/verify_resident_b_native_input_closure.py --measure --host-install-plan companions/host-install-boot-a-successor/examples/resident-boot-a-successor-2026-10-31/plan.json
       - name: Check combined historical source ancestry and new exact controller pins
         run: |
           git merge-base --is-ancestor 02fdd2f6b374322dd902ec58b982bbbf64d4b013 HEAD
