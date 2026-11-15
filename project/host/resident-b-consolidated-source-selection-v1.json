@@ -161,5 +161,39 @@
     "predecessor_package_receipts_verified": false,
     "package_binary_closure_verified": false,
     "source_graph_status": "SOURCE_GRAPH_CLOSED_NATIVE_INPUT_RECEIPTS_HELD"
+  },
+  "native_admission": {
+    "schema": "zog-resident-b-native-receipt-admission-v1",
+    "status": "CORRECTED_BOOT_A_NOT_YET_PUBLISHED_HOLD",
+    "compiler": {
+      "generation": "3805294fc8ccd9589aa75d3a6c5cb9367b7baf84b6ce131a84adafed7d34f9dc",
+      "original_receipt_sha256": "sha256:a205c07bde4e6cf61e48061affd9a0b40c3a101e18dff67a9871995a3a2afafc",
+      "acceptance_contract": "image-build-compiler-base-acceptance-v1",
+      "binding_contract": "image-build-compiler-base-binding-v1",
+      "reader_source_revision": "1616f192ef9d8964a8f37f32a86c69c0242a213c",
+      "reader_source_blob_sha1": "3eb562bbf2460fb95af0780a079cb2b058650f80",
+      "project_id": null,
+      "authenticated": false
+    },
+    "corrected_predecessor": {
+      "historical_generation": "273de2a04a8a0b8d4db3005bca078639f3c2fdcd6f9e24a9619d2b0ca6947aab",
+      "generation": null,
+      "source_revision": null,
+      "canonical_manifest_sha256": null,
+      "canonical_archive_sha256": null,
+      "installed_package_receipts_sha256": null,
+      "accepted": false
+    },
+    "package_decisions": {
+      "graph_stage_count": 29,
+      "present": null,
+      "missing": null,
+      "complete_native_closure": false
+    },
+    "authority": {
+      "native_build_permitted": false,
+      "service_activation_permitted": false,
+      "source_only": true
+    }
   }
 }
