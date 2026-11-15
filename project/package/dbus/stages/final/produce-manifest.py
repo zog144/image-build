@@ -3,4 +3,5 @@
  'required': ['usr/bin/dbus-daemon',
               'usr/bin/dbus-run-session',
               'usr/lib/libdbus-1.so',
-              'usr/lib/systemd/system/dbus.service']}
+              'usr/lib/systemd/system/dbus.service',
+              'usr/lib/sysusers.d/dbus.conf']}
