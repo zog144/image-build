@@ -41,9 +41,16 @@ def canonical(value):
 
 
 def read_stage(stage):
-    if not isinstance(stage, str) or not stage.endswith("-final"):
+    if not isinstance(stage, str):
         reject("invalid stage selector")
-    file = PACKAGES / stage[:-6] / "stages/final/dependencies.py"
+    if stage.endswith("-final"):
+        file = PACKAGES / stage[:-6] / "stages/final/dependencies.py"
+    elif stage.endswith("-build"):
+        file = PACKAGES / "build-environment/stages" / stage[:-6] / "dependencies.py"
+    elif stage.endswith("-environment"):
+        file = PACKAGES / "build-environment/stages" / stage[:-12] / "dependencies.py"
+    else:
+        reject("invalid stage selector: " + stage)
     if not file.is_file():
         reject("source dependency definition missing: " + stage)
     try:
@@ -69,7 +76,8 @@ def closure(roots=ROOT_STAGES, *, reader=read_stage):
         for kind in ("build", "runtime"):
             items = edges[kind]
             if (type(items) is not list or len(items) != len(set(items)) or
-                any(type(x) is not str or not x.endswith("-final") or x == stage
+                any(type(x) is not str or not x.endswith(
+                    ("-final", "-build", "-environment")) or x == stage
                     for x in items)):
                 reject("invalid or duplicate source dependency edges: " + stage)
             record[kind] = sorted(items)
