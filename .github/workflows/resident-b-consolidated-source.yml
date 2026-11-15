@@ -60,7 +60,7 @@ jobs:
       - name: Check selected Boot A successor and recursively measure package stage graph
         run: |
           test "$(git -C companions/host-install-boot-a-successor rev-parse HEAD)" = c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a
-          python tools/verify_resident_b_native_input_closure.py --measure --host-install-plan companions/host-install-boot-a-successor/examples/resident-boot-a-successor-2026-10-31/plan.json
+          python tools/verify_resident_b_native_input_closure.py --host-install-plan companions/host-install-boot-a-successor/examples/resident-boot-a-successor-2026-10-31/plan.json
       - name: Check combined historical source ancestry and new exact controller pins
         run: |
           git merge-base --is-ancestor 02fdd2f6b374322dd902ec58b982bbbf64d4b013 HEAD
@@ -69,6 +69,7 @@ jobs:
           python tools/verify_resident_b_controller_source_stages.py
           python tools/verify_resident_b_combined_source.py
           python tools/verify_resident_b_consolidated_source.py
+          python tools/verify_resident_b_native_input_closure.py
           python tools/verify_resident_b_source_prerequisites.py
       - name: Check newer root/box upstream interfaces and exact installed-source security
         run: |
@@ -96,6 +97,7 @@ jobs:
           python -m pip install 'pytest==8.4.2' 'cryptography==46.0.3'
           python -m pytest -q -rs \
             tests/test_resident_b_consolidated_source.py \
+            tests/test_resident_b_native_input_closure.py \
             tests/test_python312_independent_source_review.py \
             tests/test_python312_resident_candidate.py \
             tests/test_resident_b_source_prerequisites.py \
