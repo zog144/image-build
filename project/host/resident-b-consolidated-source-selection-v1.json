@@ -1,0 +1,113 @@
+{
+  "schema": "zog-resident-b-consolidated-source-selection-v1",
+  "status": "SOURCE_CANDIDATE_PINNED_NATIVE_HOLD",
+  "lineage": {
+    "source_branch_base_commit": "0f90f125e79214e17b6dd2384b5f1c669a1e3cc0",
+    "reuses": [
+      "image-build PR #12",
+      "image-build PR #14",
+      "image-build PR #15",
+      "image-build PR #16"
+    ],
+    "duplicate_package_stages": []
+  },
+  "python_controllers": {
+    "package": "python-resident312-final",
+    "version": "3.12.16",
+    "expected_soabi": "cpython-312-x86_64-linux-gnu",
+    "build_dependencies": [
+      "openssl-final",
+      "sqlite-final",
+      "libffi-final",
+      "expat-final",
+      "gdbm-final",
+      "pkgconf-final"
+    ],
+    "required_extensions": [
+      "_ssl",
+      "_sqlite3",
+      "_hashlib"
+    ],
+    "replaces_python_final": false
+  },
+  "source_tools": [
+    "resident312-flit-core-final",
+    "resident312-installer-final",
+    "resident312-packaging-final",
+    "resident312-wheel-final",
+    "resident312-setuptools-final",
+    "resident312-dbus-next-final",
+    "resident312-image-build-final"
+  ],
+  "controllers": {
+    "box-control": {
+      "stage": "box-control-final",
+      "revision": "c886e7a90bb4ea74e771a6c5dcefaa2069539ec7",
+      "archive_sha256": "2a2749f9c223fb947695634008c5e37cafc49248c19f84262f60e23c7575a121",
+      "version": "0.1.0",
+      "source_pr": 21,
+      "entry_point": "usr/bin/box-control",
+      "wheel_metadata": [
+        "METADATA",
+        "RECORD"
+      ],
+      "mode": "one-shot"
+    },
+    "root-control": {
+      "stage": "root-control-final",
+      "revision": "d9dfd6c02a5a96750f1213bf663cdceab72f1efd",
+      "archive_sha256": "8be83a4d9e50f7165ea08f70b8443cad4553b079fa058d29c3544766ebca5de1",
+      "version": "0.1.0",
+      "source_pr": 51,
+      "entry_point": "usr/bin/root-control",
+      "wheel_metadata": [
+        "METADATA",
+        "RECORD"
+      ],
+      "mode": "disabled-systemd-unit"
+    }
+  },
+  "resident_utilities": {
+    "systemd-final": [
+      "usr/lib/systemd/systemd-networkd",
+      "usr/lib/systemd/systemd-resolved",
+      "usr/bin/networkctl",
+      "usr/bin/resolvectl"
+    ],
+    "host-install-final": [
+      "usr/bin/host-install"
+    ],
+    "host-discover-final": [
+      "usr/bin/host-discover",
+      "usr/bin/host-discover-recovery",
+      "usr/bin/host-discover-supervisor"
+    ]
+  },
+  "python_runtime_boundary": {
+    "controller_wheels": "python-resident312-final",
+    "existing_host_install_and_discover_recipes": "python-final (3.15 source); existing manifests not rewritten to 3.12",
+    "verify_both_installed_abi_closures": true
+  },
+  "retained_evidence": {
+    "original_controller_sources_preserved_as_historical_review": true,
+    "compiler_base_receipt_replaced": false,
+    "boot_a_selection_changed": false
+  },
+  "native_authority": {
+    "accepted_generation": null,
+    "accepted_state": null,
+    "native_generation_receipt": null,
+    "native_compilation_permitted": false,
+    "resident_service_activation_permitted": false,
+    "redistribution_authorized": false
+  },
+  "remaining_native_checks": [
+    "Accepted input rootfs generation and immutable predecessor closure",
+    "Compiled Python3.12 and both SSL/SQLite ELF extensions from selected libraries",
+    "Selected Python3.15 host app CLI shebang/import linkage verified separately",
+    "Full controller wheel METADATA, RECORD, scripts, notices and dependencies",
+    "Exact installed root-control systemd unit, STATE mount and protected socket",
+    "Native issuer, Task C and inherited finite-build runtime integration",
+    "Independent native rootfs/STATE physical observation and explicit release approval"
+  ]
+}
