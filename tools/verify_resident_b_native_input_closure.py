@@ -8,6 +8,7 @@ import argparse
 import ast
 import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -125,6 +126,69 @@ def evidence(native):
         reject("native source selection fabricates installed/booted evidence")
 
 
+def validate_native_admission(value):
+    """A source pin is not native acceptance; corrected generation unknown yet."""
+    if type(value) is not dict or set(value) != {
+        "schema", "status", "compiler", "corrected_predecessor",
+        "package_decisions", "authority",
+    }:
+        reject("native compiler/predecessor receipt admission schema differs")
+    if value["schema"] != "zog-resident-b-native-receipt-admission-v1":
+        reject("unsupported native receipt admission selection")
+    c = value["compiler"]
+    if (type(c) is not dict or c != {
+        "generation": "3805294fc8ccd9589aa75d3a6c5cb9367b7baf84b6ce131a84adafed7d34f9dc",
+        "original_receipt_sha256": "sha256:a205c07bde4e6cf61e48061affd9a0b40c3a101e18dff67a9871995a3a2afafc",
+        "acceptance_contract": "image-build-compiler-base-acceptance-v1",
+        "binding_contract": "image-build-compiler-base-binding-v1",
+        "reader_source_revision": "1616f192ef9d8964a8f37f32a86c69c0242a213c",
+        "reader_source_blob_sha1": "3eb562bbf2460fb95af0780a079cb2b058650f80",
+        "project_id": None,
+        "authenticated": False,
+    }):
+        reject("original compiler Project/receipt or reader source was substituted")
+    p = value["corrected_predecessor"]
+    if type(p) is not dict or set(p) != {
+        "historical_generation", "generation", "source_revision",
+        "canonical_manifest_sha256", "canonical_archive_sha256",
+        "installed_package_receipts_sha256", "accepted",
+    } or p["historical_generation"] != GENERATION or p["accepted"] is not False:
+        reject("corrected Boot A predecessor source fields differ")
+    a = value["authority"]
+    if a != {
+        "native_build_permitted": False,
+        "service_activation_permitted": False,
+        "source_only": True,
+    }:
+        reject("native admission source grants an unsupported operation")
+    d = value["package_decisions"]
+    if (type(d) is not dict or set(d) != {
+        "graph_stage_count", "present", "missing", "complete_native_closure",
+    } or d["graph_stage_count"] != 29 or d["present"] is not None
+        or d["missing"] is not None or d["complete_native_closure"] is not False):
+        reject("source graph fabricated installed-package dispositions")
+    if value["status"] == "CORRECTED_BOOT_A_NOT_YET_PUBLISHED_HOLD":
+        if any(p[field] is not None for field in (
+            "generation", "source_revision", "canonical_manifest_sha256",
+            "canonical_archive_sha256", "installed_package_receipts_sha256"
+        )):
+            reject("unpublished corrected Boot A generation cannot have native hashes")
+    elif value["status"] == "CORRECTED_BOOT_A_SOURCE_SELECTED_READBACK_REQUIRED":
+        if (type(p["generation"]) is not str or not re.fullmatch(r"[0-9a-f]{64}", p["generation"])
+                or p["generation"] in (GENERATION, FAILED)
+                or type(p["source_revision"]) is not str
+                or not re.fullmatch(r"[0-9a-f]{40}", p["source_revision"])
+                or any(type(p[field]) is not str
+                       or not re.fullmatch(r"sha256:[0-9a-f]{64}", p[field])
+                       for field in ("canonical_manifest_sha256",
+                                     "canonical_archive_sha256",
+                                     "installed_package_receipts_sha256"))):
+            reject("corrected Boot A source selection is not fully and distinctly pinned")
+    else:
+        reject("unknown corrected Boot A native readback state")
+    return value
+
+
 def check_original_plan(plan):
     """Compare the actual host-install PR39 source selection, not old failed plan."""
     try:
@@ -153,6 +217,7 @@ def check_original_plan(plan):
 def verify(*, selection=None, reader=read_stage, allow_unpinned=False):
     data = json.loads(SELECTION.read_text()) if selection is None else selection
     evidence(data.get("native_input"))
+    validate_native_admission(data.get("native_admission"))
     p = data.get("package_closure")
     if type(p) is not dict or set(p) != {
         "policy", "source_roots", "stage_scope", "closure_stage_count",
