@@ -170,6 +170,36 @@ def _initialize_base(root, mode):
     staging_sync(root)
 
 
+def _normalize_unpublished_shadow_modes(root):
+    """Make newly generated mode-0000 shadow files owner-readable for hashing.
+
+    The final published rootfs normalizes ownership to root; 0400 means only
+    root can read the shadow database. This adjustment is limited to the two
+    reviewed files of an unpublished private staging tree and never widens
+    access to group/other. An existing readable mode is retained unchanged.
+    """
+    normalized = []
+    for relative in ("etc/shadow", "etc/gshadow"):
+        path = root / relative
+        if not path.exists() and not path.is_symlink():
+            continue
+        info = path.lstat()
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                or stat.S_ISLNK(info.st_mode)):
+            raise ImageBuildError("unsafe generated shadow database: " + relative)
+        mode = stat.S_IMODE(info.st_mode)
+        if mode == 0:
+            if info.st_uid != os.geteuid():
+                raise ImageBuildError(
+                    "root-owned mode-0000 shadow requires root publication owner: " + relative
+                )
+            path.chmod(0o400)
+            normalized.append(relative)
+        elif not mode & 0o400:
+            raise ImageBuildError("unreadable shadow mode requires separate review: " + relative)
+    return normalized
+
+
 def _delta(before, after, *, base_mode):
     """Only reviewed account DB files, plus a missing /etc directory, may vary."""
     previous = {row["path"]: row for row in before}
@@ -255,6 +285,7 @@ def materialize(root, work, composition, binding):
                 )):
             raise ImageBuildError("retained account preparation changed")
         base_mode = prepared["base"]["mode"]
+        _normalize_unpublished_shadow_modes(root)
         _delta(composition["expected_outputs"], staging_inventory(root),
                base_mode=base_mode)
     else:
@@ -277,6 +308,7 @@ def materialize(root, work, composition, binding):
             or materialized["after"]["group_sha256"] !=
             verified["before"]["group_sha256"]):
         raise ImageBuildError("resident account database changed after materialization")
+    _normalize_unpublished_shadow_modes(root)
     staging_sync(root)
     outputs = staging_inventory(root)
     delta = _delta(composition["expected_outputs"], outputs, base_mode=base_mode)
