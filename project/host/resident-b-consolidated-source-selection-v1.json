@@ -109,5 +109,57 @@
     "Exact installed root-control systemd unit, STATE mount and protected socket",
     "Native issuer, Task C and inherited finite-build runtime integration",
     "Independent native rootfs/STATE physical observation and explicit release approval"
-  ]
+  ],
+  "native_input": {
+    "generation": "273de2a04a8a0b8d4db3005bca078639f3c2fdcd6f9e24a9619d2b0ca6947aab",
+    "kind": "image",
+    "role": "resident-b-intended-build-predecessor",
+    "producer_source_revision": "68d6397ca20c4651df8f13c8a840dc8f77d55034",
+    "retained_parent_generation": "45a81ec3ea473bfa397e546b5c0ec1ae306bf00cb864eaa9a86d94c13c623f2e",
+    "rejected_predecessor": "5af34ec67cbfdcd1e7936bf70e3cf2f5c6945c7e3de5f95993918325f6e29c44",
+    "source_plan": {
+      "repository": "zog144/host-install",
+      "reviewed_commit": "c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a",
+      "path": "examples/resident-boot-a-successor-2026-10-31/plan.json"
+    },
+    "source_verification": "published-source-and-installed-verification-passed",
+    "inventory_entries": 40974,
+    "provenance_records": 27,
+    "canonical_archive_sha256": null,
+    "installed_package_receipt_sha256": null,
+    "package_inventory_verified_against_predecessor": false,
+    "booted_resident_runtime_verified": false
+  },
+  "package_closure": {
+    "policy": "recursive-final-stage-dependencies-v1",
+    "source_roots": [
+      "python-final",
+      "python-cryptography-final",
+      "host-identify-final",
+      "host-install-final",
+      "host-discover-final",
+      "python-resident312-final",
+      "resident312-flit-core-final",
+      "resident312-installer-final",
+      "resident312-packaging-final",
+      "resident312-wheel-final",
+      "resident312-setuptools-final",
+      "resident312-dbus-next-final",
+      "resident312-image-build-final",
+      "box-control-final",
+      "root-control-final",
+      "openssl-final",
+      "sqlite-final",
+      "ca-certificates-final",
+      "dbus-final",
+      "iproute2-final",
+      "systemd-final"
+    ],
+    "stage_scope": "candidate-from-existing-recipes; verify-predecessor-outputs-or-build-with-reviewed-source; no-inferred-installed-stage",
+    "closure_stage_count": null,
+    "closure_graph_sha256": null,
+    "predecessor_package_receipts_verified": false,
+    "package_binary_closure_verified": false,
+    "source_graph_status": "NEEDS_FIRST_SOURCE_MEASUREMENT"
+  }
 }
