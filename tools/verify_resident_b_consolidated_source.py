@@ -58,6 +58,7 @@ def verify(*, selection=None):
         "schema", "status", "lineage", "python_controllers", "source_tools",
         "controllers", "resident_utilities", "python_runtime_boundary",
         "retained_evidence", "native_authority", "remaining_native_checks",
+        "native_input", "package_closure",
     } or record["schema"] != "zog-resident-b-consolidated-source-selection-v1"
             or record["status"] != "SOURCE_CANDIDATE_PINNED_NATIVE_HOLD"):
         refuse("invalid source selection schema or false native promotion")
@@ -180,6 +181,17 @@ def verify(*, selection=None):
     if (not isinstance(remaining, list) or len(remaining) != 7
             or any(not isinstance(x, str) or len(x) < 25 for x in remaining)):
         refuse("native acceptance obligations omitted")
+    # The exact input generation and entire transitive stage graph are part of
+    # this same selection. A source-only package list is insufficient.
+    closure_path = ROOT / "tools/verify_resident_b_native_input_closure.py"
+    native_spec = spec_from_file_location("resident_b_native_input_closure", closure_path)
+    native = module_from_spec(native_spec)
+    native_spec.loader.exec_module(native)
+    native_result = native.verify(selection=record)
+    if (native_result["stage_count"] != 29
+            or native_result["native_packages_verified"] is not False
+            or native_result["compiler_authorized"] is not False):
+        refuse("source package closure falsely admitted for native use")
     return {
         "source_selection": "CONSOLIDATED_CP312_AND_CURRENT_CONTROLLERS",
         "python3_12": "SOURCE_REVIEWED_NATIVE_UNACCEPTED",
