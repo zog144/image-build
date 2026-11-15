@@ -1,0 +1,25 @@
+name: Resident B consolidated source selection (no native build)
+on:
+  push:
+    branches: [regular/resident-b-consolidated-cp312-controllers-20261115]
+  pull_request:
+    branches: [review/resident-b-native-evidence-integration-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-controller-archives:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Independently measure newer original controller tarball SHA-256 and notices
+        run: python tools/inspect_resident_b_consolidated_controller_archives.py
+      - name: Source-only hold
+        if: always()
+        run: echo "No compiler, rootfs publication, native boot, runtime service, user provisioning or redistribution approval." >> "$GITHUB_STEP_SUMMARY"
