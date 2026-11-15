@@ -28,8 +28,8 @@ REQUIRED_CONTROLLERS=("box-control","root-control")
 MODULES=("_ssl","_sqlite3","_hashlib")
 SHA=re.compile(r"[a-f0-9]{64}\Z")
 HEX128=re.compile(r"[0-9a-f]{128}\Z")
-SOURCE_PINS={"box-control":"b513a9bde79135c7569adc7cadb4d45a163c7841",
-             "root-control":"0c217182d25f05b9cc0f7528ee614bb5669370d3"}
+SOURCE_PINS={"box-control":"c886e7a90bb4ea74e771a6c5dcefaa2069539ec7",
+             "root-control":"d9dfd6c02a5a96750f1213bf663cdceab72f1efd"}
 SOURCE_EXPECTED=Path(__file__).resolve().parents[1]/"project/host/resident-b-pr14-pr15-combined-source-review.json"
 
 class EvidenceDenied(ValueError): pass
