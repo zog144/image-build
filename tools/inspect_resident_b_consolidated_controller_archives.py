@@ -38,6 +38,7 @@ def inspect_all(inspector=original.inspect):
     results = []
     for name, (commit, marker) in SELECTED.items():
         observed = inspector(name, commit, marker)
+        print("ZOG_RESIDENT_B_SUCCESSOR_MEASURED", json.dumps(observed, sort_keys=True), flush=True)
         for field, expected in UNCHANGED_METADATA[name].items():
             if observed[field] != expected:
                 raise RuntimeError(f"{name} changed upstream original {field}")
