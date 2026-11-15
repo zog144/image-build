@@ -29,7 +29,7 @@ UNCHANGED_METADATA = {
     "root-control": {
         "pyproject_sha256": "f42d1b9458536b4b20aef183d438267b0790bb8fc9238afcc10b9a1bc62b1c96",
         "license_sha256": "421a457ded4d2bf4b853c5ce211f74797292b2ef2f82bc7245304956fb7cf68f",
-        "third_party_notice_sha256": "b3aa6c652c70db0faecdd42d35723c62bc61282dc53d73f637f26e",
+        "third_party_notice_sha256": "b3aa6c652c70db0faecdd42d35723c62bc61282dc53a2c1d19d53d73f637f26e",
     },
 }
 
