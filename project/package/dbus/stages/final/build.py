@@ -31,6 +31,8 @@
               '-c',
               'cd upstream/dbus-1.16.2\n'
               'DESTDIR="$DESTDIR" meson install -C build --no-rebuild\n'
+              'test -f "$DESTDIR/usr/lib/sysusers.d/dbus.conf"\n'
+              'grep -Eq "^u[[:space:]]+messagebus[[:space:]]" "$DESTDIR/usr/lib/sysusers.d/dbus.conf"\n'
               'install -d "$DESTDIR/usr/share/licenses/dbus"\n'
               'cp -a COPYING LICENSES "$DESTDIR/usr/share/licenses/dbus/"\n'
               '# Machine identity and account creation belong to host-install.\n'
