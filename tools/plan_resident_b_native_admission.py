@@ -119,7 +119,7 @@ def _canonical_predecessor(state, selection, pinned):
             or digest(manifest_bytes) != pinned["canonical_manifest_sha256"]
             or receipt_digest != pinned["installed_package_receipts_sha256"]):
         deny("selected canonical archive, manifest or installed receipts differ")
-    if (selection.root.parent / "manifest.json").read_bytes() != manifest_bytes
+    if ((selection.root.parent / "manifest.json").read_bytes() != manifest_bytes
             or _stable_file_sha256(archive_path) != archive_digest):
         deny("canonical predecessor changed during readback")
     return {
