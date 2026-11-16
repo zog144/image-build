@@ -31,9 +31,9 @@ def deny(message):
     raise BuildHeld("nonresident Certbot aggregate build HOLD: " + message)
 
 
-def _run(args, *, cwd=None):
+def _run(args, *, cwd=None, env=None):
     try:
-        subprocess.run([str(x) for x in args], cwd=cwd, timeout=600, check=True)
+        subprocess.run([str(x) for x in args], cwd=cwd, env=env, timeout=600, check=True)
     except (OSError, subprocess.SubprocessError) as exc:
         raise BuildHeld("selected build or installation command failed: " + repr(args)) from exc
 
@@ -83,7 +83,7 @@ def _selection():
     x = json.loads(SELECTION.read_text())
     selected = installed._check_selection(json.loads(installed.PIN.read_text()))
     if (set(x) != {"schema", "status", "distribution", "version",
-                   "interpreter", "base", "controllers", "operations", "native"}
+                   "interpreter", "base", "controllers", "operations", "native", "reproducibility"}
             or x["schema"] != "zog-nonresident-certbot-aggregate-build-v1"
             or x["status"] != "REVIEWED_SOURCE_BUILD_UNACCEPTED_NATIVE_INSTALL"
             or x["distribution"] != "zog" or x["version"] != "0.1.1.dev20261116"
@@ -104,6 +104,11 @@ def _selection():
                     "README.md": "ed02c306333a1cc9194948544d059f2008166dc6",
                 },
                 "component_count": 14,
+            }
+            or x["reproducibility"] != {
+                "source_date_epoch": 1791740336,
+                "normalize_source_timestamps": True,
+                "require_independent_second_build": True,
             }
             or x["operations"] != {
                 "base_source": "checked_out_pinned_zog",
@@ -207,6 +212,15 @@ def prepare(base, box, root, workspace):
             deny("aggregate metadata, entry points or version differ")
         if any(x in raw for x in ('"box-control=="', '"root-control=="')):
             deny("aggregate dependencies on superseded component distributions")
+        # Normalize every packaged source timestamp to the selected release's
+        # original commit time, even if source checkouts were created now.
+        epoch = selection["reproducibility"]["source_date_epoch"]
+        for source_entry in sorted(stage.rglob("*"), reverse=True):
+            if source_entry.is_symlink():
+                deny("symlinked aggregate source in staged candidate")
+            if source_entry.is_file() or source_entry.is_dir():
+                os.utime(source_entry, (epoch, epoch))
+        os.utime(stage, (epoch, epoch))
     except BaseException:
         shutil.rmtree(workspace)
         raise
@@ -217,8 +231,12 @@ def build(base, box, root, workspace):
     stage, selection = prepare(base, box, root, workspace)
     wheel_dir = workspace / "wheel"
     wheel_dir.mkdir()
+    build_environment = dict(os.environ)
+    build_environment["SOURCE_DATE_EPOCH"] = str(
+        selection["reproducibility"]["source_date_epoch"])
+    build_environment["PYTHONHASHSEED"] = "0"
     _run([sys.executable, "-m", "build", "--no-isolation", "--wheel",
-          "--outdir", wheel_dir, stage])
+          "--outdir", wheel_dir, stage], env=build_environment)
     wheels = list(wheel_dir.glob("*.whl"))
     if len(wheels) != 1:
         deny("aggregate builder produced anything but one wheel")
