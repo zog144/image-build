@@ -87,8 +87,17 @@ def verify(*, selection=None):
         "native_activation_permitted": False,
     }:
         refuse("aggregate source evidence or native hold changed")
-    from tools.verify_resident_b_aggregate_installed import _check_selection, PIN
-    source_pins = _check_selection(json.loads(PIN.read_text()))
+    pin_path = ROOT / aggregate["source_pin_path"]
+    pins_spec = importlib.util.spec_from_file_location(
+        "resident_b_aggregate_installed_pins",
+        ROOT / "tools/verify_resident_b_aggregate_installed.py",
+    )
+    pins_verifier = importlib.util.module_from_spec(pins_spec)
+    pins_spec.loader.exec_module(pins_verifier)
+    try:
+        source_pins = pins_verifier._check_selection(json.loads(pin_path.read_text()))
+    except ValueError as exc:
+        refuse("aggregate source controller pins rejected: " + str(exc))
     if sum(len(item["files"]) for item in source_pins["controllers"].values()) != 78:
         refuse("source-pinned controller aggregate module inventory changed")
     native = record["native_authority"]
