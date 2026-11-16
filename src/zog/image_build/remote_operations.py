@@ -754,7 +754,7 @@ class RemoteOperations:
         record = snapshot_builder.prepare_pipeline(
             mode,
             selection,
-            owner=self._owner(request),
+            owner={**self._owner(request), "recipe_snapshot": snapshot.snapshot},
             **arguments,
         )
         self._write_binding(
