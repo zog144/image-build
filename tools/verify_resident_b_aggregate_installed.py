@@ -127,9 +127,9 @@ def _check_selection(pins):
             or pins["schema"] != "zog-resident-b-aggregate-installed-source-pins-v1"
             or pins["status"] != "SOURCE_PINNED_AGGREGATE_NOT_YET_PRODUCED"
             or pins["distribution"] != {
-                "name": "zog", "version": "0.1.0", "python": "3.12",
+                "name": "zog", "version": "0.1.1.dev20261116", "python": "3.12",
                 "install_prefix": "usr/lib/python3.12/site-packages",
-                "dist_info": "zog-0.1.0.dist-info",
+                "dist_info": "zog-0.1.1.dev20261116.dist-info",
                 "required_entry_points": {
                     "box-control": "zog.box_control.cli:main",
                     "root-control": "zog.root_control.daemon:main",
@@ -209,11 +209,11 @@ def verify_sources(box_checkout, root_checkout, *, pins=None):
             "native_accepted": False}
 
 
-def _record_member(prefix, raw):
+def _record_member(prefix, raw, dist_info):
     if SCRIPT.fullmatch(raw):
         return "usr/bin/" + raw.rsplit("/", 1)[-1]
     path = _relative(raw)
-    if not path.startswith(("zog/", "zog-0.1.0.dist-info/")):
+    if not path.startswith(("zog/", dist_info + "/")):
         deny("unsupported aggregate RECORD member: " + path)
     return prefix + "/" + path
 
@@ -240,7 +240,7 @@ def _verify_record(root, pins):
         if member in seen:
             deny("duplicate aggregate RECORD member: " + member)
         seen.add(member)
-        rel = _record_member(prefix, member)
+        rel = _record_member(prefix, member, d["dist_info"])
         data = _read(root, rel)
         if member == record_name:
             if encoded or sizepart:
