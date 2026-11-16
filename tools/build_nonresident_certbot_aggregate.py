@@ -228,8 +228,27 @@ def build(base, box, root, workspace):
         deny("unexpected aggregate wheel artifact tag/version: " + wheel.name)
     installed_root = workspace / "installed"
     installed_root.mkdir()
-    _run([sys.executable, "-m", "installer",
-          "--destdir", installed_root, "--prefix=/usr", wheel])
+    # installer 1.0.1's CLI always uses *its running* sys.executable
+    # for generated entrypoints; hosted CI would embed /opt/hostedtoolcache.
+    # Select the actual future nonresident Host's canonical interpreter via
+    # the public WheelDestination interface, and let installer generate its
+    # own installed RECORD with these final entrypoint script bytes.
+    from installer import install
+    from installer.__main__ import _get_scheme_dict
+    from installer.destinations import SchemeDictionaryDestination
+    from installer.sources import WheelFile
+    from installer.utils import get_launcher_kind
+    destination = SchemeDictionaryDestination(
+        scheme_dict=_get_scheme_dict("zog", prefix="/usr"),
+        interpreter=selection["interpreter"]["canonical_host_executable"],
+        script_kind=get_launcher_kind(),
+        bytecode_optimization_levels=(),
+        destdir=str(installed_root),
+        overwrite_existing=False,
+    )
+    with WheelFile.open(str(wheel)) as source:
+        source.validate_record(validate_contents=True)
+        install(source, destination, {})
     report = installed.inspect_installed(installed_root)
     if (report["distribution"]["version"] != selection["version"]
             or report["status"] != "INSTALLED_BYTES_AND_RECORD_COHERENT_UNACCEPTED"
