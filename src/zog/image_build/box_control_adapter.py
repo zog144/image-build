@@ -36,13 +36,10 @@ class BuildExecutionFailed(ImageBuildError):
 
 
 class BoxControlExecutionAdapter:
-    def __init__(self, control, *, execution_user_id, execution_group_id,
-                 startup_timeout_seconds, termination_grace_seconds, wait_timeout_seconds,
+    def __init__(self, control, *, startup_timeout_seconds, termination_grace_seconds, wait_timeout_seconds,
                  resource_limits, input_manifest_id, device_profile=None):
         self.device_profile = device_profile
         self.control = control
-        self.execution_user_id = execution_user_id
-        self.execution_group_id = execution_group_id
         self.startup_timeout_seconds = startup_timeout_seconds
         self.termination_grace_seconds = termination_grace_seconds
         self.wait_timeout_seconds = wait_timeout_seconds
@@ -54,8 +51,6 @@ class BoxControlExecutionAdapter:
     def configuration(self):
         return dict(**({'device_profile':self.device_profile} if self.device_profile is not None else {}), project_root=str(self.control.project.path),
                     socket_path=str(getattr(self.control.systemd_transport, "socket_path", "test-transport")),
-                    execution_user_id=self.execution_user_id,
-                    execution_group_id=self.execution_group_id,
                     startup_timeout_seconds=self.startup_timeout_seconds,
                     termination_grace_seconds=self.termination_grace_seconds,
                     resource_limits=self.resource_limits)
@@ -150,8 +145,7 @@ class BoxControlExecutionAdapter:
         with ProjectLock(checkpoint.with_suffix('.lock')):
             intent = json.loads(json.dumps(asdict(request),default=str,allow_nan=False))
             manifest_id = self.input_manifest_id(request) if callable(self.input_manifest_id) else self.input_manifest_id
-            config = dict(execution_user_id=self.execution_user_id, execution_group_id=self.execution_group_id,
-                          startup_timeout_seconds=self.startup_timeout_seconds, termination_grace_seconds=self.termination_grace_seconds,
+            config = dict(startup_timeout_seconds=self.startup_timeout_seconds, termination_grace_seconds=self.termination_grace_seconds,
                           resource_limits=self.resource_limits, input_manifest_id=manifest_id)
             if self.device_profile is not None: config['device_profile'] = self.device_profile
             binding = {'request':intent,'configuration':config}
@@ -161,7 +155,7 @@ class BoxControlExecutionAdapter:
             with ProjectLock(resources_path.with_suffix('.lock')):
                 registration = dict(prepared_root=str(request.root),source_directory=str(request.source),
                                     output_directory=str(request.output),input_manifest_id=manifest_id,
-                                    execution_user_id=self.execution_user_id,execution_group_id=self.execution_group_id)
+                                    )
                 if resources_path.exists():
                     resource = json.loads(resources_path.read_text())
                     if resource['registration'] != registration: raise ImageBuildError('package resource binding changed')
