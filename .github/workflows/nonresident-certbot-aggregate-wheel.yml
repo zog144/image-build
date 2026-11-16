@@ -62,6 +62,25 @@ jobs:
             --box companions/box-control \
             --root companions/root-control \
             --workspace /tmp/nonresident-certbot-aggregate
+      - name: Repeat the independently staged real build and prove byte-for-byte wheel reproducibility
+        run: |
+          python tools/build_nonresident_certbot_aggregate.py \
+            --base companions/zog-aggregate-base \
+            --box companions/box-control \
+            --root companions/root-control \
+            --workspace /tmp/nonresident-certbot-aggregate-repeat
+          python - <<'PY'
+          import hashlib, json, pathlib
+          first = pathlib.Path("/tmp/nonresident-certbot-aggregate")
+          second = pathlib.Path("/tmp/nonresident-certbot-aggregate-repeat")
+          a = json.loads((first/"aggregate-build-evidence.json").read_text())
+          b = json.loads((second/"aggregate-build-evidence.json").read_text())
+          assert a["candidate_wheel"]['sha256'] == b["candidate_wheel"]['sha256'], "wheel is not bit-for-bit reproducible"
+          assert a["distribution"]["RECORD_sha256"] == b["distribution"]["RECORD_sha256"]
+          assert a["controller_modules"] == b["controller_modules"]
+          assert a["installed_members"] == b["installed_members"]
+          print("REPEAT_BUILD_WHEEL_AND_INSTALLED_RECORD_IDENTICAL",a["candidate_wheel"]['sha256'])
+          PY
       - name: Verify exact installed RECORD and independently recheck actual wheel
         run: |
           python tools/verify_resident_b_aggregate_installed.py \
