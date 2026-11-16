@@ -195,5 +195,20 @@
       "service_activation_permitted": false,
       "source_only": true
     }
+  },
+  "aggregate_installed": {
+    "schema": "zog-resident-b-installed-aggregate-selection-v1",
+    "status": "SOURCE_PINNED_NO_ACTUAL_AGGREGATE",
+    "source_pin_path": "project/host/resident-b-aggregate-installed-source-pins-v1.json",
+    "distribution": "zog",
+    "version": "0.1.0",
+    "target_interpreter": "/usr/bin/python3.12",
+    "controller_modules_pin_count": 78,
+    "aggregate_wheel_sha256": null,
+    "installed_record_sha256": null,
+    "installed_root_generation": null,
+    "installed_bytes_verified": false,
+    "installer_receipt_verified": false,
+    "native_activation_permitted": false
   }
 }
