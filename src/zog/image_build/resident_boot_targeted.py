@@ -46,6 +46,7 @@ from .rootfs_compatibility import FIELD as COMPATIBILITY_FIELD, derive as derive
 from .stages import stage_recipes
 from . import installed_verification
 from . import engine as engine_module
+from . import resident_boot_accounts as accounts
 
 CONTRACT = "image-build-resident-boot-targeted-derivation-v1"
 FIELD = "resident_boot_targeted_derivation"
@@ -372,6 +373,16 @@ def validate_manifest(inputs, details):
         or details.get("verification_execution", {}).get("cleanup_complete") is not True
     ):
         raise ImageBuildError("invalid targeted resident-boot derivation publication")
+    account = value.get("resident_accounts")
+    if account is not None:
+        if (not isinstance(account, dict)
+                or set(account) != {"source", "receipt", "final_outputs_identity"}
+                or account["source"].get("contract") != accounts.CONTRACT
+                or account["source"].get("host_install_commit") != accounts.SOURCE_COMMIT
+                or account["source"].get("host_install_module_git_blob") != accounts.SOURCE_BLOB
+                or not re.fullmatch(r"sha256:[0-9a-f]{64}", account["final_outputs_identity"])
+                or inputs.get("resident_service_accounts") != account):
+            raise ImageBuildError("resident account derivation is not frozen in image owner inputs")
     return True
 
 
@@ -489,7 +500,8 @@ def _require_publication_recovery_ready(state, work, packages, targets):
 
 
 def run(project, catalogue, controller, selection, work, source_revision, host_id, project_id,
-        plan_file, check_file, retry_of=None, pin_revision=None, recovery_source_revision=None):
+        plan_file, check_file, retry_of=None, pin_revision=None, recovery_source_revision=None,
+        resident_accounts_source=None, sysusers_executable=None):
     project, catalogue, controller, selection, work = map(
         lambda value: Path(value).resolve(),
         (project, catalogue, controller, selection, work),
@@ -500,6 +512,11 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
         if (re.fullmatch(r"[0-9a-f]{40}", recovery_source_revision) is None
                 or recovery_source_revision == source_revision):
             raise ImageBuildError("exact distinct publication recovery source revision required")
+    if resident_accounts_source is None or sysusers_executable is None:
+        raise ImageBuildError("exact host-install account module and systemd-sysusers are required")
+    account_source = accounts.source_binding(
+        resident_accounts_source, sysusers_executable
+    )
     state = project / "state"
     ensure_directory(work)
     with (work / "operation.lock").open("a+") as stream:
@@ -545,6 +562,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             "policy": builder._policy(),
             "check": check,
             "provenance": provenance.configuration(),
+            "resident_service_accounts_source": account_source,
         }
         intent_path = work / "intent.json"
         if intent_path.exists():
@@ -595,20 +613,36 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
         root = work / "derived-root"
         marker = work / "composition.json"
         if marker.exists():
-            saved = json.loads(marker.read_text())
-            if (
-                saved.get("plan_identity") != "sha256:" + identity(composition)
-                or not root.is_dir()
-                or staging_inventory(root) != composition["expected_outputs"]
-            ):
-                raise ImageBuildError("retained targeted Boot A composition changed")
+            receipt = accounts.verify_materialized(
+                root, work, composition, account_source
+            )
         else:
-            outputs = compose(parent, overlays, composition, root)
-            write_json(marker, {
-                "schema": 1,
-                "plan_identity": "sha256:" + identity(composition),
-                "outputs_identity": "sha256:" + identity(outputs),
-            })
+            if root.exists() and not (work / accounts.PREPARED).is_file():
+                raise ImageBuildError(
+                    "interrupted pre-account composition has no durable preparation; inspect and start a new operation"
+                )
+            if not root.exists():
+                if (work / accounts.PREPARED).exists() or (work / accounts.RESULT).exists():
+                    raise ImageBuildError("resident account operation lost its staged root")
+                compose(parent, overlays, composition, root)
+            receipt = accounts.materialize(root, work, composition, account_source)
+        final_outputs = receipt["final_outputs"]
+        marker_record = {
+            "schema": 2,
+            "plan_identity": "sha256:" + identity(composition),
+            "outputs_identity": "sha256:" + identity(final_outputs),
+            "final_expected_outputs": final_outputs,
+            "resident_accounts_receipt_sha256": "sha256:" + _sha256(
+                work / accounts.RESULT
+            ),
+        }
+        if marker.exists():
+            if json.loads(marker.read_text()) != marker_record:
+                raise ImageBuildError("retained account-aware Boot A composition changed")
+        else:
+            write_json(marker, marker_record)
+        if staging_inventory(root) != final_outputs:
+            raise ImageBuildError("final account-aware rootfs inventory differs")
 
         compatibility = derive_compatibility(
             {"resident-root": {"root": str(root), "outputs": staging_inventory(root)}},
@@ -626,6 +660,10 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
         )
         composition_material = provenance._bytes(
             "resident-boot-overlay-plan.json", composition
+        )
+        account_material = provenance._file(
+            "resident-boot-service-accounts.json", work / accounts.RESULT,
+            "sha256:" + _sha256(work / accounts.RESULT),
         )
         gap = {
             "contract": GAP_CONTRACT,
@@ -652,6 +690,11 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             },
             "composition_plan": composition_material,
             "historical_provenance": gap,
+            "resident_accounts": {
+                "source": account_source,
+                "receipt": account_material,
+                "final_outputs_identity": "sha256:" + identity(final_outputs),
+            },
         }
         inputs = {
             "schema": 2,
@@ -665,6 +708,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
             "provenance": provenance.configuration(),
             COMPATIBILITY_FIELD: compatibility,
             FIELD: derivation,
+            "resident_service_accounts": derivation["resident_accounts"],
         }
         # Existing ce4b1d75-era targeted operations predate an explicit argv
         # field. Their retained verification_check has a narrow compatibility
@@ -698,15 +742,19 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
                     targets,
                     assembled,
                     inputs,
-                    composition_materials=[parent_manifest, composition_material, gap_material],
+                    composition_materials=[parent_manifest, composition_material, gap_material,
+                                           account_material],
                     composition_actions=[
                         "Treat retained-parent as an exact legacy package inventory with an explicit provenance gap.",
                         "Overlay only systemd-final and shadow-login exact verified package outputs.",
                         "Freeze every collision/addition before mutation; permit no implicit removals.",
                         "Permit only the reviewed /applications 0755 to 0000 directory-mode replacement.",
+                        "Materialize root and service accounts offline using exact host-install PR43 source before freezing the final root inventory.",
+                        "Bind newly materialized account database bytes and their exact source and receipt to canonical generation evidence.",
                     ],
                 )
 
+        accounts.verify_materialized(root, work, composition, account_source)
         verification = state / "image-build/attempts" / (work.name + "-installed")
         verify_installed(
             builder,
@@ -737,6 +785,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
                 "execution_invocation_id": execution["invocation_id"],
             }
 
+        accounts.verify_materialized(root, work, composition, account_source)
         with builder.locked():
             report = installed_verification.capture(
                 provenance, binding, root, inputs, verification, execution
@@ -766,6 +815,7 @@ def run(project, catalogue, controller, selection, work, source_revision, host_i
                 details["publication_recovery"] = publication_recovery
             if "application_data_targets" in inputs:
                 details["application_data_targets"] = inputs["application_data_targets"]
+            accounts.verify_materialized(root, work, composition, account_source)
             _prepare_publication_candidate(builder, root, inputs, "image", details)
             with _targeted_staging_sync():
                 accepted = builder._publish(root, inputs, "image", details)
@@ -800,6 +850,10 @@ def main():
     parser.add_argument("--retry-of")
     parser.add_argument("--pin-revision")
     parser.add_argument("--recovery-source-revision")
+    parser.add_argument("--resident-accounts-source", required=True,
+                        help="host-install PR43 resident_accounts.py at reviewed exact commit")
+    parser.add_argument("--sysusers-executable", required=True,
+                        help="existing root-owned /usr/bin/systemd-sysusers")
     print(json.dumps(run(**vars(parser.parse_args())), sort_keys=True), flush=True)
 
 

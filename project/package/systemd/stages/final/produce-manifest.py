@@ -11,6 +11,7 @@
               'usr/bin/udevadm',
               'usr/lib/systemd/system/getty@.service',
               'usr/lib/systemd/system/serial-getty@.service',
+              'usr/lib/sysusers.d/systemd-journal.conf',
               'usr/lib/systemd/boot/efi/systemd-bootx64.efi',
               'usr/lib/os-release',
               'etc/os-release',
