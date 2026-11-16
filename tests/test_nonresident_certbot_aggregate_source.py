@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -46,16 +47,8 @@ def test_explicit_distinct_aggregate_source_and_interpreter():
 def test_fake_source_selection_or_native_approval_fails_closed(monkeypatch, change):
     record = json.loads(builder.SELECTION.read_text())
     change(record)
-    monkeypatch.setattr(builder, "SELECTION", Path("/invalid/not-present"))
-    original = builder.json.loads
-
-    def controlled(content):
-        if isinstance(content, str) and '"zog-nonresident-certbot-aggregate-build-v1"' in content:
-            return record
-        return original(content)
-    monkeypatch.setattr(builder.json, "loads", controlled)
-    # Return synthetic modified selection without trusting unchecked input.
-    monkeypatch.setattr(builder.SELECTION.__class__, "read_text", lambda _self: json.dumps(record))
+    monkeypatch.setattr(builder, "SELECTION", SimpleNamespace(
+        read_text=lambda: json.dumps(record)))
     with pytest.raises(builder.BuildHeld, match="selection or native HOLD changed|controller aggregate source pins disagree"):
         builder._selection()
 
