@@ -1370,6 +1370,94 @@ def test_recipe_snapshot_is_deterministic_and_pipeline_binds_exact_selection(
     assert pipeline["recipes"] == manifest["inventory"]
 
 
+def test_image_submit_uses_own_project_active_toolchain_and_snapshot(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    snapshot = remote_recipe_snapshot(
+        remote, "configured-snapshot", "library", "consumer"
+    )
+    # This is already present in the Project from bootstrap. No gateway
+    # selection, snapshot digest or cross-Project search is involved.
+    link = builder.state / "image-build" / "toolchain-active"
+    assert link.is_symlink()
+    assert link.readlink() == Path("generations") / toolchain.generation
+    builder.runner = BoxControlRunner(
+        execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    submitted = remote.execute(request(
+        "configured-fonts-submit", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    ))
+    assert submitted["status"] == "pending", submitted
+    pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
+    assert pipeline["generation"] == toolchain.generation
+    assert pipeline["owner"]["recipe_snapshot"] == snapshot
+    assert submitted["recipe_identity"] == snapshot
+    assert "selection" not in request(
+        "configured-fonts-submit", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    )["arguments"]
+
+
+def test_missing_or_ambiguous_project_inputs_return_normal_producer_failure(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    missing = remote.execute(request(
+        "configured-missing-snapshot", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    ))
+    assert missing["status"] == "failed"
+    assert "no unique published recipe snapshot" in missing["failure"]["reason"]
+    first = remote_recipe_snapshot(remote, "configured-first", "library", "consumer")
+    second = remote_recipe_snapshot(remote, "configured-second", "compiler-first", "consumer", "library")
+    assert first != second
+    ambiguous = remote.execute(request(
+        "configured-ambiguous-snapshot", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    ))
+    assert ambiguous["status"] == "failed"
+    assert "no unique published recipe snapshot" in ambiguous["failure"]["reason"]
+
+
+def test_project_defaults_do_not_follow_cross_project_or_invalid_toolchain_link(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    remote_recipe_snapshot(remote, "configured-local-snapshot", "library")
+    link = builder.state / "image-build" / "toolchain-active"
+    link.unlink()
+    link.symlink_to(Path("..") / ".." / "other-project" / "toolchain-active")
+    denied = remote.execute(request(
+        "configured-cross-project-link", "pipeline.submit",
+        {"mode": "image", "targets": ["library"]},
+    ))
+    assert denied["status"] == "failed"
+    assert "toolchain link is invalid" in denied["failure"]["reason"]
+    link.unlink()
+    missing = remote.execute(request(
+        "configured-toolchain-missing", "pipeline.submit",
+        {"mode": "image", "targets": ["library"]},
+    ))
+    assert missing["status"] == "failed"
+    assert "no active toolchain" in missing["failure"]["reason"]
+
+
+def test_explicit_producer_arguments_remain_supported(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    snapshot = remote_recipe_snapshot(
+        remote, "configured-explicit-snapshot", "library"
+    )
+    builder.runner = BoxControlRunner(
+        execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    submitted = remote.execute(request(
+        "configured-explicit-submit", "pipeline.submit",
+        {"mode": "image", "selection": toolchain.generation,
+         "targets": ["library"], "recipe_snapshot": snapshot},
+    ))
+    assert submitted["status"] == "pending"
+
+
 def test_new_pipeline_submit_requires_recipe_snapshot(tmp_path):
     repository, _, builder, toolchain = setup_repo(tmp_path)
     result = adapter(repository, builder).execute(
