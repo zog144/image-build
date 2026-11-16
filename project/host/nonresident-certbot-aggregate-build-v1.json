@@ -50,5 +50,10 @@
     "installed_on_host": false,
     "station_assignment_approved": false,
     "certificate_issuer_ready": false
+  },
+  "reproducibility": {
+    "source_date_epoch": 1791740336,
+    "normalize_source_timestamps": true,
+    "require_independent_second_build": true
   }
 }
