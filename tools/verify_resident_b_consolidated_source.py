@@ -58,7 +58,7 @@ def verify(*, selection=None):
         "schema", "status", "lineage", "python_controllers", "source_tools",
         "controllers", "resident_utilities", "python_runtime_boundary",
         "retained_evidence", "native_authority", "remaining_native_checks",
-        "native_input", "package_closure", "native_admission",
+        "native_input", "package_closure", "native_admission", "aggregate_installed",
     } or record["schema"] != "zog-resident-b-consolidated-source-selection-v1"
             or record["status"] != "SOURCE_CANDIDATE_PINNED_NATIVE_HOLD"):
         refuse("invalid source selection schema or false native promotion")
@@ -70,6 +70,27 @@ def verify(*, selection=None):
         "duplicate_package_stages": [],
     }):
         refuse("source lineage is duplicated, unrelated or substituted")
+    aggregate = record["aggregate_installed"]
+    if aggregate != {
+        "schema": "zog-resident-b-installed-aggregate-selection-v1",
+        "status": "SOURCE_PINNED_NO_ACTUAL_AGGREGATE",
+        "source_pin_path": "project/host/resident-b-aggregate-installed-source-pins-v1.json",
+        "distribution": "zog",
+        "version": "0.1.0",
+        "target_interpreter": "/usr/bin/python3.12",
+        "controller_modules_pin_count": 78,
+        "aggregate_wheel_sha256": None,
+        "installed_record_sha256": None,
+        "installed_root_generation": None,
+        "installed_bytes_verified": False,
+        "installer_receipt_verified": False,
+        "native_activation_permitted": False,
+    }:
+        refuse("aggregate source evidence or native hold changed")
+    from tools.verify_resident_b_aggregate_installed import _check_selection, PIN
+    source_pins = _check_selection(json.loads(PIN.read_text()))
+    if sum(len(item["files"]) for item in source_pins["controllers"].values()) != 78:
+        refuse("source-pinned controller aggregate module inventory changed")
     native = record["native_authority"]
     if (type(native) is not dict or set(native) != {
         "accepted_generation", "accepted_state", "native_generation_receipt",
