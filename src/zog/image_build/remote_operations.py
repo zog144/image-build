@@ -1901,8 +1901,6 @@ class RemoteOperations:
             }
             adapter = BoxControlExecutionAdapter(
                 execute.control,
-                execution_user_id=execute.execution_user_id,
-                execution_group_id=execute.execution_group_id,
                 startup_timeout_seconds=execute.startup_timeout_seconds,
                 termination_grace_seconds=execute.termination_grace_seconds,
                 wait_timeout_seconds=execute.wait_timeout_seconds,
