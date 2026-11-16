@@ -597,6 +597,46 @@ class RemoteOperations:
             raise ImageBuildError("remote operation owns multiple pipelines")
         return matches[0] if matches else None
 
+    def _configured_toolchain(self):
+        """Resolve the Project's existing active toolchain, never another Project."""
+        link = self.control_state / "image-build" / "toolchain-active"
+        if not link.is_symlink():
+            raise ImageBuildError("configured Project has no active toolchain")
+        target = link.readlink()
+        if (len(target.parts) != 2 or target.parts[0] != "generations"
+                or not _GENERATION.fullmatch(target.parts[1])):
+            raise ImageBuildError("configured Project toolchain link is invalid")
+        selected = self._generation(target.parts[1])
+        if selected.manifest["kind"] != "toolchain":
+            raise ImageBuildError("configured Project selection is not a toolchain")
+        return selected
+
+    def _configured_recipe_snapshot(self, targets):
+        """Select a unique *already published* recipe set in this Project.
+
+        Do not accept a request-provided path, scan other Projects, or create
+        mutable snapshot/selection state to make gateway forwarding work.
+        """
+        store = self._recipe_snapshot_store()
+        matches = []
+        for entry in sorted((store.root / "snapshots").iterdir()):
+            if entry.is_symlink() or not entry.is_dir():
+                raise ImageBuildError("unsafe configured Project recipe snapshot")
+            identity = "sha256:" + entry.name
+            # Resolve through the normal verified immutable snapshot reader.
+            snapshot = store.resolve(identity)
+            if (snapshot.manifest["source"] ==
+                    {"repository": self.source_repository,
+                     "revision": self.source_revision}
+                    and set(targets) <= set(snapshot.manifest["packages"])):
+                matches.append(snapshot)
+        if len(matches) != 1:
+            raise ImageBuildError(
+                "configured Project has no unique published recipe snapshot "
+                "for the selected targets"
+            )
+        return matches[0]
+
     def _pipeline_arguments(self, request):
         arguments = request["arguments"]
         if set(arguments) - {
@@ -609,18 +649,29 @@ class RemoteOperations:
             raise ImageBuildError(
                 "unsupported pipeline submission argument"
             )
-        if "recipe_snapshot" not in arguments:
-            raise ImageBuildError(
-                "new remote pipeline submission requires recipe_snapshot"
-            )
-        snapshot = self._resolve_recipe_snapshot(
-            arguments["recipe_snapshot"]
-        )
-        packages = set(snapshot.manifest["packages"])
         mode = arguments.get("mode")
         if mode not in GENERIC_PIPELINE_MODES:
             raise ImageBuildError("invalid remote pipeline mode")
-        selection = self._generation(arguments.get("selection"))
+        # Only the image pipeline may use the configured Project's existing
+        # defaults. Explicit generic/bootstrap requests keep their contract.
+        defaults = (
+            mode == "image"
+            and set(arguments) == {"mode", "targets"}
+        )
+        if defaults:
+            targets = list(names(arguments["targets"]))
+            selection = self._configured_toolchain()
+            snapshot = self._configured_recipe_snapshot(targets)
+        else:
+            if "recipe_snapshot" not in arguments:
+                raise ImageBuildError(
+                    "new remote pipeline submission requires recipe_snapshot"
+                )
+            snapshot = self._resolve_recipe_snapshot(
+                arguments["recipe_snapshot"]
+            )
+            selection = self._generation(arguments.get("selection"))
+        packages = set(snapshot.manifest["packages"])
         if mode == "bootstrap":
             if set(arguments) != {
                 "mode",
@@ -659,7 +710,7 @@ class RemoteOperations:
                 {"stages": stages},
                 snapshot,
             )
-        if set(arguments) != {
+        if not defaults and set(arguments) != {
             "mode",
             "selection",
             "targets",
