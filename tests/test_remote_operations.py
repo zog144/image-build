@@ -1390,7 +1390,7 @@ def test_image_submit_uses_own_project_active_toolchain_and_snapshot(tmp_path):
     ))
     assert submitted["status"] == "pending", submitted
     pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
-    assert pipeline["generation"] == toolchain.generation
+    assert Path(pipeline["selection"]).name == toolchain.generation
     assert pipeline["owner"]["recipe_snapshot"] == snapshot
     assert submitted["recipe_identity"] == snapshot
     assert "selection" not in request(
