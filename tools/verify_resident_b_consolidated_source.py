@@ -76,7 +76,7 @@ def verify(*, selection=None):
         "status": "SOURCE_PINNED_NO_ACTUAL_AGGREGATE",
         "source_pin_path": "project/host/resident-b-aggregate-installed-source-pins-v1.json",
         "distribution": "zog",
-        "version": "0.1.1.dev20261116",
+        "version": "0.1.1.dev20261117",
         "target_interpreter": "/usr/bin/python3.12",
         "controller_modules_pin_count": 78,
         "aggregate_wheel_sha256": None,
