@@ -43,11 +43,12 @@ jobs:
           python -m pip --version
           mkdir -p /tmp/zog-certbot-deps/wheelhouse
           python -m pip download \
-            --only-binary=:all: --implementation cp --python-version 3.12 \
+            --require-hashes --only-binary=:all: \
+            --implementation cp --python-version 3.12 \
             --abi cp312 --platform manylinux2014_x86_64 \
             --index-url https://pypi.org/simple \
             --dest /tmp/zog-certbot-deps/wheelhouse \
-            -r project/host/nonresident-certbot-python312-dependencies.in
+            -r project/host/nonresident-certbot-python312-dependencies.lock
       - name: Generate reviewable transitive wheel lock and hash-check every downloaded file
         run: |
           python - <<'PY'
