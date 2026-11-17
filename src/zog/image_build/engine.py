@@ -662,12 +662,13 @@ class ImageBuild(PipelineMixin):
         if seed_check and toolchain.manifest["kind"] != "host-bootstrap":
             raise ImageBuildError("seed verification requires a recorded host bootstrap")
         if not validation_only and (
-            toolchain.manifest["kind"] != "toolchain"
-            or toolchain.manifest.get("stage") != 2
-            or not toolchain.manifest.get("self_hosted")
+            toolchain.manifest["kind"] not in {"image", "toolchain"}
+            or (toolchain.manifest["kind"] == "toolchain"
+                and (toolchain.manifest.get("stage") != 2
+                     or not toolchain.manifest.get("self_hosted")))
         ):
             raise ImageBuildError(
-                "ordinary builds require a promoted second-stage toolchain"
+                "ordinary builds require a usable selected image or promoted toolchain"
             )
         if toolchain.manifest["inputs"].get("architecture") != platform.machine():
             raise ImageBuildError("toolchain architecture differs from this host")
