@@ -666,8 +666,9 @@ class ImageBuild(PipelineMixin):
             # An independently accepted compiler base may be published as an
             # immutable image. Do not rewrite it as kind=toolchain or demand
             # a new stage-two generation just to select its compiler files.
-            # The separate compiler-purpose receipt and installed runner
-            # authority are checked by the accepted compiler-base reader.
+            # The separate PR #20 compiler-purpose receipt/runner reader
+            # must remain part of the composed native authorization path.
+            # This kind-label compatibility change grants no build authority.
             if compiler_kind == "toolchain":
                 if (toolchain.manifest.get("stage") != 2
                         or toolchain.manifest.get("self_hosted") is not True):
