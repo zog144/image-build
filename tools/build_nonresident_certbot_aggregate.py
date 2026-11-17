@@ -84,7 +84,7 @@ def _selection():
     x = json.loads(SELECTION.read_text())
     selected = installed._check_selection(json.loads(installed.PIN.read_text()))
     if (set(x) != {"schema", "status", "distribution", "version",
-                   "interpreter", "base", "controllers", "host_install", "operations", "native", "reproducibility"
+                   "interpreter", "base", "controllers", "host_install", "operations", "native", "reproducibility"}
             or x["schema"] != "zog-nonresident-certbot-aggregate-build-v1"
             or x["status"] != "REVIEWED_SOURCE_BUILD_UNACCEPTED_NATIVE_INSTALL"
             or x["distribution"] != "zog" or x["version"] != "0.1.1.dev20261117"
