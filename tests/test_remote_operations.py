@@ -1389,7 +1389,7 @@ def test_image_submit_snapshots_current_project_packages_without_preselected_dig
     pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
     assert Path(pipeline["selection"]).name == toolchain.generation
     assert "recipe_snapshot" not in pipeline["owner"]
-    assert "recipe_identity" not in submitted
+    assert submitted.get("recipe_identity") is None
     assert pipeline["recipes"]  # immutable package inventory captured by pipeline
     assert (builder.state / "image-build/pipelines" / submitted["pipeline_id"]
             / "package/consumer/build.py").is_file()
