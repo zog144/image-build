@@ -661,14 +661,26 @@ class ImageBuild(PipelineMixin):
         validation_only = seed_check or native_check
         if seed_check and toolchain.manifest["kind"] != "host-bootstrap":
             raise ImageBuildError("seed verification requires a recorded host bootstrap")
-        if not validation_only and (
-            toolchain.manifest["kind"] != "toolchain"
-            or toolchain.manifest.get("stage") != 2
-            or not toolchain.manifest.get("self_hosted")
-        ):
-            raise ImageBuildError(
-                "ordinary builds require a promoted second-stage toolchain"
-            )
+        if not validation_only:
+            compiler_kind = toolchain.manifest["kind"]
+            # An independently accepted compiler base may be published as an
+            # immutable image. Do not rewrite it as kind=toolchain or demand
+            # a new stage-two generation just to select its compiler files.
+            # The separate PR #20 compiler-purpose receipt/runner reader
+            # must remain part of the composed native authorization path.
+            # This kind-label compatibility change grants no build authority.
+            if compiler_kind == "toolchain":
+                if (toolchain.manifest.get("stage") != 2
+                        or toolchain.manifest.get("self_hosted") is not True):
+                    raise ImageBuildError(
+                        "ordinary builds require a promoted second-stage toolchain "
+                        "when using a toolchain generation"
+                    )
+            elif compiler_kind != "image":
+                raise ImageBuildError(
+                    "ordinary compiler input must be a recorded image or "
+                    "promoted second-stage toolchain"
+                )
         if toolchain.manifest["inputs"].get("architecture") != platform.machine():
             raise ImageBuildError("toolchain architecture differs from this host")
         packages = load_packages(self.package_dir)

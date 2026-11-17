@@ -597,18 +597,34 @@ class RemoteOperations:
             raise ImageBuildError("remote operation owns multiple pipelines")
         return matches[0] if matches else None
 
-    def _configured_toolchain(self):
-        """Resolve the Project's existing active toolchain, never another Project."""
-        link = self.control_state / "image-build" / "toolchain-active"
+    def _configured_compiler_input(self):
+        """Reopen an existing Project-local compiler generation, never another Project.
+
+        The historical toolchain-active link is permitted but its name is not
+        a kind claim. A pre-existing active link can also select an image when
+        no toolchain-active link exists. Neither link is created here. Callers
+        with an exact accepted generation can use explicit pipeline selection
+        instead, without either link.
+        """
+        directory = self.control_state / "image-build"
+        legacy = directory / "toolchain-active"
+        active = directory / "active"
+        link = legacy if legacy.is_symlink() else active
         if not link.is_symlink():
-            raise ImageBuildError("configured Project has no active toolchain")
+            raise ImageBuildError(
+                "configured Project has no selected compiler generation; "
+                "use an explicit generation and recipe snapshot"
+            )
         target = link.readlink()
         if (len(target.parts) != 2 or target.parts[0] != "generations"
                 or not _GENERATION.fullmatch(target.parts[1])):
-            raise ImageBuildError("configured Project toolchain link is invalid")
+            raise ImageBuildError("configured Project compiler link is invalid")
         selected = self._generation(target.parts[1])
-        if selected.manifest["kind"] != "toolchain":
-            raise ImageBuildError("configured Project selection is not a toolchain")
+        if selected.manifest["kind"] not in {"image", "toolchain"}:
+            raise ImageBuildError(
+                "configured Project compiler input is not a recorded image "
+                "or promoted toolchain"
+            )
         return selected
 
     def _configured_recipe_snapshot(self, targets):
@@ -660,7 +676,7 @@ class RemoteOperations:
         )
         if defaults:
             targets = list(names(arguments["targets"]))
-            selection = self._configured_toolchain()
+            selection = self._configured_compiler_input()
             snapshot = self._configured_recipe_snapshot(targets)
         else:
             if "recipe_snapshot" not in arguments:
