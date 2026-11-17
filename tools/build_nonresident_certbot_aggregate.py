@@ -221,6 +221,15 @@ def prepare(base, box, root, host_install, workspace):
             deny("unexpected source distribution version")
         raw = raw.replace('version = "0.1.0"',
                           'version = "' + selection["version"] + '"')
+        # The original aggregate exports only top-level systemd fixtures.
+        # host-install 9ad4 adds reviewed nested root-backed/task-c-local
+        # resources. Include precisely one nested level without globbing
+        # arbitrary files outside the selected source directory.
+        old_resources = '"zog.host_install" = ["systemd/*"]'
+        if raw.count(old_resources) != 1:
+            deny("original host-install package-data contract differs")
+        raw = raw.replace(old_resources,
+                          '"zog.host_install" = ["systemd/*", "systemd/*/*"]')
         pyproject.write_text(raw)
         meta = tomllib.loads(raw)["project"]
         if (meta["name"] != "zog"
