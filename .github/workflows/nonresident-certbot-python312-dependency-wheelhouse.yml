@@ -72,6 +72,10 @@ jobs:
             --lock /tmp/zog-certbot-deps/requirements.lock \
             --aggregate $SELECTED_AGGREGATE_WHEEL \
             --output /tmp/zog-certbot-deps/offline-dependency-evidence.json
+      - name: Reject missing, changed or aggregate-overwriting dependency wheels
+        run: |
+          python -m unittest discover -s tests \
+            -p 'test_nonresident_certbot_dependency_wheelhouse.py' -v
       - name: Real clean Python3.12 offline installation and all fifteen controller imports
         run: |
           python -m venv /tmp/zog-dependencies-smoke
