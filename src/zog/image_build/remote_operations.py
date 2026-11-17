@@ -598,18 +598,21 @@ class RemoteOperations:
         return matches[0] if matches else None
 
     def _configured_toolchain(self):
-        """Resolve the Project's existing active toolchain, never another Project."""
-        link = self.control_state / "image-build" / "toolchain-active"
-        if not link.is_symlink():
-            raise ImageBuildError("configured Project has no active toolchain")
+        """Use the selected Project's active generation, regardless of kind label."""
+        directory = self.control_state / "image-build"
+        link = next(
+            (directory / name for name in ("active", "toolchain-active")
+             if (directory / name).is_symlink()), None
+        )
+        if link is None:
+            raise ImageBuildError("configured Project has no active generation")
         target = link.readlink()
         if (len(target.parts) != 2 or target.parts[0] != "generations"
                 or not _GENERATION.fullmatch(target.parts[1])):
-            raise ImageBuildError("configured Project toolchain link is invalid")
-        selected = self._generation(target.parts[1])
-        if selected.manifest["kind"] != "toolchain":
-            raise ImageBuildError("configured Project selection is not a toolchain")
-        return selected
+            raise ImageBuildError("configured Project active generation link is invalid")
+        # The immutable generation reader verifies its manifest and contents.
+        # In particular, kind=image is not a reason to reject a compiler input.
+        return self._generation(target.parts[1])
 
     def _configured_recipe_snapshot(self, targets):
         """Select a unique *already published* recipe set in this Project.
