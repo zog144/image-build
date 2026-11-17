@@ -35,6 +35,8 @@ jobs:
           actual=hashlib.sha256(wheels[0].read_bytes()).hexdigest()
           assert actual=='bf8560e3ee228dc6390f708bb9282472bbc7e14b154b5841c7ba912901b204c8'
           print("ORIGINAL_AGGREGATE_UNCHANGED",actual)
+          with open(__import__('os').environ['GITHUB_ENV'],'a') as env:
+              env.write('SELECTED_AGGREGATE_WHEEL='+str(wheels[0])+'\n')
           PY
       - name: Resolve binary-only dependencies for AL2023 x86_64 CPython3.12
         run: |
@@ -68,7 +70,7 @@ jobs:
           python tools/verify_nonresident_certbot_dependency_wheelhouse.py \
             --wheelhouse /tmp/zog-certbot-deps/wheelhouse \
             --lock /tmp/zog-certbot-deps/requirements.lock \
-            --aggregate /tmp/selected-aggregate/zog-0.1.1.dev20261117-py3-none-any.whl \
+            --aggregate $SELECTED_AGGREGATE_WHEEL \
             --output /tmp/zog-certbot-deps/offline-dependency-evidence.json
       - name: Real clean Python3.12 offline installation and all fifteen controller imports
         run: |
@@ -79,7 +81,7 @@ jobs:
             -r /tmp/zog-certbot-deps/requirements.lock
           /tmp/zog-dependencies-smoke/bin/python -m pip install \
             --no-index --no-deps --no-cache-dir --no-compile \
-            /tmp/selected-aggregate/zog-0.1.1.dev20261117-py3-none-any.whl
+            $SELECTED_AGGREGATE_WHEEL
           /tmp/zog-dependencies-smoke/bin/python -m pip check
           /tmp/zog-dependencies-smoke/bin/python -I -B - <<'PY'
           import importlib, importlib.metadata, json, sys
