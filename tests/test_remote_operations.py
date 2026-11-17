@@ -1431,14 +1431,37 @@ def test_project_defaults_do_not_follow_cross_project_or_invalid_toolchain_link(
         {"mode": "image", "targets": ["library"]},
     ))
     assert denied["status"] == "failed"
-    assert "toolchain link is invalid" in denied["failure"]["reason"]
+    assert "active generation link is invalid" in denied["failure"]["reason"]
     link.unlink()
     missing = remote.execute(request(
         "configured-toolchain-missing", "pipeline.submit",
         {"mode": "image", "targets": ["library"]},
     ))
     assert missing["status"] == "failed"
-    assert "no active toolchain" in missing["failure"]["reason"]
+    assert "no active generation" in missing["failure"]["reason"]
+
+
+def test_existing_image_generation_is_usable_as_project_compiler_default(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    image = builder.ensure(["library"], toolchain=toolchain)
+    assert image.manifest["kind"] == "image"
+    link = builder.state / "image-build" / "active"
+    assert link.is_symlink()
+    assert link.readlink() == Path("generations") / image.generation
+
+    remote = adapter(repository, builder)
+    snapshot = remote_recipe_snapshot(remote, "image-kind-snapshot", "library", "consumer")
+    builder.runner = BoxControlRunner(
+        execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    submitted = remote.execute(request(
+        "image-kind-producer-submit", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    ))
+    assert submitted["status"] == "pending", submitted
+    prepared = builder.inspect_pipeline(submitted["pipeline_id"])
+    assert Path(prepared["selection"]).name == image.generation
+    assert prepared["owner"]["recipe_snapshot"] == snapshot
 
 
 def test_explicit_producer_arguments_remain_supported(tmp_path):
