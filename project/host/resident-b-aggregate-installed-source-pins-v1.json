@@ -3,10 +3,10 @@
   "status": "SOURCE_PINNED_AGGREGATE_NOT_YET_PRODUCED",
   "distribution": {
     "name": "zog",
-    "version": "0.1.1.dev20261116",
+    "version": "0.1.1.dev20261117",
     "python": "3.12",
     "install_prefix": "usr/lib/python3.12/site-packages",
-    "dist_info": "zog-0.1.1.dev20261116.dist-info",
+    "dist_info": "zog-0.1.1.dev20261117.dist-info",
     "required_entry_points": {
       "box-control": "zog.box_control.cli:main",
       "root-control": "zog.root_control.daemon:main"
