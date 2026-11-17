@@ -2,7 +2,7 @@
   "schema": "zog-nonresident-certbot-aggregate-build-v1",
   "status": "REVIEWED_SOURCE_BUILD_UNACCEPTED_NATIVE_INSTALL",
   "distribution": "zog",
-  "version": "0.1.1.dev20261116",
+  "version": "0.1.1.dev20261117",
   "interpreter": {
     "major": 3,
     "minor": 12,
@@ -42,7 +42,8 @@
     "change_metadata_version": true,
     "update_release_manifest": true,
     "discard_historical_component_directories": true,
-    "no_pypi_publish": true
+    "no_pypi_publish": true,
+    "replace_host_install_directory": true
   },
   "native": {
     "accepted_installed_generation": null,
@@ -55,5 +56,14 @@
     "source_date_epoch": 1791740336,
     "normalize_source_timestamps": true,
     "require_independent_second_build": true
+  },
+  "host_install": {
+    "repository": "zog144/host-install",
+    "revision": "9ad4e951ef0a14cc6a735af47ffb31734d854816",
+    "source_pin_path": "project/host/nonresident-certbot-host-install-source-pins-v1.json",
+    "source_prefix": "src/zog/host_install/",
+    "selected_files": 74,
+    "component_version": "0.14.9",
+    "required_installed_command": "certify-manage-controller-attest-installed"
   }
 }
