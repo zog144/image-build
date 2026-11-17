@@ -18,6 +18,7 @@ import sys
 import tomllib
 
 import verify_resident_b_aggregate_installed as installed
+import verify_nonresident_certbot_host_install as host_importer
 
 ROOT = Path(__file__).resolve().parents[1]
 SELECTION = ROOT / "project/host/nonresident-certbot-aggregate-build-v1.json"
@@ -83,10 +84,10 @@ def _selection():
     x = json.loads(SELECTION.read_text())
     selected = installed._check_selection(json.loads(installed.PIN.read_text()))
     if (set(x) != {"schema", "status", "distribution", "version",
-                   "interpreter", "base", "controllers", "operations", "native", "reproducibility"}
+                   "interpreter", "base", "controllers", "host_install", "operations", "native", "reproducibility"
             or x["schema"] != "zog-nonresident-certbot-aggregate-build-v1"
             or x["status"] != "REVIEWED_SOURCE_BUILD_UNACCEPTED_NATIVE_INSTALL"
-            or x["distribution"] != "zog" or x["version"] != "0.1.1.dev20261116"
+            or x["distribution"] != "zog" or x["version"] != "0.1.1.dev20261117"
             or x["interpreter"] != {
                 "major": 3, "minor": 12,
                 "canonical_host_executable": "/usr/bin/python3.12",
@@ -116,6 +117,7 @@ def _selection():
                 "change_metadata_version": True,
                 "update_release_manifest": True,
                 "discard_historical_component_directories": True,
+                "replace_host_install_directory": True,
                 "no_pypi_publish": True,
             }
             or x["native"] != {
@@ -126,6 +128,17 @@ def _selection():
                 "certificate_issuer_ready": False,
             } or set(x["controllers"]) != {"box-control", "root-control"}):
         deny("source selection or native HOLD changed")
+    expected_host = host_importer.pins()
+    if x["host_install"] != {
+        "repository": expected_host["repository"],
+        "revision": expected_host["revision"],
+        "source_pin_path": "project/host/nonresident-certbot-host-install-source-pins-v1.json",
+        "source_prefix": expected_host["source_prefix"],
+        "selected_files": len(expected_host["files"]),
+        "component_version": "0.14.9",
+        "required_installed_command": expected_host["required_attestation_command"],
+    }:
+        deny("host-install selected attestor source pin differs")
     for name, source in selected["controllers"].items():
         want = x["controllers"].get(name)
         if want != {
@@ -138,18 +151,19 @@ def _selection():
     return x
 
 
-def prepare(base, box, root, workspace):
+def prepare(base, box, root, host_install, workspace):
     """Review inputs and create a new candidate tree, never edit checkouts."""
     selection = _selection()
     if sys.version_info[:2] != (3, 12):
         deny("aggregate producer must use Python 3.12")
-    for source in (base, box, root):
+    for source in (base, box, root, host_install):
         if source.is_symlink() or not source.is_dir():
             deny("source checkout unavailable or linked")
         _clean(source)
     if _git_head(base) != selection["base"]["revision"]:
         deny("wrong original released Zog baseline")
     installed.verify_sources(box, root)
+    host_importer.verify_source(host_install)
     for name, blob in selection["base"]["files"].items():
         _require_original_file(base, name, blob)
     manifest_path = base / "src/zog/_release_manifest.json"
@@ -164,6 +178,7 @@ def prepare(base, box, root, workspace):
     source_files = {
         "box-control": box / "box-control/src/zog/box_control",
         "root-control": root / "src/zog/root_control",
+        "host-install": host_install / "src/zog/host_install",
     }
     for name, source in source_files.items():
         if not source.is_dir():
@@ -187,6 +202,9 @@ def prepare(base, box, root, workspace):
         for component in components:
             if component["program"] in selection["controllers"]:
                 component["revision"] = selection["controllers"][component["program"]]["revision"]
+            elif component["program"] == "host-install":
+                component["revision"] = selection["host_install"]["revision"]
+                component["component_version"] = selection["host_install"]["component_version"]
         manifest["version"] = selection["version"]
         (stage / "src/zog/_release_manifest.json").write_text(
             json.dumps(manifest, sort_keys=True, indent=2) + "\n"
@@ -227,8 +245,8 @@ def prepare(base, box, root, workspace):
     return stage, selection
 
 
-def build(base, box, root, workspace):
-    stage, selection = prepare(base, box, root, workspace)
+def build(base, box, root, host_install, workspace):
+    stage, selection = prepare(base, box, root, host_install, workspace)
     wheel_dir = workspace / "wheel"
     wheel_dir.mkdir()
     build_environment = dict(os.environ)
@@ -268,6 +286,12 @@ def build(base, box, root, workspace):
         source.validate_record(validate_contents=True)
         install(source, destination, {})
     report = installed.inspect_installed(installed_root)
+    host_report = host_importer.inspect_installed(installed_root)
+    if (host_report["status"] != "INSTALLED_CONTROLLERS_AND_IMPORTER_BYTES_COHERENT_UNACCEPTED"
+            or host_report["host_install_source_revision"] != selection["host_install"]["revision"]
+            or len(host_report["host_install_selected_members"]) != selection["host_install"]["selected_files"]):
+        deny("selected native attestor missing from genuine aggregate installed RECORD")
+    report["host_install_importer"] = host_report
     if (report["distribution"]["version"] != selection["version"]
             or report["status"] != "INSTALLED_BYTES_AND_RECORD_COHERENT_UNACCEPTED"
             or report["controller_source_pins"]["box-control"]["revision"]
@@ -286,6 +310,7 @@ def build(base, box, root, workspace):
             "base": selection["base"]["revision"],
             "box-control": selection["controllers"]["box-control"]["revision"],
             "root-control": selection["controllers"]["root-control"]["revision"],
+            "host-install": selection["host_install"]["revision"],
         },
         "ephemeral_build": True,
         "native_host_installed": False,
@@ -304,9 +329,10 @@ def main():
     parser.add_argument("--base", type=Path, required=True)
     parser.add_argument("--box", type=Path, required=True)
     parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--host-install", type=Path, required=True)
     parser.add_argument("--workspace", type=Path, required=True)
     args = parser.parse_args()
-    result = build(args.base, args.box, args.root, args.workspace)
+    result = build(args.base, args.box, args.root, args.host_install, args.workspace)
     print(json.dumps(result, indent=2, sort_keys=True))
 
 
