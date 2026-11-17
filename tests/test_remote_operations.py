@@ -1364,11 +1364,8 @@ def test_recipe_snapshot_is_deterministic_and_pipeline_binds_exact_selection(
         )
     )
     pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
-    assert "recipe_snapshot" not in pipeline["owner"]
-    assert "recipe_identity" not in submitted
-    assert pipeline["recipes"]  # immutable package inventory captured by pipeline
-    assert (builder.state / "image-build/pipelines" / submitted["pipeline_id"]
-            / "package/consumer/build.py").is_file()
+    assert pipeline["owner"]["recipe_snapshot"] == snapshot
+    assert submitted["recipe_identity"] == snapshot
     assert submitted["artifacts"]["recipe_snapshot"] == snapshot
     assert pipeline["recipes"] == manifest["inventory"]
 
@@ -1391,8 +1388,11 @@ def test_image_submit_snapshots_current_project_packages_without_preselected_dig
     assert submitted["status"] == "pending", submitted
     pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
     assert Path(pipeline["selection"]).name == toolchain.generation
-    assert pipeline["owner"]["recipe_snapshot"] == snapshot
-    assert submitted["recipe_identity"] == snapshot
+    assert "recipe_snapshot" not in pipeline["owner"]
+    assert "recipe_identity" not in submitted
+    assert pipeline["recipes"]  # immutable package inventory captured by pipeline
+    assert (builder.state / "image-build/pipelines" / submitted["pipeline_id"]
+            / "package/consumer/build.py").is_file()
     assert "selection" not in request(
         "configured-fonts-submit", "pipeline.submit",
         {"mode": "image", "targets": ["consumer"]},
@@ -1413,7 +1413,10 @@ def test_missing_project_package_fails_normally_without_gateway_gate(tmp_path):
 def test_current_project_pin_update_is_copied_into_next_pipeline(tmp_path):
     repository, packages, builder, toolchain = setup_repo(tmp_path)
     # Project package definitions change after the compiler was produced.
-    recipe(packages, "library", command="new-current-pin")
+    (packages / "library/build.py").write_text(repr({
+        "build": [["new-current-pin", "library"]],
+        "install": [["install", "library"]],
+    }))
     remote = adapter(repository, builder)
     builder.runner = BoxControlRunner(
         execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
