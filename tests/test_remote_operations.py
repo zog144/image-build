@@ -1370,6 +1370,131 @@ def test_recipe_snapshot_is_deterministic_and_pipeline_binds_exact_selection(
     assert pipeline["recipes"] == manifest["inventory"]
 
 
+def test_image_submit_snapshots_current_project_packages_without_preselected_digest(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    # No recipe snapshot is published: the current source/package pins are
+    # captured by the normal image-build pipeline preparation itself.
+    link = builder.state / "image-build" / "toolchain-active"
+    assert link.is_symlink()
+    assert link.readlink() == Path("generations") / toolchain.generation
+    builder.runner = BoxControlRunner(
+        execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    submitted = remote.execute(request(
+        "configured-fonts-submit", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    ))
+    assert submitted["status"] == "pending", submitted
+    pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
+    assert Path(pipeline["selection"]).name == toolchain.generation
+    assert "recipe_snapshot" not in pipeline["owner"]
+    assert submitted.get("recipe_identity") is None
+    assert pipeline["recipes"]  # immutable package inventory captured by pipeline
+    assert (builder.state / "image-build/pipelines" / submitted["pipeline_id"]
+            / "package/consumer/build.py").is_file()
+    assert "selection" not in request(
+        "configured-fonts-submit", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    )["arguments"]
+
+
+def test_missing_project_package_fails_normally_without_gateway_gate(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    missing = remote.execute(request(
+        "configured-missing-package", "pipeline.submit",
+        {"mode": "image", "targets": ["not-in-project"]},
+    ))
+    assert missing["status"] == "failed"
+    assert "targets are absent from configured Project" in missing["failure"]["reason"]
+
+
+def test_current_project_pin_update_is_copied_into_next_pipeline(tmp_path):
+    repository, packages, builder, toolchain = setup_repo(tmp_path)
+    # Project package definitions change after the compiler was produced.
+    (packages / "library/build.py").write_text(repr({
+        "build": [["new-current-pin", "library"]],
+        "install": [["install", "library"]],
+    }))
+    remote = adapter(repository, builder)
+    builder.runner = BoxControlRunner(
+        execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    result = remote.execute(request(
+        "project-current-pin-submit", "pipeline.submit",
+        {"mode": "image", "targets": ["library"]},
+    ))
+    assert result["status"] == "pending", result
+    captured = builder.state / "image-build/pipelines" / result["pipeline_id"] / "package"
+    assert (captured / "library/build.py").read_text() == (
+        packages / "library/build.py").read_text()
+    assert "new-current-pin" in (captured / "library/build.py").read_text()
+    assert (captured / "commit-pin.py").read_bytes() == (
+        packages / "commit-pin.py").read_bytes()
+
+
+def test_project_defaults_do_not_follow_cross_project_or_invalid_toolchain_link(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    remote_recipe_snapshot(remote, "configured-local-snapshot", "library")
+    link = builder.state / "image-build" / "toolchain-active"
+    link.unlink()
+    link.symlink_to(Path("..") / ".." / "other-project" / "toolchain-active")
+    denied = remote.execute(request(
+        "configured-cross-project-link", "pipeline.submit",
+        {"mode": "image", "targets": ["library"]},
+    ))
+    assert denied["status"] == "failed"
+    assert "active generation link is invalid" in denied["failure"]["reason"]
+    link.unlink()
+    missing = remote.execute(request(
+        "configured-toolchain-missing", "pipeline.submit",
+        {"mode": "image", "targets": ["library"]},
+    ))
+    assert missing["status"] == "failed"
+    assert "no active generation" in missing["failure"]["reason"]
+
+
+def test_existing_image_generation_is_usable_as_project_compiler_default(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    image = builder.ensure(["library"], toolchain=toolchain)
+    assert image.manifest["kind"] == "image"
+    link = builder.state / "image-build" / "active"
+    assert link.is_symlink()
+    assert link.readlink() == Path("generations") / image.generation
+
+    remote = adapter(repository, builder)
+    builder.runner = BoxControlRunner(
+        execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    submitted = remote.execute(request(
+        "image-kind-producer-submit", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    ))
+    assert submitted["status"] == "pending", submitted
+    prepared = builder.inspect_pipeline(submitted["pipeline_id"])
+    assert Path(prepared["selection"]).name == image.generation
+    assert "recipe_snapshot" not in prepared["owner"]
+
+
+def test_explicit_producer_arguments_remain_supported(tmp_path):
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    remote = adapter(repository, builder)
+    snapshot = remote_recipe_snapshot(
+        remote, "configured-explicit-snapshot", "library"
+    )
+    builder.runner = BoxControlRunner(
+        execute=lambda request: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    submitted = remote.execute(request(
+        "configured-explicit-submit", "pipeline.submit",
+        {"mode": "image", "selection": toolchain.generation,
+         "targets": ["library"], "recipe_snapshot": snapshot},
+    ))
+    assert submitted["status"] == "pending"
+
+
 def test_new_pipeline_submit_requires_recipe_snapshot(tmp_path):
     repository, _, builder, toolchain = setup_repo(tmp_path)
     result = adapter(repository, builder).execute(
