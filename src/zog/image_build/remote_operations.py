@@ -614,32 +614,6 @@ class RemoteOperations:
         # In particular, kind=image is not a reason to reject a compiler input.
         return self._generation(target.parts[1])
 
-    def _configured_recipe_snapshot(self, targets):
-        """Select a unique *already published* recipe set in this Project.
-
-        Do not accept a request-provided path, scan other Projects, or create
-        mutable snapshot/selection state to make gateway forwarding work.
-        """
-        store = self._recipe_snapshot_store()
-        matches = []
-        for entry in sorted((store.root / "snapshots").iterdir()):
-            if entry.is_symlink() or not entry.is_dir():
-                raise ImageBuildError("unsafe configured Project recipe snapshot")
-            identity = "sha256:" + entry.name
-            # Resolve through the normal verified immutable snapshot reader.
-            snapshot = store.resolve(identity)
-            if (snapshot.manifest["source"] ==
-                    {"repository": self.source_repository,
-                     "revision": self.source_revision}
-                    and set(targets) <= set(snapshot.manifest["packages"])):
-                matches.append(snapshot)
-        if len(matches) != 1:
-            raise ImageBuildError(
-                "configured Project has no unique published recipe snapshot "
-                "for the selected targets"
-            )
-        return matches[0]
-
     def _pipeline_arguments(self, request):
         arguments = request["arguments"]
         if set(arguments) - {
@@ -655,16 +629,16 @@ class RemoteOperations:
         mode = arguments.get("mode")
         if mode not in GENERIC_PIPELINE_MODES:
             raise ImageBuildError("invalid remote pipeline mode")
-        # Only the image pipeline may use the configured Project's existing
-        # defaults. Explicit generic/bootstrap requests keep their contract.
-        defaults = (
-            mode == "image"
-            and set(arguments) == {"mode", "targets"}
-        )
+        # A request without selected identities uses the current Project's
+        # active generation and live package definitions. Pipeline preparation
+        # already copies and hashes those packages into its own durable record;
+        # do not select an older published snapshot or invent an approval file.
+        defaults = mode == "image" and set(arguments) == {"mode", "targets"}
         if defaults:
             targets = list(names(arguments["targets"]))
             selection = self._configured_toolchain()
-            snapshot = self._configured_recipe_snapshot(targets)
+            packages = set(load_packages(self.builder.package_dir))
+            snapshot = None
         else:
             if "recipe_snapshot" not in arguments:
                 raise ImageBuildError(
@@ -674,7 +648,7 @@ class RemoteOperations:
                 arguments["recipe_snapshot"]
             )
             selection = self._generation(arguments.get("selection"))
-        packages = set(snapshot.manifest["packages"])
+            packages = set(snapshot.manifest["packages"])
         if mode == "bootstrap":
             if set(arguments) != {
                 "mode",
@@ -725,7 +699,8 @@ class RemoteOperations:
         targets = list(names(arguments["targets"]))
         if not set(targets) <= packages:
             raise ImageBuildError(
-                "pipeline targets are not present in recipe snapshot"
+                "pipeline targets are absent from configured Project package recipes"
+                if defaults else "pipeline targets are not present in recipe snapshot"
             )
         return (
             mode,
@@ -751,22 +726,23 @@ class RemoteOperations:
         mode, selection, arguments, snapshot = (
             self._pipeline_arguments(request)
         )
-        snapshot_builder = self._builder_for_recipe_snapshot(
-            snapshot
+        # ImageBuild.prepare_pipeline snapshots the currently installed
+        # Project packages and source pins before execution. Explicit
+        # immutable snapshot operations keep their historical builder path.
+        selected_builder = (
+            self.builder if snapshot is None
+            else self._builder_for_recipe_snapshot(snapshot)
         )
-        record = snapshot_builder.prepare_pipeline(
-            mode,
-            selection,
-            owner={**self._owner(request), "recipe_snapshot": snapshot.snapshot},
-            **arguments,
+        owner = self._owner(request)
+        if snapshot is not None:
+            owner["recipe_snapshot"] = snapshot.snapshot
+        record = selected_builder.prepare_pipeline(
+            mode, selection, owner=owner, **arguments,
         )
-        self._write_binding(
-            directory,
-            {
-                "pipeline_id": record["pipeline_id"],
-                "recipe_snapshot": snapshot.snapshot,
-            },
-        )
+        binding = {"pipeline_id": record["pipeline_id"]}
+        if snapshot is not None:
+            binding["recipe_snapshot"] = snapshot.snapshot
+        self._write_binding(directory, binding)
         return record["pipeline_id"]
 
     def _observed_pipeline_path(self, pipeline_id):
@@ -1406,6 +1382,7 @@ class RemoteOperations:
         mode, selection, arguments, snapshot = (
             self._pipeline_arguments(request)
         )
+        snapshot_key = snapshot.snapshot if snapshot is not None else "project-current"
         binding = self._binding(directory)
         if binding is None:
             predecessor_pipeline, summary = self._predecessor_pipeline(request)
@@ -1420,11 +1397,11 @@ class RemoteOperations:
                 directory,
                 {
                     "predecessor_pipeline_id": predecessor_pipeline,
-                    "recipe_snapshot": snapshot.snapshot,
+                    "recipe_snapshot": snapshot_key,
                     "phase": "release-predecessor",
                 },
             )
-        if binding.get("recipe_snapshot") != snapshot.snapshot:
+        if binding.get("recipe_snapshot") != snapshot_key:
             raise ImageBuildError(
                 "retry recipe snapshot differs from durable binding"
             )
@@ -1433,7 +1410,7 @@ class RemoteOperations:
             self.builder.release_pipeline(predecessor_pipeline)
             binding = {
                 "predecessor_pipeline_id": predecessor_pipeline,
-                "recipe_snapshot": snapshot.snapshot,
+                "recipe_snapshot": snapshot_key,
                 "phase": "prepare-retry",
             }
             write_json(directory / "binding.json", binding)
@@ -1441,7 +1418,8 @@ class RemoteOperations:
             recovered = self._find_owned_pipeline(request)
             if recovered is None:
                 snapshot_builder = (
-                    self._builder_for_recipe_snapshot(snapshot)
+                    self.builder if snapshot is None
+                    else self._builder_for_recipe_snapshot(snapshot)
                 )
                 record = snapshot_builder.prepare_pipeline(
                     mode,
@@ -1454,7 +1432,7 @@ class RemoteOperations:
                 pipeline_id = recovered["pipeline_id"]
             binding = {
                 "predecessor_pipeline_id": predecessor_pipeline,
-                "recipe_snapshot": snapshot.snapshot,
+                "recipe_snapshot": snapshot_key,
                 "phase": "run-retry",
                 "pipeline_id": pipeline_id,
             }
