@@ -17,6 +17,7 @@ from zog.image_build.remote_operations import (
     _validated_observed_state_dir,
 )
 from zog.image_build.runner import BoxControlRunner, BuildExecutionResult
+from zog.image_build.filesystem import inventory
 
 
 def recipe(root, name, *, build=(), runtime=(), command="compile"):
@@ -1431,14 +1432,14 @@ def test_project_defaults_do_not_follow_cross_project_or_invalid_toolchain_link(
         {"mode": "image", "targets": ["library"]},
     ))
     assert denied["status"] == "failed"
-    assert "toolchain link is invalid" in denied["failure"]["reason"]
+    assert "compiler link is invalid" in denied["failure"]["reason"]
     link.unlink()
     missing = remote.execute(request(
         "configured-toolchain-missing", "pipeline.submit",
         {"mode": "image", "targets": ["library"]},
     ))
     assert missing["status"] == "failed"
-    assert "no active toolchain" in missing["failure"]["reason"]
+    assert "no selected compiler generation" in missing["failure"]["reason"]
 
 
 def test_explicit_producer_arguments_remain_supported(tmp_path):
@@ -1778,3 +1779,117 @@ def test_retained_pin_new_executable_cli_captures_original_revision_not_its_own(
         "digest":digest,
     }]
     assert not (source/"project/pins/2026-10-01/commit-pin.py").exists()
+
+
+def _accepted_image_fixture(tmp_path):
+    """A real immutable generation of kind=image, not an invented toolchain."""
+    repository, _, builder, promoted = setup_repo(tmp_path)
+    compiler_image = builder.ensure(["library"], toolchain=promoted)
+    assert compiler_image.manifest["kind"] == "image"
+    assert compiler_image.manifest["inputs"]["kind"] == "image"
+    assert "stage" not in compiler_image.manifest
+    original_dir = builder.state / "image-build/generations" / compiler_image.generation
+    original_manifest = (original_dir / "manifest.json").read_bytes()
+    original_root = inventory(compiler_image.root)
+    # Acceptance receipts are separate immutable evidence, not generation
+    # metadata to be amended for the purposes of a kind-label workaround.
+    receipt = tmp_path / "accepted-certbot-seed-compiler-receipt.json"
+    receipt_bytes = json.dumps({
+        "generation_id": compiler_image.generation,
+        "generation_kind": "image",
+        "receipt_ref": "sha256:" + "a" * 64,
+        "status": "externally-accepted-compiler-fixture",
+    }, sort_keys=True).encode()
+    receipt.write_bytes(receipt_bytes)
+    receipt.chmod(0o400)
+    return (repository, builder, compiler_image, original_dir,
+            original_manifest, original_root, receipt, receipt_bytes)
+
+
+def _assert_compiler_input_unchanged(compiler, directory, original_manifest,
+                                     original_root, receipt, receipt_bytes):
+    from zog.image_build.engine import read_selection
+    from zog.image_build.filesystem import inventory
+    selected = read_selection(directory)
+    assert selected.generation == compiler.generation
+    assert selected.manifest["kind"] == "image"
+    assert (directory / "manifest.json").read_bytes() == original_manifest
+    assert inventory(directory / "root") == original_root
+    assert receipt.read_bytes() == receipt_bytes
+    assert receipt.stat().st_mode & 0o777 == 0o400
+
+
+def test_accepted_kind_image_compiler_builds_distinct_output_without_relabel(tmp_path):
+    from zog.image_build.filesystem import inventory
+    (repository, builder, compiler, directory, original_manifest,
+     original_root, receipt, receipt_bytes) = _accepted_image_fixture(tmp_path)
+    result = builder.ensure(["compiler-first"], toolchain=compiler)
+    assert result.generation != compiler.generation
+    assert result.manifest["kind"] == "image"
+    assert result.manifest["inputs"]["toolchain"] == compiler.generation
+    assert (builder.state / "image-build/generations" / result.generation /
+            "manifest.json").is_file()
+    assert (result.root / "usr/share/compiler-first").read_text() == "compiler-first"
+    _assert_compiler_input_unchanged(
+        compiler, directory, original_manifest, original_root, receipt, receipt_bytes)
+
+
+def test_explicit_remote_image_compiler_needs_no_toolchain_pointer(tmp_path):
+    (repository, builder, compiler, directory, original_manifest,
+     original_root, receipt, receipt_bytes) = _accepted_image_fixture(tmp_path)
+    links = builder.state / "image-build"
+    for name in ("toolchain-active", "active"):
+        (links / name).unlink(missing_ok=True)
+    remote = adapter(repository, builder)
+    snapshot = remote_recipe_snapshot(remote, "image-snapshot-explicit", "compiler-first")
+    builder.runner = BoxControlRunner(
+        execute=lambda value: (_ for _ in ()).throw(KeyboardInterrupt()))
+    submitted = remote.execute(request(
+        "image-compiler-explicit", "pipeline.submit",
+        {"mode": "image", "selection": compiler.generation,
+         "targets": ["compiler-first"], "recipe_snapshot": snapshot},
+    ))
+    assert submitted["status"] == "pending", submitted
+    pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
+    assert Path(pipeline["selection"]).name == compiler.generation
+    assert pipeline["owner"]["recipe_snapshot"] == snapshot
+    assert not (links / "toolchain-active").exists()
+    _assert_compiler_input_unchanged(
+        compiler, directory, original_manifest, original_root, receipt, receipt_bytes)
+
+
+def test_remote_existing_active_image_compiler_default_requires_no_new_toolchain(tmp_path):
+    (repository, builder, compiler, directory, original_manifest,
+     original_root, receipt, receipt_bytes) = _accepted_image_fixture(tmp_path)
+    links = builder.state / "image-build"
+    (links / "toolchain-active").unlink()
+    assert (links / "active").is_symlink()
+    assert (links / "active").readlink() == Path("generations") / compiler.generation
+    remote = adapter(repository, builder)
+    snapshot = remote_recipe_snapshot(remote, "image-snapshot-default", "compiler-first")
+    builder.runner = BoxControlRunner(
+        execute=lambda value: (_ for _ in ()).throw(KeyboardInterrupt()))
+    submitted = remote.execute(request(
+        "image-compiler-existing-default", "pipeline.submit",
+        {"mode": "image", "targets": ["compiler-first"]},
+    ))
+    assert submitted["status"] == "pending", submitted
+    pipeline = builder.inspect_pipeline(submitted["pipeline_id"])
+    assert Path(pipeline["selection"]).name == compiler.generation
+    assert pipeline["owner"]["recipe_snapshot"] == snapshot
+    assert not (links / "toolchain-active").exists()
+    _assert_compiler_input_unchanged(
+        compiler, directory, original_manifest, original_root, receipt, receipt_bytes)
+
+
+def test_seed_bootstrap_cannot_be_misused_as_compiler_image(tmp_path):
+    repository, _, builder, promoted = setup_repo(tmp_path)
+    generations = builder.state / "image-build/generations"
+    from zog.image_build.engine import read_selection
+    seed = next(
+        read_selection(p) for p in generations.iterdir()
+        if json.loads((p / "manifest.json").read_text())["kind"] == "host-bootstrap"
+    )
+    with pytest.raises(ImageBuildError, match="ordinary compiler input must be"):
+        builder.ensure(["library"], toolchain=seed)
+    assert promoted.manifest["kind"] == "toolchain"
