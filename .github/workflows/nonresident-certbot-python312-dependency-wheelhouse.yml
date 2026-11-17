@@ -1,0 +1,128 @@
+name: Nonresident Certbot pinned Python 3.12 dependency wheelhouse (no Host install)
+on:
+  push:
+    branches: [regular/nonresident-certbot-python312-dependency-closure-20261117]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  offline-wheelhouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Download unchanged original aggregate wheel from selected successful run
+        uses: actions/download-artifact@v4
+        with:
+          name: nonresident-certbot-zog-development-wheel-unaccepted
+          repository: zog144/image-build
+          run-id: 44090347882
+          github-token: ${{ github.token }}
+          path: /tmp/selected-aggregate
+      - name: Verify the existing installed aggregate identity, not replace it
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          wheels=list(Path('/tmp/selected-aggregate').rglob('zog-0.1.1.dev20261117-py3-none-any.whl'))
+          assert len(wheels)==1
+          actual=hashlib.sha256(wheels[0].read_bytes()).hexdigest()
+          assert actual=='bf8560e3ee228dc6390f708bb9282472bbc7e14b154b5841c7ba912901b204c8'
+          print("ORIGINAL_AGGREGATE_UNCHANGED",actual)
+          PY
+      - name: Resolve binary-only dependencies for AL2023 x86_64 CPython3.12
+        run: |
+          python -m pip --version
+          mkdir -p /tmp/zog-certbot-deps/wheelhouse
+          python -m pip download \
+            --only-binary=:all: --implementation cp --python-version 3.12 \
+            --abi cp312 --platform manylinux2014_x86_64 \
+            --index-url https://pypi.org/simple \
+            --dest /tmp/zog-certbot-deps/wheelhouse \
+            -r project/host/nonresident-certbot-python312-dependencies.in
+      - name: Generate reviewable transitive wheel lock and hash-check every downloaded file
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,str(Path.cwd()/'tools'))
+          from verify_nonresident_certbot_dependency_wheelhouse import inventory, generated_lock
+          wheels=inventory('/tmp/zog-certbot-deps/wheelhouse')
+          path=Path('/tmp/zog-certbot-deps/requirements.lock')
+          path.write_text(generated_lock(wheels))
+          print("EXACT REVIEWABLE CLOSURE")
+          print(path.read_text())
+          PY
+          if test -f project/host/nonresident-certbot-python312-dependencies.lock; then
+            cmp -s project/host/nonresident-certbot-python312-dependencies.lock \
+              /tmp/zog-certbot-deps/requirements.lock || { echo "LOCK DRIFT: wheelhouse changed from reviewed source"; exit 1; }
+          else
+            echo "CANDIDATE LOCK: needs independent source review and commit"
+          fi
+          python tools/verify_nonresident_certbot_dependency_wheelhouse.py \
+            --wheelhouse /tmp/zog-certbot-deps/wheelhouse \
+            --lock /tmp/zog-certbot-deps/requirements.lock \
+            --aggregate /tmp/selected-aggregate/zog-0.1.1.dev20261117-py3-none-any.whl \
+            --output /tmp/zog-certbot-deps/offline-dependency-evidence.json
+      - name: Real clean Python3.12 offline installation and all fifteen controller imports
+        run: |
+          python -m venv /tmp/zog-dependencies-smoke
+          /tmp/zog-dependencies-smoke/bin/python -m pip install \
+            --no-index --find-links /tmp/zog-certbot-deps/wheelhouse \
+            --require-hashes --no-cache-dir --no-compile \
+            -r /tmp/zog-certbot-deps/requirements.lock
+          /tmp/zog-dependencies-smoke/bin/python -m pip install \
+            --no-index --no-deps --no-cache-dir --no-compile \
+            /tmp/selected-aggregate/zog-0.1.1.dev20261117-py3-none-any.whl
+          /tmp/zog-dependencies-smoke/bin/python -m pip check
+          /tmp/zog-dependencies-smoke/bin/python -I -B - <<'PY'
+          import importlib, importlib.metadata, json, sys
+          from pathlib import Path
+          assert sys.version_info[:2]==(3,12)
+          assert importlib.metadata.version('zog')=='0.1.1.dev20261117'
+          modules=[
+            'zog.box_control.api',
+            'zog.box_control.application_storage',
+            'zog.box_control.errors',
+            'zog.box_control.issuer_inspection_evidence',
+            'zog.box_control.issuer_lifecycle_broker',
+            'zog.box_control.issuer_lifecycle_client',
+            'zog.box_control.role_broker',
+            'zog.box_control.role_broker_client',
+            'zog.box_control.runtime.root_control',
+            'zog.box_control.runtime.systemd',
+            'zog.root_control.daemon',
+            'zog.root_control.identities',
+            'zog.root_control.issuer_inspection_result',
+            'zog.root_control.issuer_observation',
+            'zog.root_control.systemd',
+          ]
+          for name in modules:
+              mod=importlib.import_module(name)
+              assert Path(mod.__file__).is_relative_to(Path(sys.prefix)),name
+          print(json.dumps({'status':'ALL_15_CONTROLLER_IMPORTS_PASS','python':sys.executable,
+                            'module_count':len(modules),'aggregate_unchanged':True}))
+          PY
+          /tmp/zog-dependencies-smoke/bin/python -I -B -m zog.host_install --help \
+            > /tmp/zog-certbot-deps/attestor-help.txt
+          grep -F 'certify-manage-controller-attest-installed' /tmp/zog-certbot-deps/attestor-help.txt
+      - name: Retain exact dependency wheels and nonsecret offline lock for Work
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonresident-certbot-python312-dependency-wheelhouse-candidate
+          path: |
+            /tmp/zog-certbot-deps/wheelhouse/*.whl
+            /tmp/zog-certbot-deps/requirements.lock
+            /tmp/zog-certbot-deps/offline-dependency-evidence.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Protect native installation and issuer authority
+        if: always()
+        run: echo "No dependency was installed on the original Host; the existing zog RECORD, state, identity, credentials and certificates remain unchanged." >> "$GITHUB_STEP_SUMMARY"
