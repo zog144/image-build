@@ -290,6 +290,17 @@ def _inspect_zog(root, *, expected_sha, expected_count, expected_launchers):
     return {"record_sha256": expected_sha, "launchers": launchers}
 
 
+def _rpm_jp_sha(live_root):
+    """Observe the independent RPM-owned script; never map dependency data to it."""
+    path = _ancestor_preflight(live_root, "usr/bin/jp.py")
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return None
+    _regular(path)
+    return digest(path.read_bytes())
+
+
 def preflight(evidence, live_root, *, expected_zog_sha=None,
               expected_zog_count=509, expected_zog_launchers=16):
     """Validate *all* destinations before any live filesystem mutation."""
@@ -318,6 +329,7 @@ def preflight(evidence, live_root, *, expected_zog_sha=None,
         "files": len(evidence["members"]),
         "scripts": sorted(evidence["scripts"]),
         "private_script_directory": "/" + SCRIPTS,
+        "rpm_jp_sha256": _rpm_jp_sha(live_root),
         "protected": protected,
         "root": str(Path(live_root)),
         "live_files_written": 0,
@@ -411,6 +423,8 @@ def apply(evidence, live_root, *, expected_zog_sha=ACCEPTED_ZOG_RECORD_SHA256,
         expected_zog_count=expected_zog_count,
         expected_zog_launchers=expected_zog_launchers,
     )
+    if _rpm_jp_sha(live_root) != checked["rpm_jp_sha256"]:
+        hold("RPM-owned /usr/bin/jp.py changed during dependency installation")
     receipt = operation / "live-commit-completed.json"
     receipt.write_text(json.dumps({
         "schema": SCHEMA, "status": "FILES_CREATED_NATIVE_READBACK_REQUIRED",
@@ -465,7 +479,16 @@ def main():
         "distribution_count": len(result["wheels"]),
         "member_count": len(result["members"]),
         "relocated_script_paths": sorted(result["scripts"]),
+        "relocated_script_evidence": result["scripts"],
+        "staged_record_sha256": {
+            rel: digest(_under(result["root"], rel).read_bytes())
+            for rel in result["record_paths"]
+        },
+        "source_wheel_sha256": {
+            item["name"]: item["sha256"] for item in result["wheels"]
+        },
         "live_files_written": final["live_files_written"],
+        "rpm_jp_sha256_preflight": final["rpm_jp_sha256"],
         "original_zog_modified": False,
         "staged_record_paths": result["record_paths"],
     }
