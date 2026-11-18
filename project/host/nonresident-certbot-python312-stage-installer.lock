@@ -1,0 +1,3 @@
+# Separate disposable staging tool, never a Python 3.12 runtime dependency.
+# PyPI installer 1.0.1 pure Python wheel, not part of 24 dependency wheels.
+installer==1.0.1 --hash=sha256:011d045df8b954ced7dde3a7e42ae4418da40ecda7990f2d11d5ed7c146fd98b
