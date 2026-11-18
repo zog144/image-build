@@ -230,3 +230,31 @@ def test_staged_collision_between_wheel_scripts_and_generated_entrypoints(tmp_pa
             bundle.writestr(name, data)
     with pytest.raises((FileExistsError, DependencyHold), match="File already exists|same staged"):
         staged.stage(wheelhouse, tmp_path / "staged-root")
+
+
+
+def test_late_racing_destination_cannot_overwrite_after_full_preflight(tmp_path, monkeypatch):
+    result = _stage(tmp_path, monkeypatch)
+    root, rpm_script, rpm_before = _rpm_root(tmp_path)
+    zog_sha, launcher, launcher_before = _zog_guard(root)
+    monkeypatch.setattr(staged.os, "geteuid", lambda: 0)
+    original_write = staged._exclusive_write
+    injected = sorted(result["members"])[0]
+
+    def racing_write(live_root, rel, source, expected):
+        if rel == injected:
+            target = root / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b"someone-else-created-this-between-preflight-and-commit")
+        return original_write(live_root, rel, source, expected)
+
+    monkeypatch.setattr(staged, "_exclusive_write", racing_write)
+    with pytest.raises(DependencyHold, match="interrupted create-only install after 0 files"):
+        staged.apply(result, root, expected_zog_sha=zog_sha,
+                     expected_zog_count=2, expected_zog_launchers=1)
+    assert (root / injected).read_bytes().startswith(b"someone-else-created")
+    assert rpm_script.read_bytes() == rpm_before
+    assert launcher.read_bytes() == launcher_before
+    assert (tmp_path / "staged-root/live-commit-preflight.json").is_file()
+    assert not (tmp_path / "staged-root/live-commit-completed.json").exists()
+    assert not (root / staged.SCRIPTS / "jp.py").exists()
