@@ -1,0 +1,128 @@
+name: Nonresident Python3.12 private dependency scripts and complete collision preflight
+on:
+  push:
+    branches: [regular/nonresident-dependency-private-scripts-20261118]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  dependency-staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install pinned wheel staging tool and test harness outside production Host
+        run: |
+          python -m pip install "installer==1.0.1" "pytest==8.4.2"
+          python - <<'PY'
+          import importlib.metadata as m
+          assert m.version("installer") == "1.0.1"
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: nonresident-certbot-python312-dependency-wheelhouse-candidate
+          repository: zog144/image-build
+          run-id: 44145584689
+          github-token: ${{ github.token }}
+          path: /tmp/locked-dependencies
+      - name: Prove all 24 original dependency wheel SHA256 identities are unchanged
+        run: |
+          find /tmp/locked-dependencies -maxdepth 3 -type f -name '*.whl' | wc -l
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,str(Path.cwd()/'tools'))
+          from verify_nonresident_certbot_dependency_wheelhouse import verify
+          wheelhouse=Path('/tmp/locked-dependencies/wheelhouse')
+          result=verify(wheelhouse,lock='project/host/nonresident-certbot-python312-dependencies.lock')
+          assert result['distribution_count']==24
+          assert next(x for x in result['distributions'] if x['name']=='jmespath')['version']=='1.1.0'
+          print("ALL_24_DEPENDENCY_WHEEL_HASHES_PINNED")
+          PY
+      - name: Synthetic wheel scripts, generated entrypoints, unexpected private collisions
+        run: |
+          PYTHONPATH=tools python -m pytest -q -rs -p no:cacheprovider \
+            tests/test_nonresident_certbot_staged_private_scripts.py \
+            tests/test_nonresident_certbot_dependency_wheelhouse.py
+      - name: Stage the REAL 24 wheel distribution set with private command scripts
+        run: |
+          mkdir -p /tmp/simulated-usr-root/usr/bin
+          printf '#!/usr/bin/python3\n# simulated RPM jp.py\n' > /tmp/simulated-usr-root/usr/bin/jp.py
+          sha256sum /tmp/simulated-usr-root/usr/bin/jp.py > /tmp/rpm-jp.before
+          python tools/install_nonresident_certbot_dependencies_staged.py \
+            --wheelhouse /tmp/locked-dependencies/wheelhouse \
+            --workspace /tmp/private-scripts-staged \
+            --live-root /tmp/simulated-usr-root \
+            --output /tmp/private-scripts-staged-preflight.json
+          sha256sum -c /tmp/rpm-jp.before
+          test ! -e /tmp/simulated-usr-root/usr/lib/python3.12/site-packages/jmespath/__init__.py
+          test -f /tmp/private-scripts-staged/root/usr/libexec/zog/python3.12/bin/jp.py
+          test ! -e /tmp/private-scripts-staged/root/usr/bin/jp.py
+      - name: Assert all REAL installed RECORD rows and relocated script hashes/paths
+        run: |
+          python - <<'PY'
+          import csv, json, pathlib, posixpath, sys
+          sys.path.insert(0,str(pathlib.Path.cwd()/'tools'))
+          from verify_nonresident_certbot_dependency_wheelhouse import inventory
+          from install_nonresident_certbot_dependencies_staged import (
+              verify_staged_records, SCRIPTS, SITE)
+          base=pathlib.Path('/tmp/private-scripts-staged/root')
+          wheels=inventory('/tmp/locked-dependencies/wheelhouse')
+          result=verify_staged_records(base,wheels)
+          assert len(result['record_paths'])==24
+          assert SCRIPTS+'/jp.py' in result['scripts']
+          assert all(x.startswith(SCRIPTS+'/') for x in result['scripts'])
+          assert not (base/'usr/bin/jp.py').exists()
+          actual=(base/SITE/'jmespath-1.1.0.dist-info/RECORD').read_text()
+          assert '../../../libexec/zog/python3.12/bin/jp.py' in actual
+          for path in result['scripts']:
+              assert (base/path).is_file()
+          print(json.dumps({'status':'ALL_24_REAL_INSTALLED_RECORDS_PRIVATE_SCRIPTS_PASS',
+                            'record_count':len(result['record_paths']),
+                            'script_paths':sorted(result['scripts'])}))
+          PY
+      - name: Ensure an occupied final PRIVATE script destination blocks every live output
+        run: |
+          mkdir -p /tmp/simulated-usr-root/usr/libexec/zog/python3.12/bin
+          printf 'occupied\n' > /tmp/simulated-usr-root/usr/libexec/zog/python3.12/bin/jp.py
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,str(Path.cwd()/'tools'))
+          import install_nonresident_certbot_dependencies_staged as stage
+          from verify_nonresident_certbot_dependency_wheelhouse import inventory, DependencyHold
+          source=Path('/tmp/private-scripts-staged/root')
+          wheels=inventory('/tmp/locked-dependencies/wheelhouse')
+          data=stage.verify_staged_records(source,wheels)
+          evidence={'root':source,'wheels':wheels,**data}
+          target=Path('/tmp/simulated-usr-root')
+          before=(target/'usr/libexec/zog/python3.12/bin/jp.py').read_bytes()
+          try:
+              stage.preflight(evidence,target)
+          except DependencyHold as e:
+              assert 'final destination collision' in str(e),e
+          else:
+              raise AssertionError('private collision did not fail')
+          assert (target/'usr/libexec/zog/python3.12/bin/jp.py').read_bytes()==before
+          assert not (target/'usr/lib/python3.12/site-packages/jmespath').exists()
+          print('PRIVATE_JP_COLLISION_BLOCKED_BEFORE_LIVE_WRITES')
+          PY
+      - name: Retain nonsecret script and RECORD mapping proof (not native Host evidence)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonresident-python312-private-dependency-script-preflight
+          path: |
+            /tmp/private-scripts-staged-preflight.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Explicit native acceptance boundary
+        if: always()
+        run: echo "Only disposable GitHub runner files changed. No existing AL2023 /usr/bin/jp.py, accepted zog package, live RECORD, private credentials, Host, or issuer authority was touched." >> "$GITHUB_STEP_SUMMARY"
