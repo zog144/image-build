@@ -95,6 +95,7 @@ jobs:
           assert not (base/'usr/bin/jp.py').exists()
           actual=(base/SITE/'jmespath-1.1.0.dist-info/RECORD').read_text()
           assert '../../../libexec/zog/python3.12/bin/jp.py' in actual
+          assert (base/SCRIPTS/'jp.py').read_bytes().startswith(b'#!/usr/bin/python3.12')
           for path in result['scripts']:
               assert (base/path).is_file()
           print(json.dumps({'status':'ALL_24_REAL_INSTALLED_RECORDS_PRIVATE_SCRIPTS_PASS',
