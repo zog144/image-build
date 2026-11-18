@@ -1,5 +1,13 @@
 # Nonresident Certbot — Python 3.12 offline dependencies (2026-11-17)
 
+> **November 18 supersession:** The source lock and its 24 wheel hashes
+> remain valid, but the old direct `pip install --prefix /usr` instruction
+> below is replaced by the private-script staging implementation in
+> [November 18 private dependency scripts](nonresident-python312-private-dependency-scripts-2026-11-18.md).
+> That implementation protects RPM-owned `/usr/bin/jp.py` and relocates
+> all dependency wheel scripts to `/usr/libexec/zog/python3.12/bin`.
+> Do not run a direct pip install of this wheelhouse into live `/usr`.
+
 ## Actual native predecessor
 
 The original Amazon Linux 2023 nonresident Host already has root-owned
@@ -56,18 +64,18 @@ station assignment or issuer activation side effect.
    distributions were absent, but does not prove all fourteen transitives
    were absent. If an existing version differs, or a file collision is
    possible, HOLD and reconcile; never blindly uninstall or upgrade it.
-4. Only on an explicitly authorized native installation operation, use
-   the complete verified offline wheelhouse with the following command
-   (replace the two /PATH/TO/REVIEWED prefixes with the saved inputs):
+4. **Replaced native installation procedure:** the 24 hash-pinned wheels
+   must first be staged with `installer==1.0.1` in an isolated temporary
+   Python 3.12 environment and with the `scripts` scheme directed to
+   `/usr/libexec/zog/python3.12/bin`. The new [November 18
+   private-script handoff](nonresident-python312-private-dependency-scripts-2026-11-18.md)
+   provides the exact staged commands, complete installed RECORD and
+   all-destination preflight, and create-only native `--apply` operation.
 
-   /usr/bin/python3.12 -m pip install --no-index \
-     --find-links /PATH/TO/REVIEWED/wheelhouse --require-hashes \
-     --no-deps --no-cache-dir --no-compile --prefix /usr \
-     -r /PATH/TO/REVIEWED/nonresident-certbot-python312-dependencies.lock
-
-   The committed lock already names ALL transitive packages, so --no-deps
-   avoids selection drift. Do not pass zog to pip; no --upgrade,
-   Python 3.15, remote network, alternate user or pyc generation.
+   **Do not use `pip install --prefix /usr` for these wheels**: that would
+   attempt to install jmespath's `jp.py` at the RPM-owned
+   `/usr/bin/jp.py`. No original wheel hashes, libraries, PATH or zog
+   launcher paths are changed by the new staged procedure.
 5. Independently verify installed versions and actual root-owned RECORD
    bytes of all 24 distributions under the selected interpreter,
    then use pip check and import all fifteen of the original issuer-critical
