@@ -83,6 +83,8 @@ def _staged_files(root):
         for name in filenames:
             file = Path(parent) / name
             info = _regular(file)
+            if stat.S_IMODE(info.st_mode) & 0o022:
+                hold("staged member unexpectedly group/world writable: " + str(file))
             rel = file.relative_to(root).as_posix()
             _relative(rel)
             if not (rel.startswith(SITE + "/") or rel.startswith(SCRIPTS + "/")):
@@ -199,7 +201,9 @@ def stage(wheelhouse, workspace, *, lock=LOCK):
     workspace = Path(workspace)
     if workspace.exists() or workspace.is_symlink():
         hold("refuse to overwrite an existing staging workspace")
-    workspace.mkdir(parents=True)
+    workspace.mkdir(parents=True, mode=0o700)
+    if stat.S_IMODE(workspace.stat().st_mode) != 0o700:
+        hold("staging workspace must be private mode 0700")
     staged = workspace / "root"
     staged.mkdir()
     destination = SchemeDictionaryDestination(
@@ -266,6 +270,7 @@ def _inspect_zog(root, *, expected_sha, expected_count, expected_launchers):
         if not (rel.startswith(SITE + "/") or rel.startswith("usr/bin/")):
             hold("unreviewed accepted zog installation destination: " + rel)
         file = _ancestor_preflight(root, rel)
+        _regular(file)
         data = file.read_bytes()
         if rel == rec_rel:
             if sha or size:
@@ -319,7 +324,7 @@ def preflight(evidence, live_root, *, expected_zog_sha=None,
     }
 
 
-def _exclusive_write(root, rel, staged):
+def _exclusive_write(root, rel, staged, expected):
     """Use dirfd + O_NOFOLLOW and O_EXCL to refuse late symlink/collision races."""
     names = _relative(rel).split("/")
     fd = os.open(root, os.O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
@@ -334,17 +339,25 @@ def _exclusive_write(root, rel, staged):
             fd = child
         source = _under(staged, rel)
         info = _regular(source)
+        if info.st_size != expected["bytes"] or digest(source.read_bytes()) != expected["sha256"]:
+            hold("staged input changed before exclusive final file creation: " + rel)
         target_fd = os.open(
             names[-1], os.O_WRONLY | os.O_CREAT | os.O_EXCL | O_NOFOLLOW,
             0o600, dir_fd=fd,
         )
         try:
+            written = hashlib.sha256()
+            size = 0
             with source.open("rb") as stream:
                 while chunk := stream.read(1024 * 1024):
+                    size += len(chunk)
+                    written.update(chunk)
                     view = memoryview(chunk)
                     while view:
                         count = os.write(target_fd, view)
                         view = view[count:]
+            if size != expected["bytes"] or written.hexdigest() != expected["sha256"]:
+                hold("staged input changed during exclusive final file creation: " + rel)
             os.fchmod(target_fd, stat.S_IMODE(info.st_mode))
             os.fsync(target_fd)
         finally:
@@ -369,10 +382,24 @@ def apply(evidence, live_root, *, expected_zog_sha=ACCEPTED_ZOG_RECORD_SHA256,
         expected_zog_count=expected_zog_count,
         expected_zog_launchers=expected_zog_launchers,
     )
+    # Preflight evidence is durably retained in the *disposable* workspace
+    # before any live installation file is created. An interrupted operation
+    # keeps its exact staged inputs and durable intent for explicit recovery.
+    operation = Path(evidence["root"]).parent
+    intent = operation / "live-commit-preflight.json"
+    if intent.exists() or intent.is_symlink():
+        hold("refuse to overwrite existing staging operation intent")
+    intent.write_text(json.dumps({
+        "schema": SCHEMA, "status": "PREPARED_CREATE_ONLY",
+        "live_root": str(Path(live_root)), "member_count": len(evidence["members"]),
+        "members": evidence["members"], "protected": checked["protected"],
+    }, indent=2, sort_keys=True) + "\n")
+    with intent.open("rb") as stream:
+        os.fsync(stream.fileno())
     completed = 0
     try:
         for rel in sorted(evidence["members"]):
-            _exclusive_write(live_root, rel, evidence["root"])
+            _exclusive_write(live_root, rel, evidence["root"], evidence["members"][rel])
             completed += 1
     except BaseException:
         # Never delete potentially accepted files or modify the old zog.
@@ -384,6 +411,13 @@ def apply(evidence, live_root, *, expected_zog_sha=ACCEPTED_ZOG_RECORD_SHA256,
         expected_zog_count=expected_zog_count,
         expected_zog_launchers=expected_zog_launchers,
     )
+    receipt = operation / "live-commit-completed.json"
+    receipt.write_text(json.dumps({
+        "schema": SCHEMA, "status": "FILES_CREATED_NATIVE_READBACK_REQUIRED",
+        "member_count": completed, "protected": after,
+    }, indent=2, sort_keys=True) + "\n")
+    with receipt.open("rb") as stream:
+        os.fsync(stream.fileno())
     return {**checked, "status": "FILES_CREATED_NATIVE_READBACK_REQUIRED",
             "live_files_written": completed,
             "postinstallation": after}
@@ -419,7 +453,13 @@ def main():
     if args.apply:
         final = apply(result, args.live_root)
     else:
-        final = preflight(result, args.live_root)
+        final = preflight(
+            result, args.live_root,
+            expected_zog_sha=(
+                ACCEPTED_ZOG_RECORD_SHA256
+                if args.live_root.resolve() == Path("/") else None
+            ),
+        )
     output = {
         "schema": SCHEMA, "status": final["status"],
         "distribution_count": len(result["wheels"]),
