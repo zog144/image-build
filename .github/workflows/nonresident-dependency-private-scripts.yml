@@ -18,12 +18,25 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.12'
-      - name: Install pinned wheel staging tool and test harness outside production Host
+      - name: Pin staging tool wheel bytes separately from the 24 unchanged runtime wheels
         run: |
-          python -m pip install "installer==1.0.1" "pytest==8.4.2"
+          mkdir -p /tmp/staging-installer-wheel
+          python -m pip download --only-binary=:all: --no-deps \
+            --require-hashes --dest /tmp/staging-installer-wheel \
+            -r project/host/nonresident-certbot-python312-stage-installer.lock
+          python -m pip install --no-index \
+            --find-links /tmp/staging-installer-wheel --require-hashes --no-deps \
+            -r project/host/nonresident-certbot-python312-stage-installer.lock
+          python -m pip install "pytest==8.4.2"
           python - <<'PY'
           import importlib.metadata as m
+          import hashlib
+          from pathlib import Path
           assert m.version("installer") == "1.0.1"
+          files=list(Path("/tmp/staging-installer-wheel").glob("installer-1.0.1-*.whl"))
+          assert len(files)==1
+          assert hashlib.sha256(files[0].read_bytes()).hexdigest()==(
+              "011d045df8b954ced7dde3a7e42ae4418da40ecda7990f2d11d5ed7c146fd98b")
           PY
       - uses: actions/download-artifact@v4
         with:
@@ -121,6 +134,7 @@ jobs:
           name: nonresident-python312-private-dependency-script-preflight
           path: |
             /tmp/private-scripts-staged-preflight.json
+            /tmp/staging-installer-wheel/installer-1.0.1-py3-none-any.whl
           if-no-files-found: error
           retention-days: 14
       - name: Explicit native acceptance boundary
