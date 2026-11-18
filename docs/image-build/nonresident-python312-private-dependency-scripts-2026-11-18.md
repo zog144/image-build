@@ -86,8 +86,8 @@ back. No compiler or remote command is invoked by this source work.
 
 ## Reviewed disposable CI evidence
 
-[Image-build CI run #44311019838](https://github.com/zog144/image-build/actions/runs/44311019838)
-passed 14 focused synthetic/negative tests and staged the original
+[Exact-source image-build CI run #44311877069](https://github.com/zog144/image-build/actions/runs/44311877069)
+passed 15 focused synthetic/negative tests and staged the original
 24 hash-locked real wheels. It verified all **24 installed RECORDs**,
 the seven actual private scripts and their relative RECORD destinations,
 a byte-identical simulated RPM-owned `/usr/bin/jp.py`, and rejection of an
@@ -95,7 +95,12 @@ unexpected pre-existing private `jp.py` before any simulated live file
 appeared. Negative tests also exercise library collisions, symlinked
 ancestry, script/entrypoint collisions, RECORD tampering, and create-only
 test-root commit preserving an original zog launcher/RECORD fixture.
-The exact-head workflow must be rerun after subsequent source corrections.
+The CI artifact `nonresident-python312-private-dependency-script-preflight`
+(ID `14430836856`, retained through December 2, 2026) includes the
+staged preflight with all original 24 wheel SHA-256 hashes, all 24
+actual installed RECORD SHA-256 hashes, each relocated script's final
+path/owner/hash/size, and the separately pinned staging tool wheel.
+No original Host files were accessed.
 
 ## image-build Work: original Host dependency-only operation
 
