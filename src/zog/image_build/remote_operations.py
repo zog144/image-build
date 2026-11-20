@@ -559,11 +559,11 @@ class RemoteOperations:
             )
         return value
 
-    def _builder_for_recipe_snapshot(self, snapshot):
+    def _builder_for_package_dir(self, package_dir):
         from .engine import ImageBuild
 
         return ImageBuild(
-            package_dir=snapshot.package_dir,
+            package_dir=package_dir,
             state_dir=self.builder.state,
             runner=self.builder.runner,
             maximum_generations=self.builder.maximum_generations,
@@ -571,6 +571,9 @@ class RemoteOperations:
             provenance=self.builder.provenance,
             source_mirror=self.builder.source_mirror,
         )
+
+    def _builder_for_recipe_snapshot(self, snapshot):
+        return self._builder_for_package_dir(snapshot.package_dir)
 
     def _pipeline_owner(self, record):
         owner = record.get("owner")
@@ -637,7 +640,16 @@ class RemoteOperations:
         if defaults:
             targets = list(names(arguments["targets"]))
             selection = self._configured_toolchain()
-            packages = set(load_packages(self.builder.package_dir))
+            from .first_fonts import eligible as fonts_eligible
+            if fonts_eligible(self.repository_root, self.builder.package_dir, targets):
+                # A catalogue root is not an execution package set:
+                # unrelated entries (e.g. acl) intentionally remain
+                # catalogue-only. Only the reviewed closed Fonts *final*
+                # stages are selected, then checked against a separate
+                # exact source SHA-256 pin in _prepare_pipeline.
+                packages = set(targets)
+            else:
+                packages = set(load_packages(self.builder.package_dir))
             snapshot = None
         else:
             if "recipe_snapshot" not in arguments:
@@ -733,6 +745,18 @@ class RemoteOperations:
             self.builder if snapshot is None
             else self._builder_for_recipe_snapshot(snapshot)
         )
+        from .first_fonts import eligible as fonts_eligible
+        if (snapshot is None and mode == "image"
+                and fonts_eligible(self.repository_root, self.builder.package_dir,
+                                   arguments["targets"])):
+            from .first_fonts import prepare as prepare_fonts
+            fonts_packages = prepare_fonts(
+                self.repository_root,
+                self.builder.package_dir,
+                directory,
+                arguments["targets"],
+            )
+            selected_builder = self._builder_for_package_dir(fonts_packages)
         owner = self._owner(request)
         if snapshot is not None:
             owner["recipe_snapshot"] = snapshot.snapshot
