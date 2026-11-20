@@ -83,50 +83,69 @@ installed module trees to those same hashes. Its source-only test uses
 distinct checkout directories as disposable installed-byte fixtures; it
 does not claim those fixtures are original Host installation evidence.
 
-**Current root-control is explicitly not a suitable v2 controller.**
-The inspected latest combined source root-control PR #54 is commit
-`119c50c11a73663a446ad07551fa662936856913`, which retains
-systemd 252 literal-argv fixes but still omits authenticated non-root
-`SO_PEERCRED` identity from its worker/build dispatch. It can run a
-finite compiler under systemd's default/root credentials. Its **26**
-selected source files are pinned only as a **rejected historical candidate**,
-not an executable admission pin. The source verifier rejects its use for
-native execution even if all those bytes match.
+**Current root-control v2 source is now selected.** Draft
+[root-control PR #55](https://github.com/zog144/root-control/pull/55)
+commit `58b5a94311d771bb1c5f4c3e9c6191b44d6565c9` contains the
+issuer/Task C functionality and systemd 252 literal-dollar finite-argv fix
+inherited from PR #54, plus full authenticated nonroot peer execution from
+issue #48. All **26** selected root-control runtime source files are
+pinned and checked byte-for-byte by the source/installed-module verifier.
+The older PR #54 commit
+`119c50c11a73663a446ad07551fa662936856913` remains in the
+source-selection evidence solely as a **rejected predecessor**, never
+selected as the executable root daemon for v2 compilation.
 
-**Native first-Fonts and Boot A execution remains HOLD** until
-root-control Regular delivers issue #48 in the same issuer/Task C capable
-controller source, including systemd 252 dollar escaping from PR #54.
-The root successor must:
-1. Bind build RPC v2 envelope (all eight lifecycle operations) to
-   kernel-authenticated accepted AF_UNIX PID/UID/GID, with no root peer.
-2. Reject selected User/Group/UID/GID fields and never use root-control's
-   own effective UID/GID as the compiler identity.
-3. Verify project access and process continuity and derive any transient
-   systemd `User=`/`Group=` fields server-side from the peer, with
-   no new compiler user accounts.
-4. Make old root-control operation records inspection-only, not
-   replayable by register/prepare/start/recovery/cleanup, and test actual
-   EUID/EGID, PID, cgroup and readonly/network controls.
-5. Provide its **exact immutable commit**, source file blobs, installed
-   RECORD/module-byte attestation and durable v2 native test evidence.
+The new server implementation accepts the exact box-control v2
+`build_contract` top-level envelope, captures `SO_PEERCRED` on the
+actual accepted Unix socket before dispatch, rejects root or forged peers,
+and injects the private server-only `_peer` into the build lifecycle.
+It binds new schema-2 records to the nonroot peer, makes historical records
+inspection-only, checks existing Project/workspace access, and derives any
+transient systemd User/Group settings from that authenticated principal.
+Live observation verifies the actual kernel child EUID/EGID, PID1's
+Unit User/Group and cgroup. No extra compiler account is created and no
+caller-chosen numeric UID/GID is accepted. The exact root-control PR55
+source CI passed 422 tests with 16 skipped per Python version, and the
+new producer CI must exercise its server-only `_peer` register signature.
 
-Once that revision is reviewed, update the source selection to replace the
-rejected root-control predecessor with the **new root v2 commit** and rerun
-the complete image-build cross-program tests. Do not weaken the verifier
-with an operator override to enable a v1 root daemon.
+**Native first-Fonts and Boot A execution remains HOLD**, but the reason
+is now **native deployment and acceptance**, not an absent source
+implementation. Root-control Work + box-control Work must prove:
+1. The actual installed box-control process uses a legitimate nonroot
+   effective UID and GID and is permitted on root-control's socket.
+2. The exact root-control PR55, box-control PR21 and this image-build
+   successor source and installed bytes are attested in their actual
+   environments (not merely CI checkout source fixtures).
+3. A **new disposable** bounded finite job traverses the normal
+   box-control/root-control path on real systemd 252, checking source
+   argv/literal dollar characters, child EUID/EGID, systemd properties,
+   network/read-only-root/cgroup and matching InvocationID at both live
+   and terminal observation through
+   `root-control/acceptance/build_peer_bound_live.py`.
+4. Existing historical operation state is never rewritten, selected as
+   a v2 checkpoint or submitted for replay. The previous uncertain R5
+   request remains unknown until explicitly reconciled; no direct SSM
+   or systemd bypass is acceptable.
+
+The command-line source verifier deliberately fails
+`--native-admission` until **the separate genuine installed-root and
+live child-evidence receipts** are accepted. Exact matching source blobs
+are necessary but insufficient. Review/integration of source may proceed
+without authorizing native compilation.
 
 ## CI / Work completion boundaries
 
 The new source workflow checks the full PR25 account/getty and
 `resident_boot_targeted` publication/recovery tests and current box
-v2 adapter on Python 3.12 and 3.13. It opens the source and installed-byte
-fixtures by exact SHA and verifies that the pre-v2 root cannot gain native
-admission. These source tests do not establish native child credentials.
+v2 + root-control PR55 server-only peer injection on Python 3.12 and
+3.13. It opens the selected source and installed-byte fixtures by
+exact SHA and verifies that source-only CI cannot claim native execution
+admission. These tests do not establish native child credentials.
 
 **Image-build Work may begin only after source and controller review:**
 
 - Authenticate the exact producer commit, box-control v2 revision,
-  reviewed root-control #48 successor and host-install #43 revision.
+  reviewed root-control PR55 successor and host-install #43 revision.
   Verify all actual installed files and signed installation/Build Record
   receipts in the selected environments, not merely GitHub CI fixtures.
 - Select a nonroot controller caller with access to the selected Project.
@@ -150,8 +169,11 @@ The former uncertain R5 controller operation
 `0111471e2132a31f052621e0fbab31f6` remains an immutable prior
 record; no direct-SSM or direct-systemd bypass is acceptable.
 
-**Source status:** image-build v2 producer hardening and PR25 preservation
-source-tested. **Native v2 controller agreement:** NOT ACCEPTED (root-control
-#48 pending). **New Boot A generation:** NOT BUILT/PUBLISHED. Therefore
-image-build issue #22 must remain open until the root v2 source is integrated,
-reviewed and its installed-byte/child credential acceptance completed.
+**Source status:** producer v2 and PR25 preservation source-reviewed
+candidate, selecting the exact box-control PR21 and root-control PR55
+v2 implementations. **Native controller acceptance:** NOT YET COMPLETED
+(actual root-owned installed bytes, nonroot client, real systemd252 child
+EUID/EGID and InvocationID pending). **New Boot A generation:** NOT
+BUILT/PUBLISHED. Image-build issue #22 remains open until the reviewed
+producer successor and matching installed controller triple are
+accepted and native Boot A publication succeeds.
