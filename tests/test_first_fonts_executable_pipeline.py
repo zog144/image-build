@@ -140,11 +140,12 @@ def test_fonts_normal_producer_prepares_actual_closed_executable_stages(tmp_path
 
 @pytest.mark.parametrize("changed, expected", [
     ("missing_build", "invalid literal metadata"),
-    ("missing_install", "invalid literal metadata"),
+    ("missing_install", "build and install steps must be explicit"),
     ("empty_build", "build and install steps must be explicit"),
     ("missing_source", "invalid literal metadata"),
     ("wrong_source_sha", "first Fonts stage source URL/SHA256 differs"),
     ("missing_source_sha", "first Fonts stage source URL/SHA256 differs"),
+    ("changed_reviewed_pin_sha", "first Fonts stage source URL/SHA256 differs"),
     ("missing_manifest", "invalid literal metadata"),
     ("missing_required_output", "required binary/header/config/notice output missing"),
     ("missing_notice", "invalid literal metadata"),
@@ -154,11 +155,11 @@ def test_fonts_rejects_nonexecutable_unpinned_or_unnoticed_stage(tmp_path, chang
     def damage(repo, catalogue):
         stage = catalogue / "freetype" / "stages" / "final"
         if changed.startswith("missing_") and changed in {
-            "missing_build", "missing_install", "missing_source",
+            "missing_build", "missing_source",
             "missing_manifest", "missing_notice"
         }:
             names = {
-                "missing_build": "build.py", "missing_install": "build.py",
+                "missing_build": "build.py",
                 "missing_source": "sources.py",
                 "missing_manifest": "produce-manifest.py",
                 "missing_notice": None,
@@ -167,9 +168,9 @@ def test_fonts_rejects_nonexecutable_unpinned_or_unnoticed_stage(tmp_path, chang
                 (catalogue / "freetype" / "license.py").unlink()
             else:
                 (stage / names[changed]).unlink()
-        elif changed == "empty_build":
+        elif changed in ("empty_build", "missing_install"):
             value = literal(stage / "build.py")
-            value["build"] = []
+            value["build" if changed == "empty_build" else "install"] = []
             (stage / "build.py").write_text(repr(value))
         elif changed in ("wrong_source_sha", "missing_source_sha"):
             value = literal(stage / "sources.py")
@@ -178,6 +179,11 @@ def test_fonts_rejects_nonexecutable_unpinned_or_unnoticed_stage(tmp_path, chang
             else:
                 del value[0]["sha256"]
             (stage / "sources.py").write_text(repr(value))
+        elif changed == "changed_reviewed_pin_sha":
+            path = repo / first_fonts.PIN
+            value = literal(path)
+            value["packages"]["freetype"]["recipes"]["freetype/stages/final"][0]["sha256"] = "f" * 64
+            path.write_text(repr(value))
         elif changed == "missing_required_output":
             path = stage / "produce-manifest.py"
             value = literal(path)
