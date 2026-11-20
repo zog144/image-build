@@ -19,9 +19,9 @@ from .pins import load as load_pin
 
 TARGETS = ("libpng-final", "freetype-final", "fontconfig-final")
 ENTRIES = (
-    {"id": "libpng-final", "project": "libpng", "recipe": "libpng/stages/final"},
-    {"id": "freetype-final", "project": "freetype", "recipe": "freetype/stages/final"},
-    {"id": "fontconfig-final", "project": "fontconfig", "recipe": "fontconfig/stages/final"},
+    {"id": "libpng-final", "project": "libpng", "stage": "final", "recipe": "libpng/stages/final"},
+    {"id": "freetype-final", "project": "freetype", "stage": "final", "recipe": "freetype/stages/final"},
+    {"id": "fontconfig-final", "project": "fontconfig", "stage": "final", "recipe": "fontconfig/stages/final"},
 )
 EDGES = {
     "libpng-final": (),
