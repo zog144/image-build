@@ -24,11 +24,13 @@ def configured_runner(path, state_dir):
     from .box_control_adapter import BoxControlExecutionAdapter
     from .runner import BoxControlRunner
     raw = json.loads(Path(path).read_text())
-    required = {'project_root', 'socket_path',
+    required = {'execution_identity', 'project_root', 'socket_path',
                 'startup_timeout_seconds', 'execution_timeout_seconds', 'termination_grace_seconds',
                 'wait_timeout_seconds', 'transport_timeout_seconds', 'resource_limits'}
     if set(raw) - {'device_profile'} != required:
         raise ImageBuildError('controller configuration has missing or unsupported fields')
+    if raw['execution_identity'] != 'inherit':
+        raise ImageBuildError('controller execution_identity must be inherit')
     for key in ('startup_timeout_seconds', 'execution_timeout_seconds', 'termination_grace_seconds',
                 'wait_timeout_seconds', 'transport_timeout_seconds'):
         value = raw[key]
@@ -50,5 +52,6 @@ def configured_runner(path, state_dir):
     adapter = BoxControlExecutionAdapter(BoxControl(project, systemd_transport=transport),
         **{k: raw[k] for k in ('startup_timeout_seconds',
                               'termination_grace_seconds', 'wait_timeout_seconds', 'resource_limits')},
-        input_manifest_id=input_manifest, **({'device_profile':raw['device_profile']} if 'device_profile' in raw else {}))
+        input_manifest_id=input_manifest, execution_identity=raw['execution_identity'],
+        **({'device_profile':raw['device_profile']} if 'device_profile' in raw else {}))
     return BoxControlRunner(execute=adapter, timeout=raw['execution_timeout_seconds'])
