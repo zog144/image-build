@@ -80,6 +80,19 @@ def selection():
         or obj.get("producer", {}).get("predecessor_revision")
             != "cb73951000a3e7774ab798f58240c2a8f24d82bb"):
         hold("reviewed predecessor/native safety contract differs")
+    old_files = obj.get("retained_boot_a_files")
+    if (type(old_files) is not dict
+        or obj.get("retained_boot_a_file_count") != 11
+        or len(old_files) != 11):
+        hold("reviewed PR25 Boot A source closure missing")
+    for name, pin in old_files.items():
+        if (not isinstance(name, str) or not name
+            or name.startswith("/") or "\\" in name
+            or any(part in ("", ".", "..") for part in name.split("/"))
+            or type(pin) is not dict or set(pin) != {"git_blob", "mode"}
+            or not HEX.fullmatch(pin["git_blob"])
+            or pin["mode"] not in ("100644", "100755")):
+            hold("invalid retained PR25 source pin")
     for component, revision in REVISIONS.items():
         entry = obj.get(component)
         if (type(entry) is not dict or entry.get("revision") != revision
@@ -156,6 +169,10 @@ def verify_producer(checkout):
              "cb73951000a3e7774ab798f58240c2a8f24d82bb", "HEAD")
     except AdmissionHold:
         hold("producer does not retain PR25 source lineage")
+    for name, pin in selection()["retained_boot_a_files"].items():
+        data, mode = _read(Path(checkout) / name)
+        if _blob(data) != pin["git_blob"] or mode != pin["mode"]:
+            hold("PR25 getty/account/materialization/recovery source changed: " + name)
     return commit
 
 
