@@ -1,0 +1,367 @@
+{
+  "schema": "zog-boot-a-inherited-peer-v2-candidate-selection-v1",
+  "status": "PRODUCER_V2_SOURCE_INTEGRATION_ROOT48_NATIVE_ADMISSION_HOLD",
+  "execution_identity": "inherit",
+  "execution_contract": "zog-build-inherited-peer-v2",
+  "producer": {
+    "repository": "zog144/image-build",
+    "predecessor_revision": "cb73951000a3e7774ab798f58240c2a8f24d82bb",
+    "successor_commit_is_bound_by_reviewed_git_ref_and_native_install_receipt": true
+  },
+  "box_control": {
+    "repository": "zog144/box-control",
+    "revision": "ad61fa6a4e9c3176149720868cb008e0512dbec9",
+    "source_prefix": "box-control/src/zog/box_control/",
+    "files": {
+      "__init__.py": {
+        "git_blob": "495bb3dd9eb43febbff28643112cd6a103b21437",
+        "mode": "100644"
+      },
+      "__main__.py": {
+        "git_blob": "13be635566e79adccc98892cc67a44e636908b35",
+        "mode": "100644"
+      },
+      "api.py": {
+        "git_blob": "b881183c5d493fc7390a25495e2a93121987c2c8",
+        "mode": "100644"
+      },
+      "application_progress.py": {
+        "git_blob": "79b06ce3e162ae5fb814091f53e9b047ae857177",
+        "mode": "100644"
+      },
+      "application_progress_broker.py": {
+        "git_blob": "6742f7f3e44fd809f0322fbb3f7cbf7bcd9fa9cc",
+        "mode": "100644"
+      },
+      "application_progress_client.py": {
+        "git_blob": "31627205509c1c8faefdb29ebc955d9d34e72cc1",
+        "mode": "100644"
+      },
+      "application_software.py": {
+        "git_blob": "557a6772d5bab494f1ca9df071dc09cf61af631c",
+        "mode": "100644"
+      },
+      "application_storage.py": {
+        "git_blob": "72a7cb0d5fc24870ad2336de7579c704a2461b15",
+        "mode": "100644"
+      },
+      "boot.py": {
+        "git_blob": "449af01bd871a4ea142fffa111d572f4b2322ebd",
+        "mode": "100644"
+      },
+      "build_job_status.py": {
+        "git_blob": "c6b5bfda383695158199b44bddb5a410c51e4a0d",
+        "mode": "100644"
+      },
+      "build_jobs.py": {
+        "git_blob": "04ad710ebdb97eba2bda5d5b019840676634215d",
+        "mode": "100644"
+      },
+      "build_protocol.py": {
+        "git_blob": "1fdbe72d5fa6f6f2a9ae614980c9ea3491d433d6",
+        "mode": "100644"
+      },
+      "cancellation.py": {
+        "git_blob": "38ae59521b69c4295998a4372e49cf46a1b87d9e",
+        "mode": "100644"
+      },
+      "cli.py": {
+        "git_blob": "22d35bff29650b796f5b6eff4526c2de3eb27446",
+        "mode": "100644"
+      },
+      "dependency.py": {
+        "git_blob": "a5a8ed06e24d1132365fecbd61b28e7acbe47aa1",
+        "mode": "100644"
+      },
+      "diagnostics.py": {
+        "git_blob": "c990f4eee194d7d557e7c81042fe1e584ec92fe1",
+        "mode": "100644"
+      },
+      "durability.py": {
+        "git_blob": "73736574e98eb46ce371b93f00c32a560aba3599",
+        "mode": "100644"
+      },
+      "errors.py": {
+        "git_blob": "592fb98713710387217238e26d148ee6fe487d1b",
+        "mode": "100644"
+      },
+      "events.py": {
+        "git_blob": "4c777f48de35fea7fa7f82e8b94b568ad5b19b96",
+        "mode": "100644"
+      },
+      "explanations.py": {
+        "git_blob": "a86da01cdc320e29f5197a97574a00622b6c7e0e",
+        "mode": "100644"
+      },
+      "generation.py": {
+        "git_blob": "52d905230a15fca3e3b9fb5eeaf9856d32b33b8e",
+        "mode": "100644"
+      },
+      "host_bindings.py": {
+        "git_blob": "44e1c96575b80950f3644fcd1b8ec7434b2eaf2e",
+        "mode": "100644"
+      },
+      "host_gateway.py": {
+        "git_blob": "e474154286c3676b2cde68bcd3c7b3d6b92290d9",
+        "mode": "100644"
+      },
+      "images.py": {
+        "git_blob": "8ad578b32c8ce4c1197b9f99807909a56be1e5b8",
+        "mode": "100644"
+      },
+      "inspection.py": {
+        "git_blob": "6485cdb1be94bc9a82a7cafc0f1ba7d384289daa",
+        "mode": "100644"
+      },
+      "issuer_broker_authority.py": {
+        "git_blob": "9dd98fe22849ba4412ba5a34cedb6edaa50f6c3d",
+        "mode": "100644"
+      },
+      "issuer_inspection_evidence.py": {
+        "git_blob": "47579c5f0fdbb7ef0c426f02a4f4f02f5495f122",
+        "mode": "100644"
+      },
+      "issuer_lifecycle_broker.py": {
+        "git_blob": "fc32e0c42fd97cdadefa197f9a0bfdc2beacc7c9",
+        "mode": "100644"
+      },
+      "issuer_lifecycle_client.py": {
+        "git_blob": "3168d674963259aadacfed05c91cec765928f094",
+        "mode": "100644"
+      },
+      "issuer_observer.py": {
+        "git_blob": "9924f00ed5783e5993a194c8e329626fd01cb490",
+        "mode": "100644"
+      },
+      "issuer_observer_client.py": {
+        "git_blob": "a00d69bee4ee15d1becb17c6c56dffda5f4437b1",
+        "mode": "100644"
+      },
+      "locking.py": {
+        "git_blob": "264174dbe04842630690dce3450ae8dfde6ab301",
+        "mode": "100644"
+      },
+      "model.py": {
+        "git_blob": "4a2b0b39f97c30a63e045388b291e25338356359",
+        "mode": "100644"
+      },
+      "mounts.py": {
+        "git_blob": "5fa552b5c58e97aa5a3fac1a2bfb85bd54221602",
+        "mode": "100644"
+      },
+      "operations.py": {
+        "git_blob": "6b45abeb34bc8efb915bb0edbc446b7bf188a50c",
+        "mode": "100644"
+      },
+      "preflight.py": {
+        "git_blob": "8c5f9d63c4a9fe5490ba94a68742d38e8f023855",
+        "mode": "100644"
+      },
+      "project.py": {
+        "git_blob": "47866e72bcaa1ec37ad06f508fe2c4794bd973eb",
+        "mode": "100644"
+      },
+      "reconcile.py": {
+        "git_blob": "4fb566bc8b28950ea6f96a20b8fd925eac25220e",
+        "mode": "100644"
+      },
+      "requests.py": {
+        "git_blob": "af5179655b78890777eb187a71268cdfb93bfc56",
+        "mode": "100644"
+      },
+      "retention.py": {
+        "git_blob": "3bdcad93b2282a704834f44e0e1eef6d91e8b71c",
+        "mode": "100644"
+      },
+      "role_broker.py": {
+        "git_blob": "16403f5c5612d10639e19f0e44defb4c9d0e5955",
+        "mode": "100644"
+      },
+      "role_broker_client.py": {
+        "git_blob": "9e9f9866b3d707328503e6981f05876d00fbb6a8",
+        "mode": "100644"
+      },
+      "root_protocol.py": {
+        "git_blob": "521560cc6addcc00f74103f0096150eff5cb0ab1",
+        "mode": "100644"
+      },
+      "runtime/__init__.py": {
+        "git_blob": "7e35cb9fc56bf49641477899826de3c74f91375e",
+        "mode": "100644"
+      },
+      "runtime/reference.py": {
+        "git_blob": "db1d412a6df7aaaa00df8912ddb8897f046bf38a",
+        "mode": "100644"
+      },
+      "runtime/root_control.py": {
+        "git_blob": "cf197851930f55b71bf53102beb4ac4542826e4a",
+        "mode": "100644"
+      },
+      "runtime/scaffold.py": {
+        "git_blob": "02b8822fdac6988b14e84e6322df040434ccdeac",
+        "mode": "100644"
+      },
+      "runtime/systemd.py": {
+        "git_blob": "2502e9a9c41a0798e56e7397b139f39cf92837f1",
+        "mode": "100644"
+      },
+      "specification.py": {
+        "git_blob": "06eeb0be18c91b8f3382bb30a35654274899d583",
+        "mode": "100644"
+      },
+      "state.py": {
+        "git_blob": "659aa562a3855680873ecc169432cc8fd2f65d25",
+        "mode": "100644"
+      },
+      "station.py": {
+        "git_blob": "8ffeb9eb7992575871da2256037694c4d8b30973",
+        "mode": "100644"
+      },
+      "workspaces.py": {
+        "git_blob": "cd46a986348240e59cbdff122f6fa7a6c8c38585",
+        "mode": "100644"
+      }
+    }
+  },
+  "root_control_predecessor_rejected": {
+    "repository": "zog144/root-control",
+    "revision": "119c50c11a73663a446ad07551fa662936856913",
+    "source_prefix": "src/zog/root_control/",
+    "files": {
+      "__init__.py": {
+        "git_blob": "7d01fc0db1295edd0ea2d544e34b6a47b75cd815",
+        "mode": "100644"
+      },
+      "__main__.py": {
+        "git_blob": "be2f49126fb1ef7e6c9c34ba003e26fb7eb9483f",
+        "mode": "100644"
+      },
+      "build.py": {
+        "git_blob": "a9dcaad16763b475e02b6f0b9e17d1ab3fe450b8",
+        "mode": "100644"
+      },
+      "credentials.py": {
+        "git_blob": "76c3a03cce9ba3f5862f8b07e11df1bd694aebd4",
+        "mode": "100644"
+      },
+      "daemon.py": {
+        "git_blob": "e5f6b8d15a8cb9cf9aeed7658a2d01271be380ab",
+        "mode": "100644"
+      },
+      "events.py": {
+        "git_blob": "3576023220c8836b8018e76f6eab881b8c7e6781",
+        "mode": "100644"
+      },
+      "identities.py": {
+        "git_blob": "ef265ffd5340c189ecb59392e0541861201716b9",
+        "mode": "100644"
+      },
+      "issuer_credentials.py": {
+        "git_blob": "c874b1112e1c0673fce2a6bdbab65d6d3d122751",
+        "mode": "100644"
+      },
+      "issuer_cross_host.py": {
+        "git_blob": "81cc49c7e25985546d78cc53d3bad8d213211e5f",
+        "mode": "100644"
+      },
+      "issuer_execution_fence.py": {
+        "git_blob": "08626b17d98ecdc20536cd1c1950c60e251c8d4b",
+        "mode": "100644"
+      },
+      "issuer_execution_provenance.py": {
+        "git_blob": "4323d395d215dbf9ebe179729410575129e123fc",
+        "mode": "100644"
+      },
+      "issuer_execution_reconcile.py": {
+        "git_blob": "ae07233acdc839a6cc8cb2946e8283529b5a3f67",
+        "mode": "100644"
+      },
+      "issuer_inspection_result.py": {
+        "git_blob": "fc810766fc2a2140770398bb503ab42442a24e30",
+        "mode": "100644"
+      },
+      "issuer_observation.py": {
+        "git_blob": "3b8ac6f8bf8d541b6e24a96f9fcff5e4f64bc242",
+        "mode": "100644"
+      },
+      "issuer_station_transfer.py": {
+        "git_blob": "b9d0506b32373982cf3c6cc134c85b6c571a5a64",
+        "mode": "100644"
+      },
+      "jobs.py": {
+        "git_blob": "2fdce870571f0d3624f6d97a10f0a3b590c84b02",
+        "mode": "100644"
+      },
+      "journal.py": {
+        "git_blob": "901e2b7ef6e94f1dc905fa6bffe65e441cbbdfe9",
+        "mode": "100644"
+      },
+      "journal_barrier.py": {
+        "git_blob": "9aca44c71451ab3fb3e7b7f312ebd54a1f0d66ee",
+        "mode": "100644"
+      },
+      "mounts.py": {
+        "git_blob": "1730cbdbaf7c20cda75f9bf32768860c2222fbd4",
+        "mode": "100644"
+      },
+      "native/journal-wait.c": {
+        "git_blob": "cd206242a674a8956edc865cedc610d64d493c9f",
+        "mode": "100644"
+      },
+      "privileged.py": {
+        "git_blob": "047a8757fc14d248087436a998ba1e5ca2411683",
+        "mode": "100644"
+      },
+      "processes.py": {
+        "git_blob": "c90944425857a5f97bddc3ddadd2d0447949923f",
+        "mode": "100644"
+      },
+      "protocol.py": {
+        "git_blob": "861a2ac5fcc67de99fc566b8433365e18b44b74a",
+        "mode": "100644"
+      },
+      "systemd.py": {
+        "git_blob": "0f0e78c50ed5f517d30f63cb56471138319df7c2",
+        "mode": "100644"
+      },
+      "task_c_trusted_host.py": {
+        "git_blob": "de63bac2261d639eb9f1177ef92651bbd3fcb750",
+        "mode": "100644"
+      },
+      "workspace.py": {
+        "git_blob": "6606665a73f681e6b9fbcc8272c9a9bfbf057a61",
+        "mode": "100644"
+      }
+    },
+    "reason": "No authenticated SO_PEERCRED nonroot execution binding, systemd default user may be root",
+    "eligible_for_native_dispatch": false
+  },
+  "host_install_resident_accounts": {
+    "repository": "zog144/host-install",
+    "revision": "4fcccb441fec851530c412f619bc02699b8a87b1",
+    "source_prefix": "src/zog/host_install/",
+    "files": {
+      "resident_accounts.py": {
+        "git_blob": "de9a161913959780a3097266d8936e0f7a1391b7",
+        "mode": "100644"
+      }
+    },
+    "required_agetty": "/usr/sbin/agetty",
+    "required_sysusers": "systemd-journal;messagebus"
+  },
+  "required_root_successor": {
+    "repository": "zog144/root-control",
+    "issue": 48,
+    "revision": null,
+    "contract": "zog-build-inherited-peer-v2",
+    "must_verify_kernel_peer_credentials": true,
+    "nonroot_peer_only": true,
+    "transient_unit_identity_server_derived": true,
+    "identity_override_rejection": true,
+    "legacy_inspection_only": true,
+    "retain_systemd252_literal_argv_fix": true
+  },
+  "legacy_operations_replayable": false,
+  "existing_source_pins_and_receipts_mutated": false,
+  "native_dispatch_enabled": false
+}
