@@ -141,7 +141,7 @@ def test_fonts_normal_producer_prepares_actual_closed_executable_stages(tmp_path
 @pytest.mark.parametrize("changed, expected", [
     ("missing_build", "invalid literal metadata"),
     ("missing_install", "invalid literal metadata"),
-    ("empty_build", "executable build recipe missing"),
+    ("empty_build", "build and install steps must be explicit"),
     ("missing_source", "invalid literal metadata"),
     ("wrong_source_sha", "first Fonts stage source URL/SHA256 differs"),
     ("missing_manifest", "invalid literal metadata"),
