@@ -1,0 +1,96 @@
+name: Boot A inherited-peer v2 producer successor (source-only, native HOLD)
+on:
+  push:
+    branches: [regular/boot-a-inherited-peer-v2-successor-20261120]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  exact-source-and-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/host-install
+          ref: 4fcccb441fec851530c412f619bc02699b8a87b1
+          path: companions/host-install-resident-accounts
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/box-control
+          ref: ad61fa6a4e9c3176149720868cb008e0512dbec9
+          path: companions/box-control-inherited
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/root-control
+          ref: 58b5a94311d771bb1c5f4c3e9c6191b44d6565c9
+          path: companions/root-control-inherited
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify exact immutable producer predecessor and selected source bytes
+        run: |
+          python tools/verify_boot_a_inherited_source_tuple.py \
+            --producer-source "$PWD" \
+            --box-source companions/box-control-inherited \
+            --root-source companions/root-control-inherited \
+            --host-source companions/host-install-resident-accounts \
+            --box-installed companions/box-control-inherited/box-control/src/zog/box_control \
+            --root-installed companions/root-control-inherited/src/zog/root_control \
+            --host-installed companions/host-install-resident-accounts/src/zog/host_install \
+            > /tmp/boot-a-v2-source-verification.json
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/boot-a-v2-source-verification.json'))
+          assert data['execution_contract']=='zog-build-inherited-peer-v2'
+          assert data['native_dispatch_accepted'] is False
+          for component in data['components'].values():
+              assert component['installed_bytes']==component['source']
+          print('EXACT_SOURCE_AND_INSTALLED_BYTE_FIXTURE_VERIFIED_NATIVE_HOLD')
+          PY
+      - name: Confirm source-only root v2 is not treated as native child identity acceptance
+        run: |
+          if python tools/verify_boot_a_inherited_source_tuple.py \
+            --native-admission \
+            --producer-source "$PWD" \
+            --box-source companions/box-control-inherited \
+            --root-source companions/root-control-inherited \
+            --host-source companions/host-install-resident-accounts \
+            2>/tmp/native-admission-denied; then
+            echo "ERROR: source-only root v2 claimed native child credentials"; exit 1
+          fi
+          grep -F "native installed-byte and actual systemd252 nonroot child acceptance still required" /tmp/native-admission-denied
+          echo "SOURCE_ONLY_PR55_NATIVE_CHILD_ACCEPTANCE_NOT_FABRICATED"
+      - name: Test real sysusers, getty, immutable Boot A publication, inherited-peer v2 and no legacy replay
+        env:
+          REQUIRE_HOST_INSTALL_ACCOUNTS: "1"
+          REQUIRE_INHERITED_BUILD_PROTOCOL: "1"
+        run: |
+          test -x /usr/bin/systemd-sysusers
+          export PYTHONPATH="$PWD/src:$PWD/companions/box-control-inherited/box-control/src:$PWD/companions/root-control-inherited/src"
+          python -m pip install 'pytest==8.4.2' "dbus-next==0.2.3"
+          python -m pip install "build-record @ git+https://github.com/zog144/build-record.git@a866c9c4b0dd385045f00ce2de7d809f5b67c104"
+          python -m pytest -q -rs \
+            tests/test_boot_a_finite_build_identity.py \
+            tests/test_boot_a_inherited_peer_v2.py \
+            tests/test_resident_boot_accounts.py \
+            tests/test_resident_boot_targeted.py \
+            tests/test_boot_a_getty_service_accounts.py \
+            tests/test_targeted_publication_binding.py \
+            tests/test_staging_durability.py \
+            tests/test_source_build.py
+      - name: Source-only boundaries
+        if: always()
+        run: |
+          echo "No native compiler, root-control peer launch, old checkpoint recovery, Host, immutable generation, SSM command or rootfs publication was performed. Root-control PR55 source is selected but native child identity on systemd252 is not yet attested." >> "$GITHUB_STEP_SUMMARY"
