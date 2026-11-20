@@ -194,21 +194,29 @@ class BoxControlExecutionAdapter:
         from zog.box_control.locking import ProjectLock
         from .trace_records import capture_request, capture_observation
         checkpoint = Path(checkpoint)
-        with ProjectLock(checkpoint.with_suffix('.lock')):
-            _require_inherited_peer()
-            # Inspect all historical markers before *any* request evidence,
-            # registration or checkpoint is written. Never migrate old IDs.
+        resources_path = request.root.parent / 'controller-resources.json'
+        pending_path = request.root.parent / 'registration-pending.json'
+
+        def reject_old_before_mutation():
             if checkpoint.exists():
                 _require_inherited_record(json.loads(checkpoint.read_text()),
                     {'binding', 'resource_id', 'request_id', 'job_id'}, 'build checkpoint')
-            resources_path = request.root.parent / 'controller-resources.json'
             if resources_path.exists():
                 _require_inherited_record(json.loads(resources_path.read_text()),
                     {'resource_id', 'registration'}, 'build resource')
-            pending_path = request.root.parent / 'registration-pending.json'
             if pending_path.exists():
                 _require_inherited_record(json.loads(pending_path.read_text()),
                     {'resource_id', 'registration'}, 'pending registration')
+
+        # Fast fail first: even the historical command's lock file must not
+        # be created just to learn that old identity cannot be replayed.
+        _require_inherited_peer()
+        reject_old_before_mutation()
+        with ProjectLock(checkpoint.with_suffix('.lock')):
+            # Repeat the check under lock to reject records appearing in
+            # between read-only preflight and the exclusive operation lock.
+            _require_inherited_peer()
+            reject_old_before_mutation()
             intent = json.loads(json.dumps(asdict(request),default=str,allow_nan=False))
             manifest_id = self.input_manifest_id(request) if callable(self.input_manifest_id) else self.input_manifest_id
             config = dict(startup_timeout_seconds=self.startup_timeout_seconds, termination_grace_seconds=self.termination_grace_seconds,
