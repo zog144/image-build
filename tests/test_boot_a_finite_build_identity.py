@@ -83,7 +83,7 @@ def test_boot_a_adapter_matches_real_legacy_free_registration_shape(tmp_path):
     assert "execution_user_id" not in params and "execution_group_id" not in params
 
 
-def test_root_control_real_source_exactly_matches_receiver_signature():
+def test_root_control_peer_bound_register_adds_only_server_authenticated_peer():
     source = ast.parse(companion(ROOT_CONTROL).read_text())
     backend = next(node for node in source.body
                    if isinstance(node, ast.ClassDef) and node.name == "BuildBackend")
@@ -92,8 +92,11 @@ def test_root_control_real_source_exactly_matches_receiver_signature():
                     and node.name == "register")
     assert [n.arg for n in register.args.kwonlyargs] == [
         "project_root", "resource_id", "prepared_root", "source_directory",
-        "output_directory", "input_manifest_id",
+        "output_directory", "input_manifest_id", "_peer",
     ]
+    # The extra _peer is injected by root-control's accepted Unix socket
+    # handler, not forwarded or selectable by image-build/box-control.
+    assert "_peer" not in inspect.signature(StrictReceiver.register_build_root).parameters
     canonical = next(node for node in source.body
                      if isinstance(node, ast.FunctionDef)
                      and node.name == "canonical_request")
