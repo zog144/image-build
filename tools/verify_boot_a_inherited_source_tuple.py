@@ -21,10 +21,10 @@ CONTRACT = "zog-build-inherited-peer-v2"
 IDENTITY = "inherit"
 REVISIONS = {
     "box_control": "ad61fa6a4e9c3176149720868cb008e0512dbec9",
-    "root_control_predecessor_rejected": "119c50c11a73663a446ad07551fa662936856913",
+    "root_control": "58b5a94311d771bb1c5f4c3e9c6191b44d6565c9",
     "host_install_resident_accounts": "4fcccb441fec851530c412f619bc02699b8a87b1",
 }
-COUNTS = {"box_control": 52, "root_control_predecessor_rejected": 26,
+COUNTS = {"box_control": 52, "root_control": 26,
           "host_install_resident_accounts": 1}
 HEX = re.compile(r"[0-9a-f]{40}\Z")
 
@@ -71,12 +71,14 @@ def selection():
     if (obj.get("schema") != "zog-boot-a-inherited-peer-v2-candidate-selection-v1"
         or obj.get("execution_identity") != IDENTITY
         or obj.get("execution_contract") != CONTRACT
-        or obj.get("status") != "PRODUCER_V2_SOURCE_INTEGRATION_ROOT48_NATIVE_ADMISSION_HOLD"
+        or obj.get("status") != "COMPOSED_V2_PRODUCER_CONTROLLER_SOURCE_NATIVE_ACCEPTANCE_PENDING"
         or obj.get("native_dispatch_enabled") is not False
         or obj.get("legacy_operations_replayable") is not False
         or obj.get("existing_source_pins_and_receipts_mutated") is not False
-        or obj.get("required_root_successor", {}).get("revision") is not None
+        or obj.get("required_root_successor", {}).get("revision") != REVISIONS["root_control"]
         or obj.get("root_control_predecessor_rejected", {}).get("eligible_for_native_dispatch") is not False
+        or obj.get("root_control_predecessor_rejected", {}).get("revision") != "119c50c11a73663a446ad07551fa662936856913"
+        or obj.get("root_control", {}).get("review_status") != "SOURCE_CI_PASS_NATIVE_WORK_PENDING"
         or obj.get("producer", {}).get("predecessor_revision")
             != "cb73951000a3e7774ab798f58240c2a8f24d82bb"):
         hold("reviewed predecessor/native safety contract differs")
@@ -182,7 +184,7 @@ def verify(*, producer_source, box_source, root_source, host_source,
     obj = selection()
     selected = {
         "box_control": box_source,
-        "root_control_predecessor_rejected": root_source,
+        "root_control": root_source,
         "host_install_resident_accounts": host_source,
     }
     result = {
@@ -202,7 +204,7 @@ def verify(*, producer_source, box_source, root_source, host_source,
         }
     installs = {
         "box_control": box_installed,
-        "root_control_predecessor_rejected": root_installed,
+        "root_control": root_installed,
         "host_install_resident_accounts": host_installed,
     }
     for key, directory in installs.items():
@@ -212,7 +214,7 @@ def verify(*, producer_source, box_source, root_source, host_source,
                 hold("installed and original source bytes differ: " + key)
             result["components"][key]["installed_bytes"] = installed
     if request_native:
-        hold("root-control #48 nonroot SO_PEERCRED/v2 transient child pin not accepted; no native dispatch")
+        hold("root-control PR55 source selected; native installed-byte and actual systemd252 nonroot child acceptance still required")
     return result
 
 
