@@ -158,7 +158,7 @@ def test_legacy_identity_bearing_checkpoint_is_not_rewritten_or_resubmitted(tmp_
         environment={"PATH": "/usr/bin"},
         working_directory="/image-build/source", timeout_seconds=10,
     )
-    with pytest.raises(ImageBuildError, match="package resource binding changed"):
+    with pytest.raises(ImageBuildError, match="inspection-only; refusing replay"):
         adapter.execute_for_attempt(request, checkpoint)
     assert json.loads(resources.read_text()) == original
     assert not checkpoint.exists()
