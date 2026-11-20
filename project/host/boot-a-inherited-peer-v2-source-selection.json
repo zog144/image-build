@@ -1,6 +1,6 @@
 {
   "schema": "zog-boot-a-inherited-peer-v2-candidate-selection-v1",
-  "status": "PRODUCER_V2_SOURCE_INTEGRATION_ROOT48_NATIVE_ADMISSION_HOLD",
+  "status": "COMPOSED_V2_PRODUCER_CONTROLLER_SOURCE_NATIVE_ACCEPTANCE_PENDING",
   "execution_identity": "inherit",
   "execution_contract": "zog-build-inherited-peer-v2",
   "producer": {
@@ -352,7 +352,7 @@
   "required_root_successor": {
     "repository": "zog144/root-control",
     "issue": 48,
-    "revision": null,
+    "revision": "58b5a94311d771bb1c5f4c3e9c6191b44d6565c9",
     "contract": "zog-build-inherited-peer-v2",
     "must_verify_kernel_peer_credentials": true,
     "nonroot_peer_only": true,
@@ -410,5 +410,126 @@
       "mode": "100644"
     }
   },
-  "retained_boot_a_file_count": 11
+  "retained_boot_a_file_count": 11,
+  "root_control": {
+    "repository": "zog144/root-control",
+    "revision": "58b5a94311d771bb1c5f4c3e9c6191b44d6565c9",
+    "source_prefix": "src/zog/root_control/",
+    "files": {
+      "__init__.py": {
+        "git_blob": "7d01fc0db1295edd0ea2d544e34b6a47b75cd815",
+        "mode": "100644"
+      },
+      "__main__.py": {
+        "git_blob": "be2f49126fb1ef7e6c9c34ba003e26fb7eb9483f",
+        "mode": "100644"
+      },
+      "build.py": {
+        "git_blob": "3c98f8a34f66888125c2fc975431290815ba4007",
+        "mode": "100644"
+      },
+      "credentials.py": {
+        "git_blob": "76c3a03cce9ba3f5862f8b07e11df1bd694aebd4",
+        "mode": "100644"
+      },
+      "daemon.py": {
+        "git_blob": "6d818cbd3fd1be318605c6eb2c0cbb55c860c3a8",
+        "mode": "100644"
+      },
+      "events.py": {
+        "git_blob": "3576023220c8836b8018e76f6eab881b8c7e6781",
+        "mode": "100644"
+      },
+      "identities.py": {
+        "git_blob": "ef265ffd5340c189ecb59392e0541861201716b9",
+        "mode": "100644"
+      },
+      "issuer_credentials.py": {
+        "git_blob": "c874b1112e1c0673fce2a6bdbab65d6d3d122751",
+        "mode": "100644"
+      },
+      "issuer_cross_host.py": {
+        "git_blob": "81cc49c7e25985546d78cc53d3bad8d213211e5f",
+        "mode": "100644"
+      },
+      "issuer_execution_fence.py": {
+        "git_blob": "08626b17d98ecdc20536cd1c1950c60e251c8d4b",
+        "mode": "100644"
+      },
+      "issuer_execution_provenance.py": {
+        "git_blob": "4323d395d215dbf9ebe179729410575129e123fc",
+        "mode": "100644"
+      },
+      "issuer_execution_reconcile.py": {
+        "git_blob": "ae07233acdc839a6cc8cb2946e8283529b5a3f67",
+        "mode": "100644"
+      },
+      "issuer_inspection_result.py": {
+        "git_blob": "fc810766fc2a2140770398bb503ab42442a24e30",
+        "mode": "100644"
+      },
+      "issuer_observation.py": {
+        "git_blob": "3b8ac6f8bf8d541b6e24a96f9fcff5e4f64bc242",
+        "mode": "100644"
+      },
+      "issuer_station_transfer.py": {
+        "git_blob": "b9d0506b32373982cf3c6cc134c85b6c571a5a64",
+        "mode": "100644"
+      },
+      "jobs.py": {
+        "git_blob": "2fdce870571f0d3624f6d97a10f0a3b590c84b02",
+        "mode": "100644"
+      },
+      "journal.py": {
+        "git_blob": "901e2b7ef6e94f1dc905fa6bffe65e441cbbdfe9",
+        "mode": "100644"
+      },
+      "journal_barrier.py": {
+        "git_blob": "9aca44c71451ab3fb3e7b7f312ebd54a1f0d66ee",
+        "mode": "100644"
+      },
+      "mounts.py": {
+        "git_blob": "1730cbdbaf7c20cda75f9bf32768860c2222fbd4",
+        "mode": "100644"
+      },
+      "native/journal-wait.c": {
+        "git_blob": "cd206242a674a8956edc865cedc610d64d493c9f",
+        "mode": "100644"
+      },
+      "privileged.py": {
+        "git_blob": "047a8757fc14d248087436a998ba1e5ca2411683",
+        "mode": "100644"
+      },
+      "processes.py": {
+        "git_blob": "c90944425857a5f97bddc3ddadd2d0447949923f",
+        "mode": "100644"
+      },
+      "protocol.py": {
+        "git_blob": "861a2ac5fcc67de99fc566b8433365e18b44b74a",
+        "mode": "100644"
+      },
+      "systemd.py": {
+        "git_blob": "0f0e78c50ed5f517d30f63cb56471138319df7c2",
+        "mode": "100644"
+      },
+      "task_c_trusted_host.py": {
+        "git_blob": "de63bac2261d639eb9f1177ef92651bbd3fcb750",
+        "mode": "100644"
+      },
+      "workspace.py": {
+        "git_blob": "6606665a73f681e6b9fbcc8272c9a9bfbf057a61",
+        "mode": "100644"
+      }
+    },
+    "contract": "zog-build-inherited-peer-v2",
+    "capabilities": [
+      "AF_UNIX_SO_PEERCRED",
+      "nonroot_uid_gid",
+      "server_derived_systemd_User_Group",
+      "schema2_peer_bound_records",
+      "legacy_inspection_only",
+      "systemd252_literal_dollar_argv"
+    ],
+    "review_status": "SOURCE_CI_PASS_NATIVE_WORK_PENDING"
+  }
 }
