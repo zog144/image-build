@@ -92,4 +92,5 @@ jobs:
             tests/test_source_build.py
       - name: Source-only boundaries
         if: always()
-        run: echo "No native compiler, root-control peer launch, old checkpoint recovery, Host, immutable generation, SSM command or rootfs publication was performed. Root-control #48 remains a hard activation HOLD." >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "No native compiler, root-control peer launch, old checkpoint recovery, Host, immutable generation, SSM command or rootfs publication was performed. Root-control issue 48 remains a hard activation HOLD." >> "$GITHUB_STEP_SUMMARY"
