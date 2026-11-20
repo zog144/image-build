@@ -613,7 +613,7 @@ def test_resume_finishes_after_publication_before_pipeline_commit(prepared, monk
 def test_configuration_rejects_nested_state_and_root_execution(tmp_path):
     from zog.image_build.configuration import configured_runner
     project = tmp_path/'project'
-    raw = dict(project_root=str(project), socket_path='/run/zog/root-control.sock',
+    raw = dict(execution_identity='inherit', project_root=str(project), socket_path='/run/zog/root-control.sock',
                startup_timeout_seconds=5,
                execution_timeout_seconds=30, termination_grace_seconds=3, wait_timeout_seconds=0,
                transport_timeout_seconds=10, resource_limits={'thread-count-maximum':32,'memory-maximum-bytes':100000000})
