@@ -100,7 +100,6 @@ def test_new_producer_emits_v2_only_and_keeps_original_request_identity(tmp_path
     assert saved["execution_contract"] == resource["execution_contract"] == INHERITED_EXECUTION_CONTRACT
     assert saved["binding"]["execution_contract"] == INHERITED_EXECUTION_CONTRACT
     assert saved["request_id"] == control.request_id
-    assert saved["binding"]["configuration"]["read_only_root"] if False else True
     assert [name for name, _ in control.calls] == ["register", "issue", "inspect", "submit"]
     for name, arguments in control.calls:
         assert "execution_user_id" not in arguments
