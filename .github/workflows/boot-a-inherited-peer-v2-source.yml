@@ -76,9 +76,9 @@ jobs:
         env:
           REQUIRE_HOST_INSTALL_ACCOUNTS: "1"
           REQUIRE_INHERITED_BUILD_PROTOCOL: "1"
-          PYTHONPATH: "$PWD/src:$PWD/companions/box-control-inherited/box-control/src:$PWD/companions/root-control-inherited/src"
         run: |
           test -x /usr/bin/systemd-sysusers
+          export PYTHONPATH="$PWD/src:$PWD/companions/box-control-inherited/box-control/src:$PWD/companions/root-control-inherited/src"
           python -m pip install 'pytest==8.4.2' "dbus-next==0.2.3"
           python -m pip install "build-record @ git+https://github.com/zog144/build-record.git@a866c9c4b0dd385045f00ce2de7d809f5b67c104"
           python -m pytest -q -rs \
