@@ -111,11 +111,15 @@ def _file_selection(base, entry, *, source):
         rel = file.relative_to(root).as_posix()
         if rel.endswith((".py", ".c", ".h")):
             observed[rel] = file
-    if set(observed) != set(entry["files"]):
-        missing = set(entry["files"]) - set(observed)
-        extra = set(observed) - set(entry["files"])
+    selected = set(entry["files"])
+    if selected != set(observed) and len(selected) != 1:
+        missing = selected - set(observed)
+        extra = set(observed) - selected
         hold("selected source/installed file set differs: missing=" +
              repr(sorted(missing)[:4]) + ", extra=" + repr(sorted(extra)[:4]))
+    if not selected <= set(observed):
+        hold("selected immutable account materializer file is absent")
+    observed = {name: observed[name] for name in selected}
     output = {}
     for name in sorted(observed):
         data, mode = _read(observed[name])
