@@ -124,6 +124,28 @@ class BoxControlExecutionAdapter:
                 or record.get("execution_contract") != INHERITED_EXECUTION_CONTRACT):
             raise ImageBuildError("incompatible " + label + " response; inherited peer v2 required")
 
+    @staticmethod
+    def _assert_registration_status(observed, resource_id, registration):
+        """Read the *server* schema-2 peer identity, not a box-control marker.
+
+        On registration timeout, the independent root-control inspection RPC
+        returns its own schema-2 record with kernel-derived execution_identity.
+        An absent record is an inspection result only, never permission to
+        register a replacement identity or start an old operation.
+        """
+        if type(observed) is not dict or observed.get("resource_id") != resource_id:
+            raise ImageBuildError("root-control registration inspection identity differs")
+        if observed.get("state") == "absent":
+            if set(observed) != {"resource_id", "state"}:
+                raise ImageBuildError("ambiguous absent registration inspection")
+            return
+        peer = observed.get("execution_identity")
+        if (observed.get("schema") != 2
+                or type(peer) is not dict or set(peer) != {"uid", "gid"}
+                or any(type(peer[k]) is not int or peer[k] <= 0 for k in peer)
+                or observed.get("intent") != registration):
+            raise ImageBuildError("root-control registration is not authenticated peer-bound schema 2")
+
     def _register(self, resource_id, registration, directory):
         """Reconcile only a typed registration reply timeout; never retry starts."""
         _require_inherited_peer()
@@ -135,7 +157,7 @@ class BoxControlExecutionAdapter:
 
         def inspect():
             observed = self.control.inspect_build_root(resource_id)
-            self._assert_controller_record(observed, 'registration inspection')
+            self._assert_registration_status(observed, resource_id, registration)
             replace_json(directory/'registration-progress.json', {
                 'schema': 2, 'execution_contract': INHERITED_EXECUTION_CONTRACT,
                 'resource_id': resource_id, 'state': observed['state'],
