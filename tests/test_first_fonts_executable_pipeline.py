@@ -61,14 +61,15 @@ def prepare_fonts(tmp_path, *, change=None):
 
     # A synthetic, immutable *kind=image* compiler selection. We verify
     # selection mechanics, not claim the real signed certbot-seed receipt.
-    inputs = {"schema": 1, "kind": "image", "architecture": platform.machine()}
+    from zog.image_build.engine import SCHEMA
+    inputs = {"schema": SCHEMA, "kind": "image", "architecture": platform.machine()}
     generation = identity(inputs)
     directory = state / "image-build" / "generations" / generation
     (directory / "root").mkdir(parents=True)
     (directory / "root" / "usr").mkdir()
     outputs = inventory(directory / "root")
     (directory / "manifest.json").write_text(json.dumps({
-        "schema": 1, "generation": generation, "kind": "image",
+        "schema": SCHEMA, "generation": generation, "kind": "image",
         "inputs": inputs, "outputs": outputs,
     }, sort_keys=True))
     link = state / "image-build" / "active"
