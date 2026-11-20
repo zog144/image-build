@@ -149,7 +149,7 @@ def verify_installed(root, component, entry):
 def verify_producer(checkout):
     commit = _git(checkout, "rev-parse", "HEAD")
     if (not HEX.fullmatch(commit)
-        or _git(checkout, "status", "--porcelain", "--untracked-files=all")):
+        or _git(checkout, "status", "--porcelain", "--untracked-files=no")):
         hold("producer is not a clean immutable checked-out source revision")
     try:
         _git(checkout, "merge-base", "--is-ancestor",
