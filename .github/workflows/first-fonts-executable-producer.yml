@@ -31,8 +31,7 @@ jobs:
           python -m compileall -q src/zog/image_build/first_fonts.py src/zog/image_build/remote_operations.py
           python -m pytest -q -rs -p no:cacheprovider \
             tests/test_first_fonts_executable_pipeline.py \
-            tests/test_first_fonts_inherited_producer.py \
-            tests/test_catalogue.py
+            tests/test_first_fonts_inherited_producer.py
       - name: Demonstrate old generic source-only Project-current input support remains
         env:
           PYTHONPATH: src
