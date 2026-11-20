@@ -93,6 +93,7 @@ class BoxControlExecutionAdapter:
         directory = Path(directory)
         resource_path = directory / 'controller-resources.json'
         if not resource_path.exists(): return
+        _require_inherited_peer()
         resource = _require_inherited_record(json.loads(resource_path.read_text()),
             {'resource_id', 'registration'}, 'build resource')
         released = directory / 'controller-released.json'
