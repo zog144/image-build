@@ -144,6 +144,7 @@ def test_fonts_normal_producer_prepares_actual_closed_executable_stages(tmp_path
     ("empty_build", "build and install steps must be explicit"),
     ("missing_source", "invalid literal metadata"),
     ("wrong_source_sha", "first Fonts stage source URL/SHA256 differs"),
+    ("missing_source_sha", "first Fonts stage source URL/SHA256 differs"),
     ("missing_manifest", "invalid literal metadata"),
     ("missing_required_output", "required binary/header/config/notice output missing"),
     ("missing_notice", "invalid literal metadata"),
@@ -170,9 +171,12 @@ def test_fonts_rejects_nonexecutable_unpinned_or_unnoticed_stage(tmp_path, chang
             value = literal(stage / "build.py")
             value["build"] = []
             (stage / "build.py").write_text(repr(value))
-        elif changed == "wrong_source_sha":
+        elif changed in ("wrong_source_sha", "missing_source_sha"):
             value = literal(stage / "sources.py")
-            value[0]["sha256"] = "f" * 64
+            if changed == "wrong_source_sha":
+                value[0]["sha256"] = "f" * 64
+            else:
+                del value[0]["sha256"]
             (stage / "sources.py").write_text(repr(value))
         elif changed == "missing_required_output":
             path = stage / "produce-manifest.py"
