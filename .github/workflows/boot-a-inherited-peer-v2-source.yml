@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           repository: zog144/root-control
-          ref: 119c50c11a73663a446ad07551fa662936856913
+          ref: 58b5a94311d771bb1c5f4c3e9c6191b44d6565c9
           path: companions/root-control-inherited
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -59,7 +59,7 @@ jobs:
               assert component['installed_bytes']==component['source']
           print('EXACT_SOURCE_AND_INSTALLED_BYTE_FIXTURE_VERIFIED_NATIVE_HOLD')
           PY
-      - name: Confirm pre-v2 root control cannot pass native inherited-peer admission
+      - name: Confirm source-only root v2 is not treated as native child identity acceptance
         run: |
           if python tools/verify_boot_a_inherited_source_tuple.py \
             --native-admission \
@@ -68,10 +68,10 @@ jobs:
             --root-source companions/root-control-inherited \
             --host-source companions/host-install-resident-accounts \
             2>/tmp/native-admission-denied; then
-            echo "ERROR: old root default-credential path was admitted"; exit 1
+            echo "ERROR: source-only root v2 claimed native child credentials"; exit 1
           fi
-          grep -F "root-control #48 nonroot SO_PEERCRED" /tmp/native-admission-denied
-          echo "LEGACY_ROOT_NATIVE_ADMISSION_REFUSED"
+          grep -F "native installed-byte and actual systemd252 nonroot child acceptance still required" /tmp/native-admission-denied
+          echo "SOURCE_ONLY_PR55_NATIVE_CHILD_ACCEPTANCE_NOT_FABRICATED"
       - name: Test real sysusers, getty, immutable Boot A publication, inherited-peer v2 and no legacy replay
         env:
           REQUIRE_HOST_INSTALL_ACCOUNTS: "1"
@@ -93,4 +93,4 @@ jobs:
       - name: Source-only boundaries
         if: always()
         run: |
-          echo "No native compiler, root-control peer launch, old checkpoint recovery, Host, immutable generation, SSM command or rootfs publication was performed. Root-control issue 48 remains a hard activation HOLD." >> "$GITHUB_STEP_SUMMARY"
+          echo "No native compiler, root-control peer launch, old checkpoint recovery, Host, immutable generation, SSM command or rootfs publication was performed. Root-control PR55 source is selected but native child identity on systemd252 is not yet attested." >> "$GITHUB_STEP_SUMMARY"
