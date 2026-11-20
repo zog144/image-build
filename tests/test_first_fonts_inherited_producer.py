@@ -1,7 +1,9 @@
 """Immutable first-Fonts source continuity across the identity-only revision.
 
 The original producer is retained as historical evidence. The replacement
-must retain exact first-Fonts recipe and October pin bytes, while no longer
+must retain the original command/dependency source blobs and historical October pin
+outside the public tree; a distinct reviewed successor strengthens final-stage
+output/notice manifests, while no longer
 allowing a selected execution UID/GID. This test never invokes a compiler.
 """
 import hashlib
@@ -30,7 +32,7 @@ def test_historical_october_pin_is_not_republished_in_public_producer():
 
 
 
-def test_exact_original_fonts_recipe_selection_is_unchanged():
+def test_fonts_executable_successor_keeps_original_commands_edges_and_plan():
     assert git_blob(ROOT / "project/bootstrap/graphics-fonts.py") == (
         "3c97eea9a93e20fa40bb69687f5e9613e8178e98"
     )
@@ -38,17 +40,17 @@ def test_exact_original_fonts_recipe_selection_is_unchanged():
         "libpng": {
             "build.py": "24becdc4f6c9841156285c23cdc9b62c1f8f2166",
             "dependencies.py": "c6905845e9b2ff16a1a6709a682fd02986af42c7",
-            "produce-manifest.py": "10d6e8fa89bceea98a1f58e582d1f7b1aaba0fdf",
+            "produce-manifest.py": "bfa273180a215012504284734bf33cf94e3318d6",
         },
         "freetype": {
             "build.py": "5af75b7ac87398c9112bada4ef2deac19c0388c5",
             "dependencies.py": "111f1d565099efc29b5b5a5ef6c944a91825eb6a",
-            "produce-manifest.py": "ddde93dec410c587abcb230fe779ab78326a97c5",
+            "produce-manifest.py": "1521731455385bb2839b58941f24d6b9beab4d62",
         },
         "fontconfig": {
             "build.py": "1fda6ea9e7eaf9aff196166ba9b94d0271d37691",
             "dependencies.py": "14984eb765eb26136b7a529f3d222658b0a0d1b7",
-            "produce-manifest.py": "d8f9bedc053d5835bb3b2b968b117744bcabc358",
+            "produce-manifest.py": "4aff4ab4487bbd3d812c161b32651159ded19f9e",
         },
     }
     for project, files in selected.items():
