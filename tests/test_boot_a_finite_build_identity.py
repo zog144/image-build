@@ -59,7 +59,8 @@ class StrictReceiver:
             "output_directory": output_directory,
             "input_manifest_id": input_manifest_id,
         })
-        return {"resource_id": resource_id, "state": "ready"}
+        return {"resource_id": resource_id, "state": "ready",
+                "execution_contract": "zog-build-inherited-peer-v2"}
 
 
 def test_boot_a_adapter_matches_real_legacy_free_registration_shape(tmp_path):
@@ -74,6 +75,8 @@ def test_boot_a_adapter_matches_real_legacy_free_registration_shape(tmp_path):
     observed = adapter._register("a" * 32, request, tmp_path)
     assert observed["state"] == "ready"
     assert control.calls == [dict(request, resource_id="a" * 32)]
+    assert adapter.configuration()["execution_identity"] == "inherit"
+    assert adapter.configuration()["execution_contract"] == "zog-build-inherited-peer-v2"
     assert "execution_user_id" not in adapter.configuration()
     assert "execution_group_id" not in adapter.configuration()
     params = inspect.signature(BoxControlExecutionAdapter).parameters
@@ -167,6 +170,7 @@ def test_config_requires_no_execution_identity_and_fails_closed_for_old_json(tmp
     from zog.image_build.configuration import configured_runner
     project = tmp_path / "project"
     raw = {
+        "execution_identity": "inherit",
         "project_root": str(project),
         "socket_path": "/run/zog/root-control.sock",
         "startup_timeout_seconds": 5,
@@ -184,7 +188,10 @@ def test_config_requires_no_execution_identity_and_fails_closed_for_old_json(tmp
     runner = configured_runner(config, project / "state")
     assert "execution_user_id" not in runner.execute.configuration()
     assert "execution_group_id" not in runner.execute.configuration()
-    for field in ("execution_user_id", "execution_group_id"):
+    for field in ("execution_user_id", "execution_group_id", "User", "Group", "execution_contract"):
         config.write_text(json.dumps(dict(raw, **{field: 24202})))
         with pytest.raises(ImageBuildError, match="missing or unsupported fields"):
             configured_runner(config, project / "state")
+    config.write_text(json.dumps(dict(raw, execution_identity="selected")))
+    with pytest.raises(ImageBuildError, match="must be inherit"):
+        configured_runner(config, project / "state")
