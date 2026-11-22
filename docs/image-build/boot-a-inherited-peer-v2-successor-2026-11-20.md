@@ -1,8 +1,8 @@
 # Boot A producer successor — inherited-peer v2 source and native admission hold
 
-**Source date:** 2026-11-20  
+**Source date:** 2026-11-20; **0:0 compatibility correction:** 2026-11-22  
 **Target:** image-build issue #22, PR #25; box-control issue #19 / PR #21;
-root-control issue #48 / PR #54; host-install PR #43.
+root-control issue #48 / PR #55 (including PR #54 fixes); host-install PR #43.
 
 ## Outcome and retained source
 
@@ -49,10 +49,14 @@ The producer now:
   `execution_group_id`, `User` or `Group` selectors are rejected.
   The runtime adapter's selected wire contract must equal
   `zog-build-inherited-peer-v2`.
-- Refuses an effective-root user or group before an attempted registration
-  or controller operation. Root-control must **independently** derive the
-  actual execution peer from the AF_UNIX socket's kernel credential
-  evidence; this local guard is not child credential attestation.
+- Accepts the existing process's exact `0:0` effective UID/GID pair
+  or a positive UID/GID pair, matching root-control PR #55. Rejects
+  `0:positive`, `positive:0`, invalid values or out-of-range values
+  **before** attempting registration or controller mutation. The local
+  process-credential check is merely a shape check, **not** proof of the
+  socket peer or child. Root-control must still obtain authenticated
+  `SO_PEERCRED` from the accepted AF_UNIX socket and bind the child to
+  that exact kernel-supplied pair.
 - Saves `schema: 2`, `execution_contract:
   "zog-build-inherited-peer-v2"` in *new* package resources,
   registration-pending records, command checkpoints and checkpoint bindings.
@@ -65,13 +69,15 @@ The producer now:
   execution UID/GID or turn a historical checkpoint into a fresh operation.
 - Requires new box-control registration/job responses to carry the exact
   inherited-peer v2 marker. Cleanup/release also refuses old resources and
-  requires the non-root caller, preventing an old operation from being
-  activated through the release/recovery lane.
+  requires a valid same-process credential pair, including exact `0:0`,
+  preventing an old operation from being activated through the
+  release/recovery lane.
 
 The source tests exercise new v2 command/registration identities, lack of
 caller identity selectors, preserved read-only/network isolation, old
-registration/checkpoint no replay, root caller rejection and unrelated
-Boot A source behavior.
+registration/checkpoint no replay, `0:0` acceptance, mixed-zero
+rejection, unchanged v2 wire mismatch rejection, exact root-control
+socket-kernel credential checks, and unrelated Boot A source behavior.
 
 ## Exact source and installed-byte verification
 
@@ -85,10 +91,13 @@ does not claim those fixtures are original Host installation evidence.
 
 **Current root-control v2 source is now selected.** Draft
 [root-control PR #55](https://github.com/zog144/root-control/pull/55)
-commit `58b5a94311d771bb1c5f4c3e9c6191b44d6565c9` contains the
+commit `a672f007b33f83bf70970e3a571fd443366bd93f` contains the
 issuer/Task C functionality and systemd 252 literal-dollar finite-argv fix
-inherited from PR #54, plus full authenticated nonroot peer execution from
-issue #48. All **26** selected root-control runtime source files are
+inherited from PR #54, plus authenticated `0:0` or positive peer
+execution from issue #48. The source-pinned revision changes the
+`build.py` and `journal_barrier.py` blobs to accept the exact
+kernel-authenticated root pair while retaining the journal stop-hook
+protection. All **26** selected root-control runtime source files are
 pinned and checked byte-for-byte by the source/installed-module verifier.
 The older PR #54 commit
 `119c50c11a73663a446ad07551fa662936856913` remains in the
@@ -97,22 +106,28 @@ selected as the executable root daemon for v2 compilation.
 
 The new server implementation accepts the exact box-control v2
 `build_contract` top-level envelope, captures `SO_PEERCRED` on the
-actual accepted Unix socket before dispatch, rejects root or forged peers,
-and injects the private server-only `_peer` into the build lifecycle.
-It binds new schema-2 records to the nonroot peer, makes historical records
+actual accepted Unix socket before dispatch, permits the actual `0:0`
+caller while rejecting mixed-zero/invalid or forged peers, and injects
+the private server-only `_peer` into the build lifecycle. It binds new
+schema-2 records to that exact kernel-authenticated pair, makes historical records
 inspection-only, checks existing Project/workspace access, and derives any
 transient systemd User/Group settings from that authenticated principal.
 Live observation verifies the actual kernel child EUID/EGID, PID1's
 Unit User/Group and cgroup. No extra compiler account is created and no
 caller-chosen numeric UID/GID is accepted. The exact root-control PR55
-source CI passed 422 tests with 16 skipped per Python version, and the
-new producer CI must exercise its server-only `_peer` register signature.
+source CI passed 427 tests with 17 skipped per Python version, plus
+one dedicated root-only `0:0` test per Python version; the build is
+still source-only. The producer's exact source integration test exercises
+the server-only `_peer` register signature, 0:0 policy and
+`SO_PEERCRED` source path.
 
 **Native first-Fonts and Boot A execution remains HOLD**, but the reason
 is now **native deployment and acceptance**, not an absent source
 implementation. Root-control Work + box-control Work must prove:
-1. The actual installed box-control process uses a legitimate nonroot
-   effective UID and GID and is permitted on root-control's socket.
+1. The actual installed box-control caller uses a kernel-authenticated
+   `0:0` pair (the approved existing root caller) or a valid positive
+   UID/GID pair, and is permitted on root-control's socket. Mixed-zero
+   or requester-selected identity remains forbidden.
 2. The exact root-control PR55, box-control PR21 and this image-build
    successor source and installed bytes are attested in their actual
    environments (not merely CI checkout source fixtures).
@@ -148,7 +163,8 @@ admission. These tests do not establish native child credentials.
   reviewed root-control PR55 successor and host-install #43 revision.
   Verify all actual installed files and signed installation/Build Record
   receipts in the selected environments, not merely GitHub CI fixtures.
-- Select a nonroot controller caller with access to the selected Project.
+- Use the selected existing root `0:0` caller (or a separately
+  verified positive UID/GID pair) with access to the selected Project.
   Verify root-control's actual accepted `SO_PEERCRED`, systemd 252
   ExecStart dollar-literal handling, inherited child EUID/EGID,
   cgroup and project access in a **distinct disposable controller job**.
@@ -172,8 +188,8 @@ record; no direct-SSM or direct-systemd bypass is acceptable.
 **Source status:** producer v2 and PR25 preservation source-reviewed
 candidate, selecting the exact box-control PR21 and root-control PR55
 v2 implementations. **Native controller acceptance:** NOT YET COMPLETED
-(actual root-owned installed bytes, nonroot client, real systemd252 child
-EUID/EGID and InvocationID pending). **New Boot A generation:** NOT
+(actual installed package bytes, authenticated `0:0` socket peer,
+real systemd252 child EUID/EGID 0/0, InvocationID and terminal receipt pending). **New Boot A generation:** NOT
 BUILT/PUBLISHED. Image-build issue #22 remains open until the reviewed
 producer successor and matching installed controller triple are
 accepted and native Boot A publication succeeds.
