@@ -108,6 +108,42 @@ def test_root_control_peer_bound_register_adds_only_server_authenticated_peer():
     assert "execution_group_id" not in literals
 
 
+def test_selected_root_v2_accepts_exact_root_pair_but_rejects_mixed_zero():
+    # The server-only helper is imported from the exact root-control PR55
+    # companion, not approximated with image-build fixture logic.
+    companion(ROOT_CONTROL)
+    from zog.root_control.build import authenticated_build_peer
+    from zog.root_control.systemd import SystemdBackendError
+
+    assert authenticated_build_peer((0, 0)) == (0, 0)
+    assert authenticated_build_peer((2001, 2001)) == (2001, 2001)
+    assert authenticated_build_peer((2001, 3001)) == (2001, 3001)
+    for invalid in ((0, 2001), (2001, 0), (-1, -1), (2**31, 2**31),
+                    (True, True), ("0", "0"), None):
+        with pytest.raises(SystemdBackendError, match="authenticated socket peer"):
+            authenticated_build_peer(invalid)
+
+    # The actual server reads kernel SO_PEERCRED and injects private _peer:
+    # the producer is never allowed to name or assert an identity on the wire.
+    daemon = ROOT_CONTROL.with_name("daemon.py")
+    source = ast.parse(companion(daemon).read_text())
+    cls = next(node for node in source.body
+               if isinstance(node, ast.ClassDef) and node.name == "RootControlDaemon")
+    peer_reader = next(node for node in cls.body
+                       if isinstance(node, ast.FunctionDef) and node.name == "_kernel_peer")
+    props = {node.attr for node in ast.walk(peer_reader)
+             if isinstance(node, ast.Attribute)}
+    assert "SO_PEERCRED" in props and "getsockopt" in props
+    assert "unpack" in props
+    handle = next(node for node in cls.body
+                  if isinstance(node, ast.FunctionDef) and node.name == "handle")
+    literals = {node.value for node in ast.walk(handle)
+                if isinstance(node, ast.Constant) and isinstance(node.value, str)}
+    for forbidden in ("_peer", "peer", "execution_user_id", "execution_group_id",
+                      "User", "Group"):
+        assert forbidden in literals
+
+
 def test_selected_box_control_wire_request_accepts_no_account_selectors():
     companion(BOX)
     from zog.box_control.build_protocol import canonical_request
