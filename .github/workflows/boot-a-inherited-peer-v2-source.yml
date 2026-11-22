@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           repository: zog144/root-control
-          ref: 58b5a94311d771bb1c5f4c3e9c6191b44d6565c9
+          ref: a672f007b33f83bf70970e3a571fd443366bd93f
           path: companions/root-control-inherited
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -70,7 +70,7 @@ jobs:
             2>/tmp/native-admission-denied; then
             echo "ERROR: source-only root v2 claimed native child credentials"; exit 1
           fi
-          grep -F "native installed-byte and actual systemd252 nonroot child acceptance still required" /tmp/native-admission-denied
+          grep -F "native installed-byte and actual systemd252 authenticated-peer child acceptance still required" /tmp/native-admission-denied
           echo "SOURCE_ONLY_PR55_NATIVE_CHILD_ACCEPTANCE_NOT_FABRICATED"
       - name: Test real sysusers, getty, immutable Boot A publication, inherited-peer v2 and no legacy replay
         env:
