@@ -24,13 +24,19 @@ def _require_inherited_record(raw, fields, label):
 
 
 def _require_inherited_peer():
-    """Only the privileged receiver may derive credentials from SO_PEERCRED.
+    """Check local peer *shape*; root-control alone authenticates SO_PEERCRED.
 
-    A process running as root may inspect old evidence but may not register
-    or start a compiler; this local check is not itself proof of the child UID.
+    The installed root-control v2 contract accepts a real 0:0 caller as well
+    as positive UID/GID pairs, but never a mixed-zero or invalid pair.
+    This process-local preflight is not proof of the socket peer or the child.
     """
-    if os.geteuid() == 0 or os.getegid() == 0:
-        raise ImageBuildError("inherited build requires an authenticated nonroot controller peer")
+    uid, gid = os.geteuid(), os.getegid()
+    if (type(uid) is not int or type(gid) is not int
+            or not 0 <= uid < 2**31 or not 0 <= gid < 2**31
+            or (uid == 0) != (gid == 0)):
+        raise ImageBuildError(
+            "inherited build requires a matched 0:0 or positive UID/GID peer"
+        )
     from zog.box_control.build_protocol import INHERITED_EXECUTION_CONTRACT as wire
     if wire != INHERITED_EXECUTION_CONTRACT:
         raise ImageBuildError("installed box-control inherited-peer v2 wire is not selected")
@@ -142,7 +148,9 @@ class BoxControlExecutionAdapter:
         peer = observed.get("execution_identity")
         if (observed.get("schema") != 2
                 or type(peer) is not dict or set(peer) != {"uid", "gid"}
-                or any(type(peer[k]) is not int or peer[k] <= 0 for k in peer)
+                or any(type(peer[k]) is not int
+                       or not 0 <= peer[k] < 2**31 for k in peer)
+                or (peer["uid"] == 0) != (peer["gid"] == 0)
                 or observed.get("intent") != registration):
             raise ImageBuildError("root-control registration is not authenticated peer-bound schema 2")
 
