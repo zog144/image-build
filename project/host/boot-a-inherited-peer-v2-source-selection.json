@@ -352,14 +352,14 @@
   "required_root_successor": {
     "repository": "zog144/root-control",
     "issue": 48,
-    "revision": "58b5a94311d771bb1c5f4c3e9c6191b44d6565c9",
+    "revision": "a672f007b33f83bf70970e3a571fd443366bd93f",
     "contract": "zog-build-inherited-peer-v2",
     "must_verify_kernel_peer_credentials": true,
-    "nonroot_peer_only": true,
     "transient_unit_identity_server_derived": true,
     "identity_override_rejection": true,
     "legacy_inspection_only": true,
-    "retain_systemd252_literal_argv_fix": true
+    "retain_systemd252_literal_argv_fix": true,
+    "accepted_peer_policy": "kernel-authenticated 0:0 or positive UID/GID pair; mixed zero forbidden"
   },
   "legacy_operations_replayable": false,
   "existing_source_pins_and_receipts_mutated": false,
@@ -413,7 +413,7 @@
   "retained_boot_a_file_count": 11,
   "root_control": {
     "repository": "zog144/root-control",
-    "revision": "58b5a94311d771bb1c5f4c3e9c6191b44d6565c9",
+    "revision": "a672f007b33f83bf70970e3a571fd443366bd93f",
     "source_prefix": "src/zog/root_control/",
     "files": {
       "__init__.py": {
@@ -425,7 +425,7 @@
         "mode": "100644"
       },
       "build.py": {
-        "git_blob": "3c98f8a34f66888125c2fc975431290815ba4007",
+        "git_blob": "61ef5752b2eab886867403ef00e4a67fa30ee13d",
         "mode": "100644"
       },
       "credentials.py": {
@@ -485,7 +485,7 @@
         "mode": "100644"
       },
       "journal_barrier.py": {
-        "git_blob": "9aca44c71451ab3fb3e7b7f312ebd54a1f0d66ee",
+        "git_blob": "968b7305110d86cdd61af30f7f309d7dff319d4a",
         "mode": "100644"
       },
       "mounts.py": {
@@ -524,11 +524,12 @@
     "contract": "zog-build-inherited-peer-v2",
     "capabilities": [
       "AF_UNIX_SO_PEERCRED",
-      "nonroot_uid_gid",
       "server_derived_systemd_User_Group",
       "schema2_peer_bound_records",
       "legacy_inspection_only",
-      "systemd252_literal_dollar_argv"
+      "systemd252_literal_dollar_argv",
+      "kernel_authenticated_root_0_0_or_positive_peer_pair",
+      "reject_mixed_zero_uid_gid"
     ],
     "review_status": "SOURCE_CI_PASS_NATIVE_WORK_PENDING"
   }
