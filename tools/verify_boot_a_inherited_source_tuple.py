@@ -3,7 +3,7 @@
 
 No mutable root, Host application, controller operation, compiler command, or
 historical checkpoint is changed. This CANNOT authorize native execution:
-root-control issue #48 has no approved inherited-peer v2 source revision yet.
+root-control PR55's 0:0-compatible source is selected but native child evidence is pending.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ CONTRACT = "zog-build-inherited-peer-v2"
 IDENTITY = "inherit"
 REVISIONS = {
     "box_control": "ad61fa6a4e9c3176149720868cb008e0512dbec9",
-    "root_control": "58b5a94311d771bb1c5f4c3e9c6191b44d6565c9",
+    "root_control": "a672f007b33f83bf70970e3a571fd443366bd93f",
     "host_install_resident_accounts": "4fcccb441fec851530c412f619bc02699b8a87b1",
 }
 COUNTS = {"box_control": 52, "root_control": 26,
@@ -214,7 +214,7 @@ def verify(*, producer_source, box_source, root_source, host_source,
                 hold("installed and original source bytes differ: " + key)
             result["components"][key]["installed_bytes"] = installed
     if request_native:
-        hold("root-control PR55 source selected; native installed-byte and actual systemd252 nonroot child acceptance still required")
+        hold("root-control PR55 source selected; native installed-byte and actual systemd252 authenticated-peer child acceptance still required")
     return result
 
 
