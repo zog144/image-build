@@ -165,16 +165,61 @@ def test_release_never_replays_or_releases_legacy_resource(tmp_path):
     assert not (directory / "controller-released.json").exists()
 
 
-@pytest.mark.parametrize("key", ["geteuid", "getegid"])
-def test_root_peer_rejected_before_any_request_or_mutation(tmp_path, monkeypatch, key):
+@pytest.mark.parametrize("uid,gid", [(0, 2001), (2001, 0)])
+def test_mixed_zero_peer_rejected_before_any_request_or_mutation(
+    tmp_path, monkeypatch, uid, gid,
+):
     control = RecordingController(tmp_path)
-    package = tmp_path / "root-caller"
+    package = tmp_path / "mixed-zero-caller"
     request = _request(package)
-    monkeypatch.setattr(adapter_module.os, key, lambda: 0)
-    with pytest.raises(ImageBuildError, match="authenticated nonroot"):
+    monkeypatch.setattr(adapter_module.os, "geteuid", lambda: uid)
+    monkeypatch.setattr(adapter_module.os, "getegid", lambda: gid)
+    with pytest.raises(ImageBuildError, match="matched 0:0 or positive UID/GID"):
         _adapter(control).execute_for_attempt(request, package / "compile.controller.json")
     assert control.calls == []
     assert not list(package.glob("*.json"))
+    assert not list(package.glob("*.lock"))
+
+
+def test_root_0_0_peer_can_register_and_submit_new_v2_job(tmp_path, monkeypatch):
+    # An injected local 0:0 process view is a source-only fixture, NOT
+    # evidence of a kernel-authenticated socket peer or native root child.
+    monkeypatch.setattr(adapter_module.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(adapter_module.os, "getegid", lambda: 0)
+    control = RecordingController(tmp_path)
+    package = tmp_path / "root-v2-new-attempt"
+    request = _request(package)
+    observed = _adapter(control).execute_for_attempt(
+        request, package / "compile.controller.json",
+    )
+    assert observed.exit_code == 0
+    checkpoint = json.loads((package / "compile.controller.json").read_text())
+    resource = json.loads((package / "controller-resources.json").read_text())
+    assert checkpoint["schema"] == resource["schema"] == 2
+    assert checkpoint["execution_contract"] == resource["execution_contract"] == INHERITED_EXECUTION_CONTRACT
+    assert [name for name, _ in control.calls] == ["register", "issue", "inspect", "submit"]
+    for _, arguments in control.calls:
+        assert not set(arguments) & {
+            "User", "Group", "execution_user_id", "execution_group_id",
+            "_peer", "peer", "peer_identity",
+        }
+    assert checkpoint["binding"]["request"]["read_only_root"] is True
+    assert checkpoint["binding"]["request"]["network_access"] is False
+
+
+def test_root_0_0_peer_still_requires_exact_box_control_v2_wire(tmp_path, monkeypatch):
+    from zog.box_control import build_protocol
+    monkeypatch.setattr(adapter_module.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(adapter_module.os, "getegid", lambda: 0)
+    monkeypatch.setattr(build_protocol, "INHERITED_EXECUTION_CONTRACT", "legacy-identity-v1")
+    control = RecordingController(tmp_path)
+    package = tmp_path / "wrong-wire"
+    request = _request(package)
+    with pytest.raises(ImageBuildError, match="v2 wire is not selected"):
+        _adapter(control).execute_for_attempt(request, package / "compile.controller.json")
+    assert control.calls == []
+    assert not list(package.glob("*.json"))
+    assert not list(package.glob("*.lock"))
 
 
 @pytest.mark.parametrize("bad", [
@@ -208,6 +253,23 @@ def _pending_registration(tmp_path):
     return directory, control, rid, registration
 
 
+def test_root_0_0_schema2_registration_resume_keeps_original_identity(
+    tmp_path, monkeypatch,
+):
+    monkeypatch.setattr(adapter_module.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(adapter_module.os, "getegid", lambda: 0)
+    directory, control, rid, registration = _pending_registration(tmp_path)
+    control.inspect_build_root = lambda key: {
+        "schema": 2, "resource_id": key, "state": "ready",
+        "execution_identity": {"uid": 0, "gid": 0}, "intent": registration,
+    }
+    original = (directory / "registration-pending.json").read_bytes()
+    assert _adapter(control)._register(rid, registration, directory)["state"] == "ready"
+    assert original  # the original was a v2 registration, never rewritten
+    assert not (directory / "registration-pending.json").exists()
+    assert control.calls == [("register", {"resource_id": rid, **registration})]
+
+
 def test_peer_bound_root_schema2_registration_recovery_uses_same_identity(tmp_path):
     directory, control, rid, registration = _pending_registration(tmp_path)
     control.inspect_build_root = lambda key: {
@@ -231,6 +293,9 @@ def test_peer_bound_root_schema2_registration_recovery_uses_same_identity(tmp_pa
     {"schema": 2, "execution_identity": {"uid": 2001, "gid": 0}},
     {"schema": 2, "execution_identity": {"uid": 2001, "gid": 2001},
      "intent": {"input_manifest_id": "different"}},
+    {"schema": 2, "execution_identity": {"uid": -1, "gid": -1}},
+    {"schema": 2, "execution_identity": {"uid": 2**31, "gid": 2**31}},
+    {"schema": 2, "execution_identity": {"uid": True, "gid": True}},
 ])
 def test_old_or_forged_remote_registration_does_not_clear_pending(
     tmp_path, server,
