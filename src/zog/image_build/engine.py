@@ -644,8 +644,13 @@ class ImageBuild(PipelineMixin):
         except OSError:
             pass
 
-    def _ensure(self, targets, *, toolchain, seed_check=False, native_check=False):
-        toolchain = read_selection(Path(toolchain.root).parent)
+    def _ensure(self, targets, *, toolchain, seed_check=False, native_check=False,
+                _validated_toolchain=False):
+        # Pipeline continuation has just read/validated the immutable selection
+        # (or received the same call's verified selection at initial submit).
+        # Standalone callers still get their own full integrity check.
+        if not _validated_toolchain:
+            toolchain = read_selection(Path(toolchain.root).parent)
         if native_check:
             kind = toolchain.manifest["kind"]
             if kind not in {"native-temporary-toolchain", "native-final-libc", "native-compiler-candidate"}:
