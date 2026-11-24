@@ -96,15 +96,32 @@ class PipelineMixin:
     def inspect_pipeline(self, pipeline_id):
         return json.loads((self._pipeline_directory(pipeline_id) / 'pipeline.json').read_text())
 
-    def resume(self, pipeline_id):
+    def resume(self, pipeline_id, *, _validated_selection=None):
+        """Continue a durable pipeline, validating its root in this process.
+
+        The one-shot private selection argument is only for a newly prepared
+        pipeline whose input was fully checked by the same submission call.
+        An independently resumed or recovered pipeline always reads the
+        retained generation from disk, including its full file inventory.
+        """
         with self.locked():
             directory = self._pipeline_directory(pipeline_id)
             record = self.inspect_pipeline(pipeline_id)
             if record.get('released'):
                 raise ImageBuildError('pipeline resources explicitly released; cannot resume')
-            return self._continue_pipeline(directory, record)
+            if _validated_selection is not None:
+                from .engine import ImageSelection
+                if (record.get('status') != 'prepared'
+                        or not isinstance(_validated_selection, ImageSelection)
+                        or _validated_selection.reused is not True
+                        or record.get('selection') != str(Path(_validated_selection.root).resolve().parent)
+                        or _validated_selection.generation != Path(record['selection']).name):
+                    raise ImageBuildError('validated selection differs from newly prepared pipeline')
+            return self._continue_pipeline(
+                directory, record, _validated_selection=_validated_selection
+            )
 
-    def _continue_pipeline(self, directory, record):
+    def _continue_pipeline(self, directory, record, *, _validated_selection=None):
         from .engine import read_selection
         if record['schema'] != 1 or record['pipeline_id'] != directory.name:
             raise ImageBuildError('invalid pipeline record')
@@ -124,13 +141,18 @@ class PipelineMixin:
         try:
             record['status'] = 'running'
             write_json(directory / 'pipeline.json', record)
-            selection = read_selection(record['selection'])
+            # Exactly one full generation inventory per in-process submit:
+            # the remote adapter already read this immutable generation before
+            # prepare_pipeline. Fresh-process resume always reads it here.
+            selection = (_validated_selection if _validated_selection is not None
+                         else read_selection(record['selection']))
             if record['operation'] == 'bootstrap':
                 result = self._bootstrap(selection, record['arguments']['stages'])
             elif record['operation'] in ('image', 'seed-check', 'native-check'):
                 result = self._ensure(record['arguments']['targets'], toolchain=selection,
                                       seed_check=record['operation'] == 'seed-check',
-                                      native_check=record['operation'] == 'native-check')
+                                      native_check=record['operation'] == 'native-check',
+                                      _validated_toolchain=True)
             else:
                 raise ImageBuildError('unknown pipeline operation')
             snapshot = self._publish_observation_snapshot(result)
