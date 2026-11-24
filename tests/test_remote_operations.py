@@ -1815,3 +1815,116 @@ def test_retained_pin_new_executable_cli_captures_original_revision_not_its_own(
         "digest":digest,
     }]
     assert not (source/"project/pins/2026-10-01/commit-pin.py").exists()
+
+
+def test_project_current_submit_inventories_selected_root_once(tmp_path, monkeypatch):
+    """One full integrity inventory, including on kind=image Project defaults."""
+    from zog.image_build import engine
+
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    root = toolchain.root
+    original_inventory = engine.inventory
+    checked = []
+
+    def counted(path, *args, **kwargs):
+        if Path(path) == root:
+            checked.append(Path(path))
+        return original_inventory(path, *args, **kwargs)
+
+    monkeypatch.setattr(engine, "inventory", counted)
+    builder.runner = BoxControlRunner(
+        execute=lambda command: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    remote = adapter(repository, builder)
+    submission = request(
+        "single-generation-scan", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    )
+    result = remote.execute(submission)
+    assert result["status"] == "pending", result
+    assert len(checked) == 1
+    assert builder.inspect_pipeline(result["pipeline_id"])["selection"] == str(
+        root.parent
+    )
+
+
+@pytest.mark.parametrize("damage", ["file", "manifest"])
+def test_project_current_corruption_blocks_first_command(tmp_path, monkeypatch, damage):
+    from zog.image_build import engine
+
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    if damage == "file":
+        (toolchain.root / "unexpected-file").write_text("corrupt")
+    else:
+        path = toolchain.root.parent / "manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest["outputs"] = []
+        path.write_text(json.dumps(manifest))
+    called = []
+    builder.runner = BoxControlRunner(execute=lambda command: called.append(command))
+    result = adapter(repository, builder).execute(request(
+        "corrupt-selected-" + damage, "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    ))
+    assert result["status"] == "failed", result
+    assert "generation outputs changed" in result["failure"]["reason"]
+    assert not called
+    assert not list((builder.state / "image-build" / "pipelines").glob("*/pipeline.json")) if (
+        builder.state / "image-build" / "pipelines").exists() else True
+
+
+def test_pending_project_current_resumes_with_full_scan_and_stable_id(tmp_path, monkeypatch):
+    """A new invocation cannot inherit the first process's verification."""
+    from zog.image_build import engine
+
+    repository, _, builder, toolchain = setup_repo(tmp_path)
+    builder.runner = BoxControlRunner(
+        execute=lambda command: (_ for _ in ()).throw(KeyboardInterrupt())
+    )
+    remote = adapter(repository, builder)
+    original = request(
+        "resumable-single-scan", "pipeline.submit",
+        {"mode": "image", "targets": ["consumer"]},
+    )
+    first = remote.execute(original)
+    assert first["status"] == "pending", first
+    pipeline_id = first["pipeline_id"]
+    fresh = adapter(repository, builder)
+    inspected = fresh.execute(request(
+        "inspect-resumable-single-scan", "pipeline.inspect",
+        {"pipeline_id": pipeline_id},
+    ))
+    assert inspected["pipeline_id"] == pipeline_id
+    assert inspected["status"] == "pending"
+
+    original_inventory = engine.inventory
+    checked = []
+
+    def counted(path, *args, **kwargs):
+        if Path(path) == toolchain.root:
+            checked.append(1)
+        return original_inventory(path, *args, **kwargs)
+
+    monkeypatch.setattr(engine, "inventory", counted)
+    again = fresh.execute(original)
+    assert again["pipeline_id"] == pipeline_id
+    assert len(checked) == 1
+    checked.clear()
+
+    # Damage the immutable input after the first call. Fresh-process resume
+    # must reject it before issuing any command, without allocating an ID.
+    (toolchain.root / "corrupt-after-submit").write_text("corrupt")
+    commands = []
+    builder.runner = BoxControlRunner(execute=lambda command: commands.append(command))
+    resumed = fresh.execute(request(
+        "resume-corrupt-single-scan", "pipeline.resume",
+        {"pipeline_id": pipeline_id},
+    ))
+    assert resumed["pipeline_id"] == pipeline_id
+    assert resumed["status"] == "pending", resumed
+    assert len(checked) == 1
+    assert not commands
+    pipeline = builder.inspect_pipeline(pipeline_id)
+    assert pipeline["status"] == "pending"
+    assert "generation outputs changed" in pipeline["error"]
+    assert len(list((builder.state / "image-build" / "pipelines").glob("*/pipeline.json"))) == 1
