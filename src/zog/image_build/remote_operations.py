@@ -721,7 +721,7 @@ class RemoteOperations:
             snapshot,
         )
 
-    def _prepare_pipeline(self, request, directory):
+    def _prepare_pipeline(self, request, directory, *, _selection_out=None):
         binding = self._binding(directory)
         if binding and binding.get("pipeline_id"):
             return binding["pipeline_id"]
@@ -763,6 +763,10 @@ class RemoteOperations:
         record = selected_builder.prepare_pipeline(
             mode, selection, owner=owner, **arguments,
         )
+        # Only a just-created pipeline may reuse this already inventoried
+        # generation. A recovered binding never sets _selection_out.
+        if _selection_out is not None:
+            _selection_out.append(selection)
         binding = {"pipeline_id": record["pipeline_id"]}
         if snapshot is not None:
             binding["recipe_snapshot"] = snapshot.snapshot
@@ -1267,9 +1271,17 @@ class RemoteOperations:
         return result
 
     def _pipeline_submit(self, request, directory):
-        pipeline_id = self._prepare_pipeline(request, directory)
+        verified = []
+        pipeline_id = self._prepare_pipeline(
+            request, directory, _selection_out=verified
+        )
         try:
-            self.builder.resume(pipeline_id)
+            if verified:
+                self.builder.resume(pipeline_id, _validated_selection=verified[0])
+            else:
+                # A recovered submission must authenticate the retained input
+                # again, even when the same operation/pipeline ID is reused.
+                self.builder.resume(pipeline_id)
             raised = None
         except BaseException as error:
             raised = error
