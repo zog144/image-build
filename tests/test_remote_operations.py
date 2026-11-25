@@ -1853,6 +1853,13 @@ def test_project_current_corruption_blocks_first_command(tmp_path, monkeypatch, 
     from zog.image_build import engine
 
     repository, _, builder, toolchain = setup_repo(tmp_path)
+    # setup_repo already made a *completed bootstrap pipeline*.
+    # Corrupt input must not allocate another pipeline for this submission.
+    prior_pipelines = {
+        path.parent.name for path in
+        (builder.state / "image-build" / "pipelines").glob("*/pipeline.json")
+    }
+    assert len(prior_pipelines) == 1
     if damage == "file":
         (toolchain.root / "unexpected-file").write_text("corrupt")
     else:
@@ -1869,8 +1876,10 @@ def test_project_current_corruption_blocks_first_command(tmp_path, monkeypatch, 
     assert result["status"] == "failed", result
     assert "generation outputs changed" in result["failure"]["reason"]
     assert not called
-    assert not list((builder.state / "image-build" / "pipelines").glob("*/pipeline.json")) if (
-        builder.state / "image-build" / "pipelines").exists() else True
+    assert {
+        path.parent.name for path in
+        (builder.state / "image-build" / "pipelines").glob("*/pipeline.json")
+    } == prior_pipelines
 
 
 def test_pending_project_current_resumes_with_full_scan_and_stable_id(tmp_path, monkeypatch):
@@ -1882,6 +1891,13 @@ def test_pending_project_current_resumes_with_full_scan_and_stable_id(tmp_path, 
         execute=lambda command: (_ for _ in ()).throw(KeyboardInterrupt())
     )
     remote = adapter(repository, builder)
+    # Count only identities allocated by this request, not the fixture's
+    # completed bootstrap pipeline. Preserve that baseline throughout resume.
+    prior_pipelines = {
+        path.parent.name for path in
+        (builder.state / "image-build" / "pipelines").glob("*/pipeline.json")
+    }
+    assert len(prior_pipelines) == 1
     original = request(
         "resumable-single-scan", "pipeline.submit",
         {"mode": "image", "targets": ["consumer"]},
@@ -1889,6 +1905,10 @@ def test_pending_project_current_resumes_with_full_scan_and_stable_id(tmp_path, 
     first = remote.execute(original)
     assert first["status"] == "pending", first
     pipeline_id = first["pipeline_id"]
+    assert {
+        path.parent.name for path in
+        (builder.state / "image-build" / "pipelines").glob("*/pipeline.json")
+    } == prior_pipelines | {pipeline_id}
     fresh = adapter(repository, builder)
     inspected = fresh.execute(request(
         "inspect-resumable-single-scan", "pipeline.inspect",
@@ -1909,6 +1929,10 @@ def test_pending_project_current_resumes_with_full_scan_and_stable_id(tmp_path, 
     again = fresh.execute(original)
     assert again["pipeline_id"] == pipeline_id
     assert len(checked) == 1
+    assert {
+        path.parent.name for path in
+        (builder.state / "image-build" / "pipelines").glob("*/pipeline.json")
+    } == prior_pipelines | {pipeline_id}
     checked.clear()
 
     # Damage the immutable input after the first call. Fresh-process resume
@@ -1927,4 +1951,7 @@ def test_pending_project_current_resumes_with_full_scan_and_stable_id(tmp_path, 
     pipeline = builder.inspect_pipeline(pipeline_id)
     assert pipeline["status"] == "pending"
     assert "generation outputs changed" in pipeline["error"]
-    assert len(list((builder.state / "image-build" / "pipelines").glob("*/pipeline.json"))) == 1
+    assert {
+        path.parent.name for path in
+        (builder.state / "image-build" / "pipelines").glob("*/pipeline.json")
+    } == prior_pipelines | {pipeline_id}
