@@ -118,7 +118,7 @@ def test_existing_python315_must_not_be_silently_replaced_with_312():
     ("host-identify-final","python-cryptography-final"),
     ("host-install-final","python-final"),
 ])
-def test_new_runtime_stage_edges_require_review(stage,dependency):
+def test_unreviewed_extra_runtime_stage_edges_are_rejected(stage,dependency):
     d=dependencies()
     d[stage]["runtime"].append(dependency)
     with pytest.raises(ValueError,match="runtime stage dependencies drifted"):
@@ -168,3 +168,13 @@ def test_missing_runtime_feature_flag_refuses_passing_inventory(package,flag):
     source[package]=source[package].replace(flag,"source-option-removed")
     with pytest.raises(ValueError):
         audit.inspect(RECORD,build_scripts=source)
+
+
+def test_historical_source_audit_is_retained_not_rewritten_for_new_python_edges():
+    original = copy.deepcopy(RECORD)
+    assert original["direct_runtime_dependencies_observed"]["host-install-final"] == []
+    assert "python-final" in dependencies()["host-install-final"]["runtime"]
+    assert audit.inspect(RECORD)["resident_b"] == "NO_GO"
+    original["direct_runtime_dependencies_observed"]["host-install-final"] = ["python-final"]
+    with pytest.raises(ValueError, match="historical Resident B runtime source audit was rewritten"):
+        audit.inspect(original)
