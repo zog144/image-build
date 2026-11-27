@@ -120,13 +120,34 @@ def inspect(record, *, stages=None, dependencies=None, upstream=None,
     expected_deps = record["direct_runtime_dependencies_observed"]
     if set(expected_manifest) != set(SOURCE_STAGE) or set(expected_deps) != set(SOURCE_STAGE):
         raise ValueError("stage inventory omitted or substituted")
+    # The original 2026-11-03 audit is immutable historical evidence.
+    # Its recorded empty Host edges must not be rewritten to impersonate
+    # the *current* reviewed Resident B dual-runtime DAG.
+    historical_host_runtime = {
+        "host-install-final": [],
+        "host-identify-final": [],
+        "host-discover-final": ["host-identify-final", "host-install-final"],
+        "python-cryptography-final": [],
+    }
+    selected_host_runtime = {
+        "host-install-final": ["python-final"],
+        "host-identify-final": ["python-cryptography-final", "python-final"],
+        "host-discover-final": ["host-identify-final", "host-install-final", "python-final"],
+        "python-cryptography-final": ["python-final"],
+    }
+    for key, original in historical_host_runtime.items():
+        if expected_deps[key] != original:
+            raise ValueError("historical Resident B runtime source audit was rewritten: " + key)
     for key in SOURCE_STAGE:
         required = stages[key]["required"]
         observed = expected_manifest[key]
         if (type(observed) is not list or len(set(observed)) != len(observed)
                 or not set(observed).issubset(required)):
             raise ValueError("observed source output missing: " + key)
-        if dependencies[key].get("runtime") != expected_deps[key]:
+        selected = selected_host_runtime.get(key, expected_deps[key])
+        actual = dependencies[key].get("runtime")
+        if (type(actual) is not list or len(actual) != len(set(actual))
+                or set(actual) != set(selected)):
             raise ValueError("direct declared runtime stage dependencies drifted: " + key)
         if type(dependencies[key].get("build")) is not list:
             raise ValueError("missing recorded build edges: " + key)
@@ -142,10 +163,8 @@ def inspect(record, *, stages=None, dependencies=None, upstream=None,
             set(dependencies["python-final"]["build"] +
                 dependencies["python-final"]["runtime"])):
         raise ValueError("Python predecessor graph changed; re-audit required")
-    for key in ("host-identify-final", "host-install-final",
-                "python-cryptography-final"):
-        if dependencies[key]["runtime"]:
-            raise ValueError("reviewed controller source edges changed: " + key)
+    # Current dual-runtime Host dependency closure is checked above. The
+    # original GAP inventory remains historical, without native promotion.
     existing_packages = (existing_packages if existing_packages is not None
                          else {p.name for p in PKG.iterdir() if p.is_dir()})
     if not {"box-control","root-control"}.issubset(existing_packages):

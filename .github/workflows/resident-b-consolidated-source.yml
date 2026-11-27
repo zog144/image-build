@@ -1,0 +1,151 @@
+name: Resident B consolidated source selection (no native build)
+on:
+  push:
+    branches: [regular/resident-b-consolidated-cp312-controllers-20261115]
+  pull_request:
+    branches: [review/resident-b-native-evidence-integration-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-controller-archives:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Independently measure newer original controller tarball SHA-256 and notices
+        run: python tools/inspect_resident_b_consolidated_controller_archives.py
+      - name: Source-only hold
+        if: always()
+        run: echo "No compiler, rootfs publication, native boot, runtime service, user provisioning or redistribution approval." >> "$GITHUB_STEP_SUMMARY"
+
+  integrated-resident-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/box-control
+          ref: c886e7a90bb4ea74e771a6c5dcefaa2069539ec7
+          path: companions/box-control
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/root-control
+          ref: d9dfd6c02a5a96750f1213bf663cdceab72f1efd
+          path: companions/root-control
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/box-control
+          ref: b5903779e72ea852a125a268dcd35189339dc4ae
+          path: companions/resident-b-selected-box
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/root-control
+          ref: 35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb
+          path: companions/resident-b-selected-root
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/host-install
+          ref: c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a
+          path: companions/host-install-boot-a-successor
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/image-build
+          ref: 1616f192ef9d8964a8f37f32a86c69c0242a213c
+          path: companions/accepted-compiler-reader
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Check selected Boot A successor and recursively measure package stage graph
+        run: |
+          test "$(git -C companions/host-install-boot-a-successor rev-parse HEAD)" = c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a
+          test "$(git -C companions/accepted-compiler-reader rev-parse HEAD)" = 1616f192ef9d8964a8f37f32a86c69c0242a213c
+          test "$(git hash-object companions/accepted-compiler-reader/src/zog/image_build/compiler_base_acceptance.py)" = 3eb562bbf2460fb95af0780a079cb2b058650f80
+          python tools/verify_resident_b_runtime_split.py
+          # Emit the measured DAG for exact digest re-pinning when source
+          # dependencies change; never use this to authorize native builds.
+          python tools/verify_resident_b_native_input_closure.py --measure
+          python tools/verify_resident_b_native_input_closure.py --host-install-plan companions/host-install-boot-a-successor/examples/resident-boot-a-successor-2026-10-31/plan.json
+      - name: Check combined historical source ancestry and new exact controller pins
+        run: |
+          git merge-base --is-ancestor 02fdd2f6b374322dd902ec58b982bbbf64d4b013 HEAD
+          test "$(git -C companions/box-control rev-parse HEAD)" = c886e7a90bb4ea74e771a6c5dcefaa2069539ec7
+          test "$(git -C companions/root-control rev-parse HEAD)" = d9dfd6c02a5a96750f1213bf663cdceab72f1efd
+          python tools/verify_resident_b_controller_source_stages.py
+          python tools/verify_resident_b_aggregate_installed.py \
+            --box-source companions/box-control \
+            --root-source companions/root-control
+          test "$(git -C companions/resident-b-selected-box rev-parse HEAD)" = b5903779e72ea852a125a268dcd35189339dc4ae
+          test "$(git -C companions/resident-b-selected-root rev-parse HEAD)" = 35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb
+          python tools/verify_resident_b_aggregate_installed.py \
+            --pins project/host/resident-b-aggregate-installed-source-pins-v2.json \
+            --box-source companions/resident-b-selected-box \
+            --root-source companions/resident-b-selected-root
+          python tools/verify_resident_b_combined_source.py
+          python tools/verify_resident_b_consolidated_source.py
+          python tools/verify_resident_b_native_input_closure.py
+          python tools/verify_resident_b_source_prerequisites.py
+      - name: Check newer root/box upstream interfaces and exact installed-source security
+        run: |
+          python tools/verify_resident_b_controller_install_security.py \
+            --root-daemon companions/root-control/src/zog/root_control/daemon.py \
+            --box-cli companions/box-control/box-control/src/zog/box_control/cli.py \
+            --root-pyproject companions/root-control/pyproject.toml \
+            --box-pyproject companions/box-control/box-control/pyproject.toml
+          python - <<'PY'
+          from pathlib import Path
+          root = Path("companions/root-control/src/zog/root_control")
+          box = Path("companions/box-control/box-control/src/zog/box_control")
+          for name in ("task_c_trusted_host.py", "issuer_observation.py",
+                       "issuer_inspection_result.py", "issuer_execution_fence.py"):
+              assert (root / name).is_file(), name
+          for name in ("issuer_lifecycle_broker.py", "issuer_broker_authority.py",
+                       "build_protocol.py"):
+              assert (box / name).is_file(), name
+          build = (root / "build.py").read_text()
+          assert "'User':" not in build and "'Group':" not in build
+          assert "setuid(" not in build and "setgid(" not in build
+          PY
+      - name: Test Python SSL/SQLite, network outputs, wheel metadata, installed-evidence and security source
+        run: |
+          python -m pip install 'pytest==8.4.2' 'cryptography==46.0.3'
+          export REQUIRE_RESIDENT_AGGREGATE_SOURCES=1
+          python -m pytest -q -rs \
+            tests/test_resident_b_consolidated_source.py \
+            tests/test_resident_b_native_input_closure.py \
+            tests/test_resident_b_native_admission.py \
+            tests/test_resident_b_runtime_split.py \
+            tests/test_python312_independent_source_review.py \
+            tests/test_python312_resident_candidate.py \
+            tests/test_resident_b_source_prerequisites.py \
+            tests/test_resident312_transitive_source_closure.py \
+            tests/test_resident_b_controller_sources_independent.py \
+            tests/test_resident_b_controller_wheel_outputs.py \
+            tests/test_resident_b_aggregate_installed.py \
+            tests/test_resident_b_aggregate_selected.py \
+            tests/test_resident_b_controller_install_security.py \
+            tests/test_resident_b_combined_source_reconciliation.py \
+            tests/test_resident_b_installed_evidence.py \
+            tests/test_resident_b_installed_evidence_hardening.py
+      - name: Source-only acceptance boundary
+        if: always()
+        run: echo "CPython and newer controllers are pinned in source only; no native installed generation, verified STATE, resident service start, accepted rights or compiler operation." >> "$GITHUB_STEP_SUMMARY"

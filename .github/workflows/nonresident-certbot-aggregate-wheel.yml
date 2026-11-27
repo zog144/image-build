@@ -1,0 +1,177 @@
+name: Nonresident Certbot actual pinned aggregate wheel (unaccepted native install)
+on:
+  push:
+    branches: [regular/resident-b-consolidated-cp312-controllers-20261115]
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  real-wheel-and-record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/zog
+          ref: d47d86b363824c718d9c165124cb55bbed12e0f9
+          path: companions/zog-aggregate-base
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/box-control
+          ref: c886e7a90bb4ea74e771a6c5dcefaa2069539ec7
+          path: companions/box-control
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/root-control
+          ref: d9dfd6c02a5a96750f1213bf663cdceab72f1efd
+          path: companions/root-control
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/host-install
+          ref: 9ad4e951ef0a14cc6a735af47ffb31734d854816
+          path: companions/host-install-issuer
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Require exact source commits and isolated Python 3.12 build tool versions
+        run: |
+          test "$(git -C companions/zog-aggregate-base rev-parse HEAD)" = d47d86b363824c718d9c165124cb55bbed12e0f9
+          test "$(git -C companions/box-control rev-parse HEAD)" = c886e7a90bb4ea74e771a6c5dcefaa2069539ec7
+          test "$(git -C companions/root-control rev-parse HEAD)" = d9dfd6c02a5a96750f1213bf663cdceab72f1efd
+          test "$(git -C companions/host-install-issuer rev-parse HEAD)" = 9ad4e951ef0a14cc6a735af47ffb31734d854816
+          python -m pip install 'build==1.3.0' 'installer==1.0.1' 'setuptools==82.0.1' 'wheel==0.48.0' 'pytest==8.4.2'
+          python - <<'PY'
+          import importlib.metadata as m
+          for pkg, version in {'build':'1.3.0', 'installer':'1.0.1',
+                               'setuptools':'82.0.1','wheel':'0.48.0'}.items():
+              assert m.version(pkg)==version, (pkg,m.version(pkg))
+          PY
+      - name: Check exact source and negative hold contracts
+        env:
+          REQUIRE_RESIDENT_AGGREGATE_SOURCES: '1'
+        run: |
+          python tools/verify_resident_b_aggregate_installed.py \
+            --box-source companions/box-control \
+            --root-source companions/root-control
+          python tools/verify_nonresident_certbot_host_install.py \
+            --source companions/host-install-issuer
+          python -m pytest -q -rs tests/test_resident_b_aggregate_installed.py tests/test_nonresident_certbot_aggregate_source.py
+      - name: Build real distribution and offline install into disposable /usr staged root
+        run: |
+          python tools/build_nonresident_certbot_aggregate.py \
+            --base companions/zog-aggregate-base \
+            --box companions/box-control \
+            --root companions/root-control \
+            --host-install companions/host-install-issuer \
+            --workspace /tmp/nonresident-certbot-aggregate
+      - name: Repeat the independently staged real build and prove byte-for-byte wheel reproducibility
+        run: |
+          python tools/build_nonresident_certbot_aggregate.py \
+            --base companions/zog-aggregate-base \
+            --box companions/box-control \
+            --root companions/root-control \
+            --host-install companions/host-install-issuer \
+            --workspace /tmp/nonresident-certbot-aggregate-repeat
+          python - <<'PY'
+          import hashlib, json, pathlib
+          first = pathlib.Path("/tmp/nonresident-certbot-aggregate")
+          second = pathlib.Path("/tmp/nonresident-certbot-aggregate-repeat")
+          a = json.loads((first/"aggregate-build-evidence.json").read_text())
+          b = json.loads((second/"aggregate-build-evidence.json").read_text())
+          assert a["candidate_wheel"]['sha256'] == b["candidate_wheel"]['sha256'], "wheel is not bit-for-bit reproducible"
+          assert a["distribution"]["RECORD_sha256"] == b["distribution"]["RECORD_sha256"]
+          assert a["controller_modules"] == b["controller_modules"]
+          assert a["installed_members"] == b["installed_members"]
+          print("REPEAT_BUILD_WHEEL_AND_INSTALLED_RECORD_IDENTICAL",a["candidate_wheel"]['sha256'])
+          PY
+      - name: Verify exact installed RECORD and independently recheck actual wheel
+        run: |
+          python tools/verify_resident_b_aggregate_installed.py \
+            --box-source companions/box-control \
+            --root-source companions/root-control \
+            --rootfs /tmp/nonresident-certbot-aggregate/installed \
+            --output /tmp/nonresident-certbot-aggregate/installed-byte-readback.json
+          python tools/verify_nonresident_certbot_host_install.py \
+            --source companions/host-install-issuer \
+            --rootfs /tmp/nonresident-certbot-aggregate/installed \
+            > /tmp/nonresident-certbot-aggregate/host-install-attestor-byte-readback.json
+          python - <<'PY'
+          import hashlib, json, pathlib
+          work = pathlib.Path('/tmp/nonresident-certbot-aggregate')
+          first = json.loads((work/'aggregate-build-evidence.json').read_text())
+          second = json.loads((work/'installed-byte-readback.json').read_text())
+          assert first['distribution'] == second['distribution']
+          assert first['controller_modules'] == second['controller_modules']
+          assert first['installed_members'] == second['installed_members']
+          assert len(first['host_install_importer']['host_install_selected_members']) == 74
+          third = json.loads((work/'host-install-attestor-byte-readback.json').read_text())
+          assert third['installed'] == first['host_install_importer']
+          assert third['source_verified'] is True
+          wheel = next((work/'wheel').glob('*.whl'))
+          assert hashlib.sha256(wheel.read_bytes()).hexdigest() == first['candidate_wheel']['sha256']
+          assert not first['producer']['native_host_installed']
+          assert not first['producer']['issuer_credential_delivered']
+          print('ACTUAL_AGGREGATE_INSTALLED_BYTE_RECORD_COHERENT_UNACCEPTED')
+          PY
+      - name: Python 3.12 genuine wheel import/entrypoint smoke (isolated venv, not a Host)
+        run: |
+          python -m venv /tmp/zog-certbot-import
+          /tmp/zog-certbot-import/bin/python -m pip install \
+            /tmp/nonresident-certbot-aggregate/wheel/zog-0.1.1.dev20261117-py3-none-any.whl
+          /tmp/zog-certbot-import/bin/python - <<'PY'
+          import importlib, importlib.metadata, json, pathlib, sys
+          import zog
+          assert sys.version_info[:2] == (3,12)
+          assert zog.__version__ == '0.1.1.dev20261117'
+          dist = importlib.metadata.distribution('zog')
+          assert dist.version == '0.1.1.dev20261117'
+          expected = {'box-control': 'zog.box_control.cli:main',
+                      'root-control': 'zog.root_control.daemon:main',
+                      'host-install': 'zog.host_install.cli:main'}
+          scripts = {e.name:e for e in dist.entry_points if e.group=='console_scripts'}
+          for name, target in expected.items():
+              assert scripts[name].value == target
+              assert callable(scripts[name].load())
+          names = ['zog.box_control.api', 'zog.box_control.issuer_lifecycle_broker',
+                   'zog.box_control.issuer_lifecycle_client',
+                   'zog.box_control.issuer_inspection_evidence',
+                   'zog.root_control.daemon', 'zog.root_control.build',
+                   'zog.root_control.issuer_observation',
+                   'zog.root_control.issuer_inspection_result',
+                   'zog.root_control.task_c_trusted_host',
+                   'zog.host_install.cli',
+                   'zog.host_install.certify_manage_profile']
+          for name in names:
+              module=importlib.import_module(name)
+              assert pathlib.Path(module.__file__).is_relative_to(
+                  pathlib.Path(sys.prefix) / 'lib/python3.12/site-packages')
+          print(json.dumps({'status':'ACTUAL_ZOG_WHEEL_IMPORTS_WITH_PYTHON312',
+                            'python':sys.executable,'distribution':dist.version,
+                            'modules_checked':len(names)}))
+          PY
+          /tmp/zog-certbot-import/bin/python -I -m zog.host_install --help \
+            > /tmp/zog-certbot-import/attestor-help.txt
+          grep -F "certify-manage-controller-attest-installed" /tmp/zog-certbot-import/attestor-help.txt
+          /tmp/zog-certbot-import/bin/python -m pip check
+      - name: Retain actual development wheel and nonsecret installed evidence for Work handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonresident-certbot-zog-development-wheel-unaccepted
+          path: |
+            /tmp/nonresident-certbot-aggregate/wheel/*.whl
+            /tmp/nonresident-certbot-aggregate/aggregate-build-evidence.json
+            /tmp/nonresident-certbot-aggregate/installed-byte-readback.json
+            /tmp/nonresident-certbot-aggregate/host-install-attestor-byte-readback.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Protected Host acceptance boundary
+        if: always()
+        run: echo 'Actual wheel/RECORD verified only in disposable GitHub runner. NO original station assignment, installed nonresident Host, protected credentials, root-control service, DNS-01 or ACME issuance, resident boot or PyPI publication.' >> "$GITHUB_STEP_SUMMARY"

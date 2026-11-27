@@ -1,0 +1,44 @@
+{
+  "schema": "zog-nonresident-certbot-disposable-wheel-evidence-v1",
+  "status": "REAL_WHEEL_AND_DISPOSABLE_RECORD_VERIFIED_NATIVE_HOST_UNACCEPTED",
+  "source_revision": "6d3fdcd8bd211aa554919f378545cc4f15bc3c0a",
+  "source_selection": "project/host/nonresident-certbot-aggregate-build-v1.json",
+  "runtime_python": "/usr/bin/python3.12",
+  "runtime_site_packages": "/usr/lib/python3.12/site-packages",
+  "distribution": "zog",
+  "version": "0.1.1.dev20261117",
+  "original_reviewed_sources": {
+    "aggregate_base": "d47d86b363824c718d9c165124cb55bbed12e0f9",
+    "box_control": "c886e7a90bb4ea74e771a6c5dcefaa2069539ec7",
+    "root_control": "d9dfd6c02a5a96750f1213bf663cdceab72f1efd",
+    "host_install": "9ad4e951ef0a14cc6a735af47ffb31734d854816"
+  },
+  "wheel": {
+    "filename": "zog-0.1.1.dev20261117-py3-none-any.whl",
+    "sha256": "bf8560e3ee228dc6390f708bb9282472bbc7e14b154b5841c7ba912901b204c8",
+    "actual_installed_record_sha256": "b4aea0184dcd267f1070bcc6b72e8ab3d85d714b5d2031e2eabe12463108d8a3"
+  },
+  "github_actions": {
+    "run_id": 44090347882,
+    "artifact_id": 14331262525,
+    "artifact_name": "nonresident-certbot-zog-development-wheel-unaccepted",
+    "artifact_expires": "2026-12-01T13:12:44Z",
+    "outcome": "success",
+    "reproducible_second_wheel": true,
+    "complete_record_readback": true,
+    "selected_imports": 11,
+    "source_negative_tests_passed": 23,
+    "native_host_installation": false
+  },
+  "host_install_attestation": {
+    "command": "env -u PYTHONPATH -u PYTHONHOME /usr/bin/python3.12 -I -m zog.host_install certify-manage-controller-attest-installed --python-executable /usr/bin/python3.12",
+    "importer_source_verified": true,
+    "command_discovery_verified": true,
+    "root_owned_native_import_accepted": false,
+    "original_host_installer_receipt": null,
+    "original_host_generation": null,
+    "original_station_assignment_approved": false,
+    "credential_delivery_performed": false,
+    "issuer_lifecycle_verified": false
+  }
+}

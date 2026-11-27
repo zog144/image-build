@@ -1,0 +1,214 @@
+{
+  "schema": "zog-resident-b-consolidated-source-selection-v1",
+  "status": "SOURCE_CANDIDATE_PINNED_NATIVE_HOLD",
+  "lineage": {
+    "source_branch_base_commit": "0f90f125e79214e17b6dd2384b5f1c669a1e3cc0",
+    "reuses": [
+      "image-build PR #12",
+      "image-build PR #14",
+      "image-build PR #15",
+      "image-build PR #16"
+    ],
+    "duplicate_package_stages": []
+  },
+  "python_controllers": {
+    "package": "python-resident312-final",
+    "version": "3.12.16",
+    "expected_soabi": "cpython-312-x86_64-linux-gnu",
+    "build_dependencies": [
+      "openssl-final",
+      "sqlite-final",
+      "libffi-final",
+      "expat-final",
+      "gdbm-final",
+      "pkgconf-final"
+    ],
+    "required_extensions": [
+      "_ssl",
+      "_sqlite3",
+      "_hashlib"
+    ],
+    "replaces_python_final": false
+  },
+  "source_tools": [
+    "resident312-flit-core-final",
+    "resident312-installer-final",
+    "resident312-packaging-final",
+    "resident312-wheel-final",
+    "resident312-setuptools-final",
+    "resident312-dbus-next-final",
+    "resident312-image-build-final"
+  ],
+  "controllers": {
+    "box-control": {
+      "stage": "box-control-final",
+      "revision": "b5903779e72ea852a125a268dcd35189339dc4ae",
+      "archive_sha256": "19fe76c5620ecdae591a6a2e2ff9395d596cb940fe51c21df8ce95d6f248df51",
+      "version": "0.1.0",
+      "source_pr": 21,
+      "entry_point": "usr/bin/box-control",
+      "wheel_metadata": [
+        "METADATA",
+        "RECORD"
+      ],
+      "mode": "one-shot"
+    },
+    "root-control": {
+      "stage": "root-control-final",
+      "revision": "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
+      "archive_sha256": "9f1d3ff7bca80bac7fd65e97473cda523f895d2a289638929bcd2cfaabc28876",
+      "version": "0.1.0",
+      "source_pr": 51,
+      "entry_point": "usr/bin/root-control",
+      "wheel_metadata": [
+        "METADATA",
+        "RECORD"
+      ],
+      "mode": "disabled-systemd-unit"
+    }
+  },
+  "resident_utilities": {
+    "systemd-final": [
+      "usr/lib/systemd/systemd-networkd",
+      "usr/lib/systemd/systemd-resolved",
+      "usr/bin/networkctl",
+      "usr/bin/resolvectl"
+    ],
+    "host-install-final": [
+      "usr/bin/host-install"
+    ],
+    "host-discover-final": [
+      "usr/bin/host-discover",
+      "usr/bin/host-discover-recovery",
+      "usr/bin/host-discover-supervisor"
+    ]
+  },
+  "python_runtime_boundary": {
+    "controller_wheels": "python-resident312-final",
+    "existing_host_install_and_discover_recipes": "python-final (3.15 source); existing manifests not rewritten to 3.12",
+    "verify_both_installed_abi_closures": true
+  },
+  "retained_evidence": {
+    "original_controller_sources_preserved_as_historical_review": true,
+    "compiler_base_receipt_replaced": false,
+    "boot_a_selection_changed": false
+  },
+  "native_authority": {
+    "accepted_generation": null,
+    "accepted_state": null,
+    "native_generation_receipt": null,
+    "native_compilation_permitted": false,
+    "resident_service_activation_permitted": false,
+    "redistribution_authorized": false
+  },
+  "remaining_native_checks": [
+    "Accepted input rootfs generation and immutable predecessor closure",
+    "Compiled Python3.12 and both SSL/SQLite ELF extensions from selected libraries",
+    "Selected Python3.15 host app CLI shebang/import linkage verified separately",
+    "Full controller wheel METADATA, RECORD, scripts, notices and dependencies",
+    "Exact installed root-control systemd unit, STATE mount and protected socket",
+    "Native issuer, Task C and inherited finite-build runtime integration",
+    "Independent native rootfs/STATE physical observation and explicit release approval"
+  ],
+  "native_input": {
+    "generation": "273de2a04a8a0b8d4db3005bca078639f3c2fdcd6f9e24a9619d2b0ca6947aab",
+    "kind": "image",
+    "role": "resident-b-intended-build-predecessor",
+    "producer_source_revision": "68d6397ca20c4651df8f13c8a840dc8f77d55034",
+    "retained_parent_generation": "45a81ec3ea473bfa397e546b5c0ec1ae306bf00cb864eaa9a86d94c13c623f2e",
+    "rejected_predecessor": "5af34ec67cbfdcd1e7936bf70e3cf2f5c6945c7e3de5f95993918325f6e29c44",
+    "source_plan": {
+      "repository": "zog144/host-install",
+      "reviewed_commit": "c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a",
+      "path": "examples/resident-boot-a-successor-2026-10-31/plan.json"
+    },
+    "source_verification": "published-source-and-installed-verification-passed",
+    "inventory_entries": 40974,
+    "provenance_records": 27,
+    "canonical_archive_sha256": null,
+    "installed_package_receipt_sha256": null,
+    "package_inventory_verified_against_predecessor": false,
+    "booted_resident_runtime_verified": false
+  },
+  "package_closure": {
+    "policy": "recursive-final-stage-dependencies-v1",
+    "source_roots": [
+      "python-final",
+      "python-cryptography-final",
+      "host-identify-final",
+      "host-install-final",
+      "host-discover-final",
+      "python-resident312-final",
+      "resident312-flit-core-final",
+      "resident312-installer-final",
+      "resident312-packaging-final",
+      "resident312-wheel-final",
+      "resident312-setuptools-final",
+      "resident312-dbus-next-final",
+      "resident312-image-build-final",
+      "box-control-final",
+      "root-control-final",
+      "openssl-final",
+      "sqlite-final",
+      "ca-certificates-final",
+      "dbus-final",
+      "iproute2-final",
+      "systemd-final"
+    ],
+    "stage_scope": "candidate-from-existing-recipes; verify-predecessor-outputs-or-build-with-reviewed-source; no-inferred-installed-stage",
+    "closure_stage_count": 29,
+    "closure_graph_sha256": "sha256:65a6101ed5079a6f23490deccd45f9104d58ae2709ddf4e507d9fbccd3c71ecc",
+    "predecessor_package_receipts_verified": false,
+    "package_binary_closure_verified": false,
+    "source_graph_status": "SOURCE_GRAPH_CLOSED_NATIVE_INPUT_RECEIPTS_HELD"
+  },
+  "native_admission": {
+    "schema": "zog-resident-b-native-receipt-admission-v1",
+    "status": "CORRECTED_BOOT_A_NOT_YET_PUBLISHED_HOLD",
+    "compiler": {
+      "generation": "3805294fc8ccd9589aa75d3a6c5cb9367b7baf84b6ce131a84adafed7d34f9dc",
+      "original_receipt_sha256": "sha256:a205c07bde4e6cf61e48061affd9a0b40c3a101e18dff67a9871995a3a2afafc",
+      "acceptance_contract": "image-build-compiler-base-acceptance-v1",
+      "binding_contract": "image-build-compiler-base-binding-v1",
+      "reader_source_revision": "1616f192ef9d8964a8f37f32a86c69c0242a213c",
+      "reader_source_blob_sha1": "3eb562bbf2460fb95af0780a079cb2b058650f80",
+      "project_id": null,
+      "authenticated": false
+    },
+    "corrected_predecessor": {
+      "historical_generation": "273de2a04a8a0b8d4db3005bca078639f3c2fdcd6f9e24a9619d2b0ca6947aab",
+      "generation": null,
+      "source_revision": null,
+      "canonical_manifest_sha256": null,
+      "canonical_archive_sha256": null,
+      "installed_package_receipts_sha256": null,
+      "accepted": false
+    },
+    "package_decisions": {
+      "graph_stage_count": 29,
+      "present": null,
+      "missing": null,
+      "complete_native_closure": false
+    },
+    "authority": {
+      "native_build_permitted": false,
+      "service_activation_permitted": false,
+      "source_only": true
+    }
+  },
+  "aggregate_installed": {
+    "schema": "zog-resident-b-installed-aggregate-selection-v2",
+    "status": "SOURCE_PINNED_NO_ACTUAL_AGGREGATE",
+    "source_pin_path": "project/host/resident-b-aggregate-installed-source-pins-v2.json",
+    "distribution": "zog",
+    "version": "0.1.1.dev20261127",
+    "target_interpreter": "/usr/bin/python3.12",
+    "controller_modules_pin_count": 78,
+    "aggregate_wheel_sha256": null,
+    "installed_record_sha256": null,
+    "installed_root_generation": null,
+    "installed_bytes_verified": false,
+    "installer_receipt_verified": false,
+    "native_activation_permitted": false
+  }
+}

@@ -2,7 +2,7 @@
 {
   "schema": 1,
   "status": "SOURCE_DEFINED_NATIVE_NOT_ACCEPTED",
-  "source_revision": "0c217182d25f05b9cc0f7528ee614bb5669370d3",
+  "source_revision": "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
   "installed_entrypoint": "usr/bin/root-control",
   "source_pyproject": "pyproject.toml",
   "runtime_python": "python-resident312-final",

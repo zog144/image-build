@@ -1,0 +1,309 @@
+{
+  "schema": "zog-nonresident-certbot-selected-host-install-v1",
+  "status": "REVIEWED_SOURCE_NATIVE_IMPORT_UNACCEPTED",
+  "repository": "zog144/host-install",
+  "revision": "9ad4e951ef0a14cc6a735af47ffb31734d854816",
+  "source_prefix": "src/zog/host_install/",
+  "files": {
+    "zog/host_install/__init__.py": {
+      "git_blob": "c7ed307d6c613bd72c2ed8df3728add7b23674f8",
+      "mode": "100644"
+    },
+    "zog/host_install/__main__.py": {
+      "git_blob": "eb53e2f31b2f703ad32ef64b8a41faa3e7d18e08",
+      "mode": "100644"
+    },
+    "zog/host_install/application_progress_profile.py": {
+      "git_blob": "5e007e5675278e4dea72026655d9a44fdbc8e9b9",
+      "mode": "100644"
+    },
+    "zog/host_install/archive_provider_consumer_bridge.py": {
+      "git_blob": "31686ab03caae8419b8ac9b0b0644c09cc4a9c8b",
+      "mode": "100644"
+    },
+    "zog/host_install/archive_provider_handoff.py": {
+      "git_blob": "abbb73ffae31b634e4224265774b316ead1b39ff",
+      "mode": "100644"
+    },
+    "zog/host_install/archive_provider_ipc_contract.py": {
+      "git_blob": "d2f2d8459bf2e72e97bade3bab3c5501bb5255cf",
+      "mode": "100644"
+    },
+    "zog/host_install/archive_provider_protected_ipc.py": {
+      "git_blob": "8c0fd3da96e947b2b05e71c3e2d09d6a0870253d",
+      "mode": "100644"
+    },
+    "zog/host_install/archive_provider_receiver.py": {
+      "git_blob": "e472688c267b6d6301e6bd3102bb026ada66987d",
+      "mode": "100644"
+    },
+    "zog/host_install/artifact.py": {
+      "git_blob": "f0375795e0aaad83896767d738734be5962636c9",
+      "mode": "100644"
+    },
+    "zog/host_install/beacon_profile.py": {
+      "git_blob": "c1f13132eb682552f5fd44ea0954f3a2890bf52c",
+      "mode": "100644"
+    },
+    "zog/host_install/bootable_image_contract.py": {
+      "git_blob": "8ef347db8a82877cefed63e6fbf567fd209cb1ec",
+      "mode": "100644"
+    },
+    "zog/host_install/certificate_execution_provenance.py": {
+      "git_blob": "fe226ac8c112ac75bdeb2b16e99930c7249bf2e3",
+      "mode": "100644"
+    },
+    "zog/host_install/certificate_gate.py": {
+      "git_blob": "28055f1ae107b398c1fe9c78133268ae182d6d35",
+      "mode": "100644"
+    },
+    "zog/host_install/certificate_lifecycle.py": {
+      "git_blob": "a31518725c50a23ea551c498dd9e9830cdb1aaa8",
+      "mode": "100644"
+    },
+    "zog/host_install/certificate_native_observation.py": {
+      "git_blob": "8801e1e3719456b91fcfdc8198ed50b76c866c69",
+      "mode": "100644"
+    },
+    "zog/host_install/certificate_owner_authority.py": {
+      "git_blob": "9e745168767cd071aecb6eb969ba0771405b5644",
+      "mode": "100644"
+    },
+    "zog/host_install/certificate_recovery_revocation.py": {
+      "git_blob": "b521c7016e87420fbfc253b50738fb4309116a63",
+      "mode": "100644"
+    },
+    "zog/host_install/certificate_selected_broker_install.py": {
+      "git_blob": "80e9f6531b85bdd23a17b7100c6203175bef5066",
+      "mode": "100644"
+    },
+    "zog/host_install/certify_manage_profile.py": {
+      "git_blob": "5edca6dbbfacc18c88c961cd2a5c8d70d2f60e5c",
+      "mode": "100644"
+    },
+    "zog/host_install/cli.py": {
+      "git_blob": "86865a52e650ee18b23daa7c9c03fdc73785a0dd",
+      "mode": "100644"
+    },
+    "zog/host_install/existing_project_layout.py": {
+      "git_blob": "d6ec22898351b8aad0405aa10497ce5ee00e6e34",
+      "mode": "100644"
+    },
+    "zog/host_install/filesystem.py": {
+      "git_blob": "1826cf26dcd1aa37a316db31fd4cbf473df7762b",
+      "mode": "100644"
+    },
+    "zog/host_install/fonts_project_initialization.py": {
+      "git_blob": "b18d5ea45ed4aeb90564162eb74429f4fa68c264",
+      "mode": "100644"
+    },
+    "zog/host_install/fonts_project_migration.py": {
+      "git_blob": "44cfb900a88a322d0de28b53b8f0c36979108e87",
+      "mode": "100644"
+    },
+    "zog/host_install/graphical_native_owner_install.py": {
+      "git_blob": "f118f72fc68c113a72759d148cc8207a8daf7c34",
+      "mode": "100644"
+    },
+    "zog/host_install/graphical_original_checkpoint_record.py": {
+      "git_blob": "24ebd3e63bb578c23536ef5b89f6d0c2add4a8d3",
+      "mode": "100644"
+    },
+    "zog/host_install/graphical_protected_storage_admission.py": {
+      "git_blob": "1322b6163b35df42ae68610545eedf4c01747a80",
+      "mode": "100644"
+    },
+    "zog/host_install/graphical_readonly_trust_broker_install.py": {
+      "git_blob": "4c5e925d6d2e381f4fbdaa7c2c8e50c870243369",
+      "mode": "100644"
+    },
+    "zog/host_install/graphical_registry_storage_installation.py": {
+      "git_blob": "807ebdcdb09eb0fa9e4006b342ff99e25db81940",
+      "mode": "100644"
+    },
+    "zog/host_install/graphical_task_c_v3_install_freeze.py": {
+      "git_blob": "8d2d51785a512312e570b6cb7cbe739d12d39e37",
+      "mode": "100644"
+    },
+    "zog/host_install/graphical_task_c_v4_root_backed_install.py": {
+      "git_blob": "f65d55a32fcb547928ddcf01d123e0b38d98d8b4",
+      "mode": "100644"
+    },
+    "zog/host_install/host_welcome_progress_profile.py": {
+      "git_blob": "cd184febe67285162f8ac0fa8c6962e1d5807fef",
+      "mode": "100644"
+    },
+    "zog/host_install/identity_worker.py": {
+      "git_blob": "758ca1cec544223ea7a0fc740b51f4d5b23e95ce",
+      "mode": "100644"
+    },
+    "zog/host_install/image.py": {
+      "git_blob": "415fb4552497d5e48136e72ae060c5eb305ca311",
+      "mode": "100644"
+    },
+    "zog/host_install/image_progress_profile.py": {
+      "git_blob": "11bf068c80d208e09b099ee3fd92a70518e31a89",
+      "mode": "100644"
+    },
+    "zog/host_install/issuer_cross_host_adoption.py": {
+      "git_blob": "63e611096f3f3cc36afdea6fb652ee210ae02649",
+      "mode": "100644"
+    },
+    "zog/host_install/layout.py": {
+      "git_blob": "d3f12e3463917c6765ef8241e6139cb7d2c82466",
+      "mode": "100644"
+    },
+    "zog/host_install/manifest.py": {
+      "git_blob": "8ed8d3e80e90eeb8fa425d1fda2c525fa5b5d1d2",
+      "mode": "100644"
+    },
+    "zog/host_install/non_resident.py": {
+      "git_blob": "36f5630b67d5fea36db1fe2f279726ba74b2cd04",
+      "mode": "100644"
+    },
+    "zog/host_install/preflight.py": {
+      "git_blob": "f4cd07bcc924abb863f16da28f335b01f82b206b",
+      "mode": "100644"
+    },
+    "zog/host_install/state_admission.py": {
+      "git_blob": "63d0716d45dfd7f9fbeb7b93f65a894ea2b5d0fd",
+      "mode": "100644"
+    },
+    "zog/host_install/state_contract.py": {
+      "git_blob": "a2e5f4d2dbf5f7ed3838be366da89304144c1722",
+      "mode": "100644"
+    },
+    "zog/host_install/state_device.py": {
+      "git_blob": "da6156882bdbb8aab8d8261a127eddb7d6e25dc7",
+      "mode": "100644"
+    },
+    "zog/host_install/state_gate.py": {
+      "git_blob": "e526e5c645bdd480f6c2a2b28c4dcab19c732637",
+      "mode": "100644"
+    },
+    "zog/host_install/state_initialize.py": {
+      "git_blob": "b547ecc8bbc83e065c31a13f38890fbe5ae17dd5",
+      "mode": "100644"
+    },
+    "zog/host_install/state_inspect.py": {
+      "git_blob": "e78e20e3b5bbadb6d321d4b79b71235fb44a454f",
+      "mode": "100644"
+    },
+    "zog/host_install/state_io.py": {
+      "git_blob": "e0620ca52948ef02931fc5ef0c0d5c735c409f95",
+      "mode": "100644"
+    },
+    "zog/host_install/state_probe.py": {
+      "git_blob": "4ed3e3a3222a8d29827999122944dbfefc25a06a",
+      "mode": "100644"
+    },
+    "zog/host_install/state_provision.py": {
+      "git_blob": "a2cd9ccad2d80551df002121c196ff91c9b6889e",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/host-discover-managed.conf.example": {
+      "git_blob": "2d8ce6795785a54e74a9fd329ca08f30f2c85f31",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/host-install-admission.socket": {
+      "git_blob": "05ad8e3fdaa9071fba33d91ccbd7f76ea53ce2d5",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/host-install-admission@.service": {
+      "git_blob": "783d15964a6dd86214e52f1acfd496a134540dbf",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/host-install-identity.service": {
+      "git_blob": "cd06cbdd805ef5eed4c260b91e7667c6fcb31609",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/host-install-prepare.service": {
+      "git_blob": "c382b3ee9dfff2ac73b2e940504bea77953cbedb",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/host-install-welcome.socket": {
+      "git_blob": "662c8505cac7739f300b07617df5db39198aeb9e",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/host-install-welcome@.service": {
+      "git_blob": "98a5e6f27363139d41cf9da0e72d1bc4e3345d3a",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/root-backed/zog-graphical-owner-storage-verified.service": {
+      "git_blob": "3ba3e9110cedd15a004332bdad2e684ece11c909",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/root-backed/zog-graphical-owner.service": {
+      "git_blob": "fadfa6cf874e5e13e754cd648e51394622d2e9e3",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/root-backed/zog-graphical-trust.service": {
+      "git_blob": "f097a034196e265fddf67d60f7646cbd020cbfdc",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/state.mount.in": {
+      "git_blob": "809a91dadce6e5cba0563a1e31437f0201025e80",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/task-c-local/zog-task-c-gateway.service": {
+      "git_blob": "5a6d920c269dc4b12bb2fce6250561fd7fcbc2c0",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-application-progress.service.in": {
+      "git_blob": "2087b4b20d01bdc0634db3da68b9bc915021bd22",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-application-progress.socket.in": {
+      "git_blob": "bb13f408379c9b294461b1aafc444cfa4093e714",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-graphical-owner.service": {
+      "git_blob": "036771bd475033ecd4d76fc8e39d4704f01a7a0c",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-graphical-owner.socket": {
+      "git_blob": "4e209303523b9e89052d86d9c44b911473215727",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-graphical-trust.service": {
+      "git_blob": "916e50cde402c7158a9cf3eb069fe3a56f7456d0",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-graphical-trust.socket": {
+      "git_blob": "cb2d58912ffe0610c242b4a6d1c2d75b8c2c8f88",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-host-welcome-controller-progress.service.in": {
+      "git_blob": "574cbe39d27c7c0cd87737c4296b917cfe0905fb",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-host-welcome-controller-progress.socket.in": {
+      "git_blob": "6d0ecbd0fa5d458b2bc98a3b0c411171fb27339a",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-host-welcome-image-progress-certify-manage.service.in": {
+      "git_blob": "deef20a24c7ae3a6b54512e65c8c8efdffe34dde",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-host-welcome-image-progress.service.in": {
+      "git_blob": "b2faa79886f54ec54ba15a57416acbbfa8806166",
+      "mode": "100644"
+    },
+    "zog/host_install/systemd/zog-host-welcome-image-progress.socket.in": {
+      "git_blob": "8e7e7bbd6af41572441f33e8db178f6588e117d6",
+      "mode": "100644"
+    },
+    "zog/host_install/task_c_local_install.py": {
+      "git_blob": "1c431bb2443b64d7ec9b38a4169be62fa6e70205",
+      "mode": "100644"
+    },
+    "zog/host_install/welcome_readiness.py": {
+      "git_blob": "bdd0adc6b0f975aeef76e35c37a2eb63bdd61802",
+      "mode": "100644"
+    }
+  },
+  "required_attestation_command": "certify-manage-controller-attest-installed",
+  "interpreter": "/usr/bin/python3.12",
+  "selected_distribution": "zog",
+  "installed_accepted": false
+}

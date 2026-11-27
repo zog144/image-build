@@ -2,7 +2,7 @@
 {
   "schema": 1,
   "status": "SOURCE_DEFINED_NATIVE_NOT_ACCEPTED",
-  "source_revision": "b513a9bde79135c7569adc7cadb4d45a163c7841",
+  "source_revision": "b5903779e72ea852a125a268dcd35189339dc4ae",
   "installed_entrypoint": "usr/bin/box-control",
   "source_pyproject": "box-control/pyproject.toml",
   "runtime_python": "python-resident312-final",
