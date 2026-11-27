@@ -59,7 +59,8 @@ class StrictReceiver:
             "output_directory": output_directory,
             "input_manifest_id": input_manifest_id,
         })
-        return {"resource_id": resource_id, "state": "ready"}
+        return {"resource_id": resource_id, "state": "ready",
+                "execution_contract": "zog-build-inherited-peer-v2"}
 
 
 def test_boot_a_adapter_matches_real_legacy_free_registration_shape(tmp_path):
@@ -74,13 +75,15 @@ def test_boot_a_adapter_matches_real_legacy_free_registration_shape(tmp_path):
     observed = adapter._register("a" * 32, request, tmp_path)
     assert observed["state"] == "ready"
     assert control.calls == [dict(request, resource_id="a" * 32)]
+    assert adapter.configuration()["execution_identity"] == "inherit"
+    assert adapter.configuration()["execution_contract"] == "zog-build-inherited-peer-v2"
     assert "execution_user_id" not in adapter.configuration()
     assert "execution_group_id" not in adapter.configuration()
     params = inspect.signature(BoxControlExecutionAdapter).parameters
     assert "execution_user_id" not in params and "execution_group_id" not in params
 
 
-def test_root_control_real_source_exactly_matches_receiver_signature():
+def test_root_control_peer_bound_register_adds_only_server_authenticated_peer():
     source = ast.parse(companion(ROOT_CONTROL).read_text())
     backend = next(node for node in source.body
                    if isinstance(node, ast.ClassDef) and node.name == "BuildBackend")
@@ -89,8 +92,11 @@ def test_root_control_real_source_exactly_matches_receiver_signature():
                     and node.name == "register")
     assert [n.arg for n in register.args.kwonlyargs] == [
         "project_root", "resource_id", "prepared_root", "source_directory",
-        "output_directory", "input_manifest_id",
+        "output_directory", "input_manifest_id", "_peer",
     ]
+    # The extra _peer is injected by root-control's accepted Unix socket
+    # handler, not forwarded or selectable by image-build/box-control.
+    assert "_peer" not in inspect.signature(StrictReceiver.register_build_root).parameters
     canonical = next(node for node in source.body
                      if isinstance(node, ast.FunctionDef)
                      and node.name == "canonical_request")
@@ -100,6 +106,42 @@ def test_root_control_real_source_exactly_matches_receiver_signature():
     }
     assert "execution_user_id" not in literals
     assert "execution_group_id" not in literals
+
+
+def test_selected_root_v2_accepts_exact_root_pair_but_rejects_mixed_zero():
+    # The server-only helper is imported from the exact root-control PR55
+    # companion, not approximated with image-build fixture logic.
+    companion(ROOT_CONTROL)
+    from zog.root_control.build import authenticated_build_peer
+    from zog.root_control.systemd import SystemdBackendError
+
+    assert authenticated_build_peer((0, 0)) == (0, 0)
+    assert authenticated_build_peer((2001, 2001)) == (2001, 2001)
+    assert authenticated_build_peer((2001, 3001)) == (2001, 3001)
+    for invalid in ((0, 2001), (2001, 0), (-1, -1), (2**31, 2**31),
+                    (True, True), ("0", "0"), None):
+        with pytest.raises(SystemdBackendError, match="authenticated socket peer"):
+            authenticated_build_peer(invalid)
+
+    # The actual server reads kernel SO_PEERCRED and injects private _peer:
+    # the producer is never allowed to name or assert an identity on the wire.
+    daemon = ROOT_CONTROL.with_name("daemon.py")
+    source = ast.parse(companion(daemon).read_text())
+    cls = next(node for node in source.body
+               if isinstance(node, ast.ClassDef) and node.name == "RootControlDaemon")
+    peer_reader = next(node for node in cls.body
+                       if isinstance(node, ast.FunctionDef) and node.name == "_kernel_peer")
+    props = {node.attr for node in ast.walk(peer_reader)
+             if isinstance(node, ast.Attribute)}
+    assert "SO_PEERCRED" in props and "getsockopt" in props
+    assert "unpack" in props
+    handle = next(node for node in cls.body
+                  if isinstance(node, ast.FunctionDef) and node.name == "handle")
+    literals = {node.value for node in ast.walk(handle)
+                if isinstance(node, ast.Constant) and isinstance(node.value, str)}
+    for forbidden in ("_peer", "peer", "execution_user_id", "execution_group_id",
+                      "User", "Group"):
+        assert forbidden in literals
 
 
 def test_selected_box_control_wire_request_accepts_no_account_selectors():
@@ -155,7 +197,7 @@ def test_legacy_identity_bearing_checkpoint_is_not_rewritten_or_resubmitted(tmp_
         environment={"PATH": "/usr/bin"},
         working_directory="/image-build/source", timeout_seconds=10,
     )
-    with pytest.raises(ImageBuildError, match="package resource binding changed"):
+    with pytest.raises(ImageBuildError, match="inspection-only; refusing replay"):
         adapter.execute_for_attempt(request, checkpoint)
     assert json.loads(resources.read_text()) == original
     assert not checkpoint.exists()
@@ -167,6 +209,7 @@ def test_config_requires_no_execution_identity_and_fails_closed_for_old_json(tmp
     from zog.image_build.configuration import configured_runner
     project = tmp_path / "project"
     raw = {
+        "execution_identity": "inherit",
         "project_root": str(project),
         "socket_path": "/run/zog/root-control.sock",
         "startup_timeout_seconds": 5,
@@ -184,7 +227,10 @@ def test_config_requires_no_execution_identity_and_fails_closed_for_old_json(tmp
     runner = configured_runner(config, project / "state")
     assert "execution_user_id" not in runner.execute.configuration()
     assert "execution_group_id" not in runner.execute.configuration()
-    for field in ("execution_user_id", "execution_group_id"):
+    for field in ("execution_user_id", "execution_group_id", "User", "Group", "execution_contract"):
         config.write_text(json.dumps(dict(raw, **{field: 24202})))
         with pytest.raises(ImageBuildError, match="missing or unsupported fields"):
             configured_runner(config, project / "state")
+    config.write_text(json.dumps(dict(raw, execution_identity="selected")))
+    with pytest.raises(ImageBuildError, match="must be inherit"):
+        configured_runner(config, project / "state")
