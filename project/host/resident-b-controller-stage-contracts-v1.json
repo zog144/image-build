@@ -14,7 +14,7 @@
   "controllers": [
     {
       "id": "box-control",
-      "source_revision": "c886e7a90bb4ea74e771a6c5dcefaa2069539ec7",
+      "source_revision": "b5903779e72ea852a125a268dcd35189339dc4ae",
       "package_stage": "box-control-final",
       "proposed_path": "project/package/box-control/stages/final",
       "status": "CATALOGUE_ONLY_SOURCE_STAGE_AUTHORED",
@@ -38,11 +38,11 @@
         "no global evaluator service: operator-selected per-home Project required",
         "independent rights and original source notices require native installed-byte verification"
       ],
-      "archive_sha256": "2a2749f9c223fb947695634008c5e37cafc49248c19f84262f60e23c7575a121"
+      "archive_sha256": "19fe76c5620ecdae591a6a2e2ff9395d596cb940fe51c21df8ce95d6f248df51"
     },
     {
       "id": "root-control",
-      "source_revision": "d9dfd6c02a5a96750f1213bf663cdceab72f1efd",
+      "source_revision": "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
       "package_stage": "root-control-final",
       "proposed_path": "project/package/root-control/stages/final",
       "status": "CATALOGUE_ONLY_SOURCE_STAGE_AUTHORED",
@@ -71,7 +71,7 @@
         "protected group/UID/STATE install and privileged service activation pending",
         "independent rights and original source notices require native installed-byte verification"
       ],
-      "archive_sha256": "8be83a4d9e50f7165ea08f70b8443cad4553b079fa058d29c3544766ebca5de1"
+      "archive_sha256": "9f1d3ff7bca80bac7fd65e97473cda523f895d2a289638929bcd2cfaabc28876"
     }
   ],
   "rootfs_privacy": [

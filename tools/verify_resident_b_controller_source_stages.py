@@ -9,10 +9,10 @@ PKG=ROOT/"project/package"
 AUDIT=ROOT/"project/host/resident-b-controller-stage-contracts-v1.json"
 SOURCES={
 "box-control":{
- "commit":"c886e7a90bb4ea74e771a6c5dcefaa2069539ec7",
- "archive":"2a2749f9c223fb947695634008c5e37cafc49248c19f84262f60e23c7575a121",
- "archive_root":"zog144-box-control-c886e7a",
- "project":"zog144-box-control-c886e7a/box-control",
+ "commit":"b5903779e72ea852a125a268dcd35189339dc4ae",
+ "archive":"19fe76c5620ecdae591a6a2e2ff9395d596cb940fe51c21df8ce95d6f248df51",
+ "archive_root":"zog144-box-control-b590377",
+ "project":"zog144-box-control-b590377/box-control",
  "entry":"zog.box_control.cli:main",
  "pyproject_sha256":"a099487955e9b42e90aed4103cb32e76f7dae0535692534c25b7be2f09a4eb47",
  "license":"aaf3d5919ea7f2720b7649d4f1e4fd28a54c58425a45dfd736d040a56480578f",
@@ -23,10 +23,10 @@ SOURCES={
              "usr/share/licenses/box-control/THIRD-PARTY-NOTICES.md"},
 },
 "root-control":{
- "commit":"d9dfd6c02a5a96750f1213bf663cdceab72f1efd",
- "archive":"8be83a4d9e50f7165ea08f70b8443cad4553b079fa058d29c3544766ebca5de1",
- "archive_root":"zog144-root-control-d9dfd6c",
- "project":"zog144-root-control-d9dfd6c",
+ "commit":"35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
+ "archive":"9f1d3ff7bca80bac7fd65e97473cda523f895d2a289638929bcd2cfaabc28876",
+ "archive_root":"zog144-root-control-35fc1ea",
+ "project":"zog144-root-control-35fc1ea",
  "entry":"zog.root_control.daemon:main",
  "pyproject_sha256":"f42d1b9458536b4b20aef183d438267b0790bb8fc9238afcc10b9a1bc62b1c96",
  "license":"421a457ded4d2bf4b853c5ce211f74797292b2ef2f82bc7245304956fb7cf68f",
