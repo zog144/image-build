@@ -20,8 +20,8 @@ PIN = Path(__file__).resolve().parents[1] / "project/host/boot-a-inherited-peer-
 CONTRACT = "zog-build-inherited-peer-v2"
 IDENTITY = "inherit"
 REVISIONS = {
-    "box_control": "ad61fa6a4e9c3176149720868cb008e0512dbec9",
-    "root_control": "a672f007b33f83bf70970e3a571fd443366bd93f",
+    "box_control": "b5903779e72ea852a125a268dcd35189339dc4ae",
+    "root_control": "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
     "host_install_resident_accounts": "4fcccb441fec851530c412f619bc02699b8a87b1",
 }
 COUNTS = {"box_control": 52, "root_control": 26,

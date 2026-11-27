@@ -322,3 +322,52 @@ def test_absent_registration_is_observed_but_not_resubmitted(tmp_path):
         _adapter(control)._register(rid, registration, directory)
     assert (directory / "registration-pending.json").read_bytes() == old
     assert control.calls == []
+
+
+@pytest.mark.parametrize("peer", [(0, 0), (1001, 1002)])
+def test_corrected_root_daemon_accepts_exact_box_registration_envelope(
+        tmp_path, monkeypatch, peer):
+    """The actual selected client/daemon pair must not repeat R5's RPC error."""
+    from zog.root_control.daemon import RootControlDaemon, BUILD_RPC_CONTRACT
+    from zog.box_control.build_protocol import INHERITED_EXECUTION_CONTRACT
+    from zog.box_control.runtime.root_control import RootControlSystemdTransport
+
+    assert BUILD_RPC_CONTRACT == INHERITED_EXECUTION_CONTRACT == (
+        "zog-build-inherited-peer-v2")
+    daemon = RootControlDaemon(tmp_path / "unused.sock")
+    calls = []
+
+    class Backend:
+        def register(self, **kwargs):
+            calls.append(kwargs)
+            assert "build_contract" not in kwargs
+            assert kwargs.pop("_peer") == peer
+            assert kwargs.pop("project_root") == "/project"
+            assert set(kwargs) == {"resource_id", "prepared_root",
+                                   "source_directory", "output_directory",
+                                   "input_manifest_id"}
+            return {"state": "ready"}
+
+    daemon.build = Backend()
+    client = RootControlSystemdTransport()
+    args = dict(resource_id="b" * 32, prepared_root="/project/root",
+                source_directory="/project/source",
+                output_directory="/project/output", input_manifest_id="test")
+    def dispatch(operation, **fields):
+        assert operation == "build_register"
+        assert fields["build_contract"] == BUILD_RPC_CONTRACT
+        assert not set(fields) & {"uid", "gid", "User", "Group", "_peer"}
+        return daemon.handle({"operation": operation, **fields},
+                             peer=peer)["result"]
+    monkeypatch.setattr(client, "_request", dispatch)
+    assert client.build_call("register", project_root="/project", **args) == {
+        "state": "ready"}
+    assert len(calls) == 1
+    with pytest.raises(ValueError, match="unsupported inherited build RPC contract"):
+        daemon.handle({"operation": "build_register", "project_root": "/project",
+                       **args}, peer=peer)
+    with pytest.raises(ValueError, match="unsupported inherited build RPC fields"):
+        daemon.handle({"operation": "build_register", "project_root": "/project",
+                       "build_contract": BUILD_RPC_CONTRACT,
+                       **args, "unexpected": True}, peer=peer)
+    assert len(calls) == 1

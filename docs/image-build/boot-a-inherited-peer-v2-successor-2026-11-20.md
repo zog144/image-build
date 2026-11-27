@@ -1,6 +1,6 @@
 # Boot A producer successor — inherited-peer v2 source and native admission hold
 
-**Source date:** 2026-11-20; **0:0 compatibility correction:** 2026-11-22  
+**Source date:** 2026-11-20; **0:0 compatibility correction:** 2026-11-22; **R5 wire correction:** 2026-11-27  
 **Target:** image-build issue #22, PR #25; box-control issue #19 / PR #21;
 root-control issue #48 / PR #55 (including PR #54 fixes); host-install PR #43.
 
@@ -38,7 +38,7 @@ generation**, never patch an already sealed image.
 ## New producer execution contract
 
 The selected new box-control v2 source is PR #21 commit
-`ad61fa6a4e9c3176149720868cb008e0512dbec9`.
+`b5903779e72ea852a125a268dcd35189339dc4ae`.
 The source-selection document pins all **52** reviewed runtime source
 files and their Git blob IDs. Both packaged `*.py` and native source
 members are compared byte-by-byte to their pins.
@@ -91,7 +91,7 @@ does not claim those fixtures are original Host installation evidence.
 
 **Current root-control v2 source is now selected.** Draft
 [root-control PR #55](https://github.com/zog144/root-control/pull/55)
-commit `a672f007b33f83bf70970e3a571fd443366bd93f` contains the
+commit `35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb` contains the
 issuer/Task C functionality and systemd 252 literal-dollar finite-argv fix
 inherited from PR #54, plus authenticated `0:0` or positive peer
 execution from issue #48. The source-pinned revision changes the
@@ -193,3 +193,39 @@ real systemd252 child EUID/EGID 0/0, InvocationID and terminal receipt pending).
 BUILT/PUBLISHED. Image-build issue #22 remains open until the reviewed
 producer successor and matching installed controller triple are
 accepted and native Boot A publication succeeds.
+
+
+## November 27 — R5 corrected root daemon and exact box-control companion
+
+R5 failed against the previously selected root-control
+`a672f007b33f83bf70970e3a571fd443366bd93f`: the daemon forwarded the
+top-level `build_contract` marker to a backend method that does not
+accept it. The corrected daemon validates the exact operation-specific
+`zog-build-inherited-peer-v2` envelope and removes the marker **before**
+calling its backend. Only the kernel AF_UNIX `SO_PEERCRED` peer is
+supplied as `_peer`; the caller still cannot select execution IDs.
+
+The newly selected **matched, reproducible source tuple** is:
+- root-control PR #55 `35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb` (26 source blobs);
+  this runtime daemon is unchanged from the envelope fix at
+  `e8c50467eec3d0870cf7fa535bd57faaef4e1f98`. Its succeeding
+  commit adds a real Unix RPC test against the newer box companion.
+- box-control PR #21 `b5903779e72ea852a125a268dcd35189339dc4ae` (52 source blobs);
+  the newer client/source also enforces explicitly selected root-run
+  external Project state and durable pruning evidence.
+
+The source tuple verifier and CI are pinned to these exact commits and
+their changed daemon, Project and build-jobs blobs. The image-build test
+covers the *real selected client and daemon registration envelope*, while
+the companion's own tests exercise all eight versioned build calls,
+real AF_UNIX peer credentials, absent/invalid registration, and the
+root-0:0 foreign-owned selected Project through mocked systemd 252.
+
+The original eleven PR #25 source blobs for serial getty, account
+materialization, frozen final inventory, sysusers and recovery have not
+changed. Host-install PR #43's account materializer pin is unchanged.
+The failed operation `boot-a-getty-accounts-0eeb8a1c-v2-r5-20261126`,
+SSM CommandId `3e963826-25f9-407e-9aac-82efc0afea39`,
+its pipeline/records and prior generations remain **preserved and not
+replayable**. This is source selection, **not** native installed-byte
+attestation or approval to run/publish a Boot A generation.

@@ -10,7 +10,7 @@
   },
   "box_control": {
     "repository": "zog144/box-control",
-    "revision": "ad61fa6a4e9c3176149720868cb008e0512dbec9",
+    "revision": "b5903779e72ea852a125a268dcd35189339dc4ae",
     "source_prefix": "box-control/src/zog/box_control/",
     "files": {
       "__init__.py": {
@@ -54,7 +54,7 @@
         "mode": "100644"
       },
       "build_jobs.py": {
-        "git_blob": "04ad710ebdb97eba2bda5d5b019840676634215d",
+        "git_blob": "6d42412a6c10db00795415bd61757b6214c5d702",
         "mode": "100644"
       },
       "build_protocol.py": {
@@ -158,7 +158,7 @@
         "mode": "100644"
       },
       "project.py": {
-        "git_blob": "47866e72bcaa1ec37ad06f508fe2c4794bd973eb",
+        "git_blob": "a68ebbcc0a8b0507044f618a6c01bc677edd8519",
         "mode": "100644"
       },
       "reconcile.py": {
@@ -352,7 +352,7 @@
   "required_root_successor": {
     "repository": "zog144/root-control",
     "issue": 48,
-    "revision": "a672f007b33f83bf70970e3a571fd443366bd93f",
+    "revision": "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
     "contract": "zog-build-inherited-peer-v2",
     "must_verify_kernel_peer_credentials": true,
     "transient_unit_identity_server_derived": true,
@@ -413,7 +413,7 @@
   "retained_boot_a_file_count": 11,
   "root_control": {
     "repository": "zog144/root-control",
-    "revision": "a672f007b33f83bf70970e3a571fd443366bd93f",
+    "revision": "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
     "source_prefix": "src/zog/root_control/",
     "files": {
       "__init__.py": {
@@ -433,7 +433,7 @@
         "mode": "100644"
       },
       "daemon.py": {
-        "git_blob": "6d818cbd3fd1be318605c6eb2c0cbb55c860c3a8",
+        "git_blob": "e9b1acfc58e892eddfe7544264afdc00731cfb39",
         "mode": "100644"
       },
       "events.py": {

@@ -27,13 +27,13 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           repository: zog144/box-control
-          ref: ad61fa6a4e9c3176149720868cb008e0512dbec9
+          ref: b5903779e72ea852a125a268dcd35189339dc4ae
           path: companions/box-control-inherited
           persist-credentials: false
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           repository: zog144/root-control
-          ref: a672f007b33f83bf70970e3a571fd443366bd93f
+          ref: 35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb
           path: companions/root-control-inherited
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -90,6 +90,15 @@ jobs:
             tests/test_targeted_publication_binding.py \
             tests/test_staging_durability.py \
             tests/test_source_build.py
+      - name: Verify actual selected v2 box-control client against corrected root daemon and AF_UNIX peer
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/companions/box-control-inherited/box-control/src:${{ github.workspace }}/companions/root-control-inherited/src
+        run: |
+          cd companions/root-control-inherited
+          python -m pytest -q -rs tests/test_build_rpc_envelope.py
+          sudo --preserve-env=PYTHONPATH "$(which python)" -m pytest -q -rs \
+            tests/test_selected_project_pair.py \
+            tests/test_build_rpc_envelope.py::test_real_socket_client_registration_with_kernel_peer
       - name: Source-only boundaries
         if: always()
         run: |
