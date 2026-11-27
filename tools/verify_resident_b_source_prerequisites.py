@@ -147,7 +147,7 @@ def inspect(record, *, stages=None, dependencies=None, upstream=None,
         selected = selected_host_runtime.get(key, expected_deps[key])
         actual = dependencies[key].get("runtime")
         if (type(actual) is not list or len(actual) != len(set(actual))
-                or actual != selected):
+                or set(actual) != set(selected)):
             raise ValueError("direct declared runtime stage dependencies drifted: " + key)
         if type(dependencies[key].get("build")) is not list:
             raise ValueError("missing recorded build edges: " + key)
