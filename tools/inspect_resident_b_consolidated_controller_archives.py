@@ -15,9 +15,9 @@ original = module_from_spec(spec)
 spec.loader.exec_module(original)
 
 SELECTED = {
-    "box-control": ("c886e7a90bb4ea74e771a6c5dcefaa2069539ec7",
+    "box-control": ("b5903779e72ea852a125a268dcd35189339dc4ae",
                     "box-control/pyproject.toml"),
-    "root-control": ("d9dfd6c02a5a96750f1213bf663cdceab72f1efd",
+    "root-control": ("35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
                      "pyproject.toml"),
 }
 UNCHANGED_METADATA = {
