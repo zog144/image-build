@@ -68,6 +68,10 @@ jobs:
           test "$(git -C companions/host-install-boot-a-successor rev-parse HEAD)" = c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a
           test "$(git -C companions/accepted-compiler-reader rev-parse HEAD)" = 1616f192ef9d8964a8f37f32a86c69c0242a213c
           test "$(git hash-object companions/accepted-compiler-reader/src/zog/image_build/compiler_base_acceptance.py)" = 3eb562bbf2460fb95af0780a079cb2b058650f80
+          python tools/verify_resident_b_runtime_split.py
+          # Emit the measured DAG for exact digest re-pinning when source
+          # dependencies change; never use this to authorize native builds.
+          python tools/verify_resident_b_native_input_closure.py --measure
           python tools/verify_resident_b_native_input_closure.py --host-install-plan companions/host-install-boot-a-successor/examples/resident-boot-a-successor-2026-10-31/plan.json
       - name: Check combined historical source ancestry and new exact controller pins
         run: |
@@ -111,6 +115,7 @@ jobs:
             tests/test_resident_b_consolidated_source.py \
             tests/test_resident_b_native_input_closure.py \
             tests/test_resident_b_native_admission.py \
+            tests/test_resident_b_runtime_split.py \
             tests/test_python312_independent_source_review.py \
             tests/test_python312_resident_candidate.py \
             tests/test_resident_b_source_prerequisites.py \

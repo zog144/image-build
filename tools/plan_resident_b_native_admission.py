@@ -225,6 +225,44 @@ def classify(graph, recipes, predecessors):
     return result
 
 
+
+def missing_build_order(graph, decisions):
+    """Dependency-first native build *candidates*, never authorization.
+
+    Even exact existing outputs must be revalidated if a prerequisite is
+    missing from BOTH authenticated predecessor selections.
+    """
+    if (type(graph) is not dict or set(graph) != set(decisions)):
+        deny("stage decisions do not match the complete selected graph")
+    visiting, visited, order = set(), set(), []
+    def visit(name):
+        if name in visiting:
+            deny("native dependency cycle detected")
+        if name in visited:
+            return
+        if name not in graph:
+            deny("unrecognized native build dependency")
+        edges = graph[name]
+        if type(edges) is not dict or set(edges) != {"build", "runtime"}:
+            deny("invalid native dependency edges")
+        visiting.add(name)
+        for child in sorted(set(edges["build"] + edges["runtime"])):
+            visit(child)
+        visiting.remove(name)
+        visited.add(name)
+        order.append(name)
+    for name in sorted(graph):
+        visit(name)
+    missing = {stage for stage, item in decisions.items()
+               if item["state"] == "missing-or-source-mismatch"}
+    candidates = [stage for stage in order if stage in missing]
+    revalidate = [stage for stage in order
+                  if stage not in missing
+                  and any(dep in missing
+                          for dep in set(graph[stage]["build"] + graph[stage]["runtime"]))]
+    return candidates, revalidate
+
+
 def admit(*, selection, compiler_project, predecessor_project,
           authority_file, controller, recipes_directory):
     """Read-only actual native readback, never permission to run a build."""
@@ -253,6 +291,10 @@ def admit(*, selection, compiler_project, predecessor_project,
         ("accepted-original-compiler", original),
         ("corrected-Boot-A", output),
     ])
+    from verify_resident_b_runtime_split import verify as verify_runtime_split
+    runtime_split = verify_runtime_split()
+    build_candidates, revalidate_after_dependencies = missing_build_order(
+        graph, decisions)
     missing = [name for name, item in decisions.items()
                if item["state"] == "missing-or-source-mismatch"]
     present = [name for name, item in decisions.items()
@@ -267,6 +309,9 @@ def admit(*, selection, compiler_project, predecessor_project,
         "source_stage_count": len(graph),
         "present": present,
         "missing": missing,
+        "missing_build_order": build_candidates,
+        "revalidate_after_missing_dependencies": revalidate_after_dependencies,
+        "runtime_split": runtime_split,
         "stage_decisions": decisions,
         "package_binary_closure_verified": False,
         "native_compilation_permitted": False,

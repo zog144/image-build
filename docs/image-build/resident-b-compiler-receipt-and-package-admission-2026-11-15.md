@@ -85,3 +85,46 @@ compiler records.
 
 No certificate issuance, S3 approval, spare compiler users, native build or
 rootfs mutation is part of this source change.
+
+
+## November 27 — dual Python runtime and dependency-aware missing-stage plan
+
+Host utilities are **not** controller packages. The selected `python-final`
+recipe is CPython 3.15.0rc2, with `/usr/bin/python3` and
+`/usr/bin/python3.15`, while controller wheels select a distinct
+`python-resident312-final` version 3.12.16. The original Host
+`host-install`, `host-discover`, `host-identify` and
+`python-cryptography` recipes run `python3`; their explicit build and
+runtime dependencies now require `python-final`, and the Host identity
+runtime retains its cryptography dependency. Controller stages retain
+their separate Python 3.12/runtime wheel dependencies. No automatic
+`/usr/bin/python3` repointing to 3.12 is authorized.
+
+`tools/verify_resident_b_runtime_split.py` checks the two runtime
+classes against exact data-only required-output manifests and dependency
+edges. The native admission planner reports a **dependency-first**
+missing-stage build-candidate list, and flags any apparently present
+stage needing revalidation after an absent dependency is rebuilt.
+These reports are read-only; they do **not** prove interpreter shebangs,
+ELF DT_NEEDED, SOABI, wheel RECORD or complete native binaries. The
+real selected compiler Project's original receipt and corrected Boot A
+canonical generation/package output receipts must still be
+authenticated to obtain an actual stage inventory.
+
+**Required native handoff:** after the new Boot A generation is
+published and exact manifest/archive/package hashes are pinned by
+reviewed source, compare all 29 stages against the canonical installed
+file inventory. Build *only* missing or genuinely incompatible stages
+under a separately authorized compiler operation in the prescribed
+dependency order, and re-evaluate reused dependents against the final
+selected output tree. Verify `/usr/bin/python3` is 3.15, CPython 3.12
+exists separately, each Host/controller launcher resolves to its
+selected runtime, and both wheel RECORD and native extensions match
+the selected files before publication. No guessed predecessor output,
+historical pipeline replay, or unverified native admission.
+
+Host-install Work owns the **subsequent separate reboot test**, including
+STATE and APPLICATIONS persistence, retained Ed25519 Host identity,
+DNS/network restoration, local controller execution and continued
+authorized local operation during an intentional Command Center outage.
+Source-only CI and mocked systemd tests are not a reboot result.
