@@ -157,7 +157,7 @@
     ],
     "stage_scope": "candidate-from-existing-recipes; verify-predecessor-outputs-or-build-with-reviewed-source; no-inferred-installed-stage",
     "closure_stage_count": 29,
-    "closure_graph_sha256": "sha256:4b99171aadafa0e094115045736c75e2e0642c46b85f40f9f9d813e2fe85f236",
+    "closure_graph_sha256": "sha256:65a6101ed5079a6f23490deccd45f9104d58ae2709ddf4e507d9fbccd3c71ecc",
     "predecessor_package_receipts_verified": false,
     "package_binary_closure_verified": false,
     "source_graph_status": "SOURCE_GRAPH_CLOSED_NATIVE_INPUT_RECEIPTS_HELD"

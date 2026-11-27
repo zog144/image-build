@@ -10,7 +10,7 @@ PATH = ROOT / "tools/verify_resident_b_native_input_closure.py"
 spec = importlib.util.spec_from_file_location("resident_b_input", PATH)
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
-DIGEST = "sha256:4b99171aadafa0e094115045736c75e2e0642c46b85f40f9f9d813e2fe85f236"
+DIGEST = "sha256:65a6101ed5079a6f23490deccd45f9104d58ae2709ddf4e507d9fbccd3c71ecc"
 
 
 def selected():

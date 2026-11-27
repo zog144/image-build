@@ -66,12 +66,11 @@ def test_only_missing_stages_are_scheduled_in_dependency_order():
     decisions["python312"]["state"] = "missing-or-source-mismatch"
     decisions["host-tool"]["state"] = "missing-or-source-mismatch"
     order, revalidate = planner.missing_build_order(graph, decisions)
-    assert order == ["host-tool", "python312"] or order == ["python312", "host-tool"]
+    assert set(order) == {"host-tool", "python312"}
     assert revalidate == ["controller"]
     decisions["python315"]["state"] = "missing-or-source-mismatch"
     order, revalidate = planner.missing_build_order(graph, decisions)
     assert order.index("python315") < order.index("host-tool")
-    assert order.index("python312") < order.index("host-tool") or order == order
     assert "controller" in revalidate
 
 def test_missing_stage_plan_refuses_dangling_or_cyclic_dependencies():
