@@ -40,6 +40,22 @@ EXPECTED = {
         26,
     ),
 }
+# A new Resident B source selection must not rewrite the historical
+# nonresident Certbot dev20261117 wheel or its installed RECORD.
+SELECTED_PIN = ROOT / "project/host/resident-b-aggregate-installed-source-pins-v2.json"
+EXPECTED_V2 = {
+    "box-control": (
+        "zog144/box-control", "b5903779e72ea852a125a268dcd35189339dc4ae",
+        "19fe76c5620ecdae591a6a2e2ff9395d596cb940fe51c21df8ce95d6f248df51",
+        "box-control/src/zog/box_control/", 52,
+    ),
+    "root-control": (
+        "zog144/root-control", "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
+        "9f1d3ff7bca80bac7fd65e97473cda523f895d2a289638929bcd2cfaabc28876",
+        "src/zog/root_control/", 26,
+    ),
+}
+
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 GIT_SHA = re.compile(r"[0-9a-f]{40}\Z")
 SCRIPT = re.compile(r"\.\./\.\./\.\./bin/[a-zA-Z][a-zA-Z0-9_.-]*\Z")
@@ -122,14 +138,24 @@ def _read(root, path, *, max_size=MAX_MEMBER_BYTES):
 
 
 def _check_selection(pins):
-    if (type(pins) is not dict or set(pins) != {"schema", "status", "distribution",
-                                             "controllers", "native"}
-            or pins["schema"] != "zog-resident-b-aggregate-installed-source-pins-v1"
+    if type(pins) is not dict:
+        deny("aggregate pins/authority changed")
+    schema = pins.get("schema")
+    if schema == "zog-resident-b-aggregate-installed-source-pins-v1":
+        expected = EXPECTED
+        version = "0.1.1.dev20261117"
+    elif schema == "zog-resident-b-aggregate-installed-source-pins-v2":
+        expected = EXPECTED_V2
+        version = "0.1.1.dev20261127"
+    else:
+        deny("aggregate pins/authority changed")
+    if (set(pins) != {"schema", "status", "distribution",
+                      "controllers", "native"}
             or pins["status"] != "SOURCE_PINNED_AGGREGATE_NOT_YET_PRODUCED"
             or pins["distribution"] != {
-                "name": "zog", "version": "0.1.1.dev20261117", "python": "3.12",
+                "name": "zog", "version": version, "python": "3.12",
                 "install_prefix": "usr/lib/python3.12/site-packages",
-                "dist_info": "zog-0.1.1.dev20261117.dist-info",
+                "dist_info": "zog-" + version + ".dist-info",
                 "required_entry_points": {
                     "box-control": "zog.box_control.cli:main",
                     "root-control": "zog.root_control.daemon:main",
@@ -139,11 +165,11 @@ def _check_selection(pins):
                 "aggregate_wheel_sha256": None, "installed_root_generation": None,
                 "installer_receipt_sha256": None, "installed_accepted": False,
                 "source_only": True,
-            } or set(pins["controllers"]) != set(EXPECTED)):
+            } or set(pins["controllers"]) != set(expected)):
         deny("aggregate pins/authority changed")
-    for name, expected in EXPECTED.items():
+    for name, source in expected.items():
         c = pins["controllers"][name]
-        repo, revision, archive, source_prefix, count = expected
+        repo, revision, archive, source_prefix, count = source
         if (set(c) != {"repository", "revision", "archive_sha256",
                       "source_prefix", "files"}
                 or (c["repository"], c["revision"], c["archive_sha256"],
@@ -341,19 +367,22 @@ def inspect_installed(rootfs, *, pins=None, require_root_owned=False):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--pins", type=Path, default=PIN,
+                   help="exact historical v1 or distinct Resident B v2 selection")
     p.add_argument("--box-source", type=Path, required=True)
     p.add_argument("--root-source", type=Path, required=True)
     p.add_argument("--rootfs", type=Path)
     p.add_argument("--require-root-ownership", action="store_true")
     p.add_argument("--output", type=Path)
     args = p.parse_args()
-    sources = verify_sources(args.box_source, args.root_source)
+    pins = _check_selection(json.loads(args.pins.read_text()))
+    sources = verify_sources(args.box_source, args.root_source, pins=pins)
     if args.rootfs is None:
         if args.require_root_ownership or args.output is not None:
             p.error("installed output and root ownership require --rootfs")
         print(json.dumps(sources, sort_keys=True))
         return
-    evidence = inspect_installed(args.rootfs, require_root_owned=args.require_root_ownership)
+    evidence = inspect_installed(args.rootfs, pins=pins, require_root_owned=args.require_root_ownership)
     evidence["source_checkouts"] = sources
     text = json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n"
     if args.output is None:

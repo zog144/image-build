@@ -15,13 +15,13 @@ SELECTION = ROOT / "project/host/resident-b-consolidated-source-selection-v1.jso
 PACKAGE = ROOT / "project/package"
 EXPECTED = {
     "box-control": (
-        "c886e7a90bb4ea74e771a6c5dcefaa2069539ec7",
-        "2a2749f9c223fb947695634008c5e37cafc49248c19f84262f60e23c7575a121",
+        "b5903779e72ea852a125a268dcd35189339dc4ae",
+        "19fe76c5620ecdae591a6a2e2ff9395d596cb940fe51c21df8ce95d6f248df51",
         "one-shot",
     ),
     "root-control": (
-        "d9dfd6c02a5a96750f1213bf663cdceab72f1efd",
-        "8be83a4d9e50f7165ea08f70b8443cad4553b079fa058d29c3544766ebca5de1",
+        "35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb",
+        "9f1d3ff7bca80bac7fd65e97473cda523f895d2a289638929bcd2cfaabc28876",
         "disabled-systemd-unit",
     ),
 }
@@ -72,11 +72,11 @@ def verify(*, selection=None):
         refuse("source lineage is duplicated, unrelated or substituted")
     aggregate = record["aggregate_installed"]
     if aggregate != {
-        "schema": "zog-resident-b-installed-aggregate-selection-v1",
+        "schema": "zog-resident-b-installed-aggregate-selection-v2",
         "status": "SOURCE_PINNED_NO_ACTUAL_AGGREGATE",
-        "source_pin_path": "project/host/resident-b-aggregate-installed-source-pins-v1.json",
+        "source_pin_path": "project/host/resident-b-aggregate-installed-source-pins-v2.json",
         "distribution": "zog",
-        "version": "0.1.1.dev20261117",
+        "version": "0.1.1.dev20261127",
         "target_interpreter": "/usr/bin/python3.12",
         "controller_modules_pin_count": 78,
         "aggregate_wheel_sha256": None,

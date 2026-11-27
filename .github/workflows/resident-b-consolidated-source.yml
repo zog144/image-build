@@ -50,6 +50,18 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
+          repository: zog144/box-control
+          ref: b5903779e72ea852a125a268dcd35189339dc4ae
+          path: companions/resident-b-selected-box
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: zog144/root-control
+          ref: 35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb
+          path: companions/resident-b-selected-root
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
           repository: zog144/host-install
           ref: c783ccbaa2768efd6d9e3c4c5d2c3e1215180b5a
           path: companions/host-install-boot-a-successor
@@ -82,6 +94,12 @@ jobs:
           python tools/verify_resident_b_aggregate_installed.py \
             --box-source companions/box-control \
             --root-source companions/root-control
+          test "$(git -C companions/resident-b-selected-box rev-parse HEAD)" = b5903779e72ea852a125a268dcd35189339dc4ae
+          test "$(git -C companions/resident-b-selected-root rev-parse HEAD)" = 35fc1ea8969c97a00cdb4b3c18ecb47bf1f83bbb
+          python tools/verify_resident_b_aggregate_installed.py \
+            --pins project/host/resident-b-aggregate-installed-source-pins-v2.json \
+            --box-source companions/resident-b-selected-box \
+            --root-source companions/resident-b-selected-root
           python tools/verify_resident_b_combined_source.py
           python tools/verify_resident_b_consolidated_source.py
           python tools/verify_resident_b_native_input_closure.py
@@ -123,6 +141,7 @@ jobs:
             tests/test_resident_b_controller_sources_independent.py \
             tests/test_resident_b_controller_wheel_outputs.py \
             tests/test_resident_b_aggregate_installed.py \
+            tests/test_resident_b_aggregate_selected.py \
             tests/test_resident_b_controller_install_security.py \
             tests/test_resident_b_combined_source_reconciliation.py \
             tests/test_resident_b_installed_evidence.py \
