@@ -469,3 +469,90 @@ def test_failed_registration_before_first_job_cancels_only_with_controller_proof
         if inspection in ("incomplete-release", "wrong-release-resource"):
             expected.append("release-registration")
         assert [label for label, _ in control.calls] == expected
+
+
+@pytest.mark.parametrize("initial_status", ["absent", "importing"])
+def test_pipeline_release_after_prejob_registration_failure_keeps_evidence_and_recovers(
+    tmp_path, initial_status,
+):
+    """Exercise the actual pipeline cancellation resource-release traversal."""
+    from contextlib import nullcontext
+    from zog.box_control.errors import RuntimeOperationError
+    from zog.image_build.pipeline import PipelineMixin
+    from zog.image_build.filesystem import write_json
+
+    class Controller(RecordingController):
+        state = initial_status
+
+        def register_build_root(self, **arguments):
+            self.calls.append(("register", arguments))
+            raise RuntimeOperationError("pre-job registration failed")
+
+        def inspect_build_root(self, rid):
+            self.calls.append(("inspect-root", {"resource_id": rid}))
+            if self.state == "absent":
+                return {"resource_id": rid, "state": "absent"}
+            return {
+                "schema": 2, "resource_id": rid, "state": self.state,
+                "execution_identity": {"uid": 2001, "gid": 2001},
+                "intent": {
+                    "prepared_root": str(package / "root"),
+                    "source_directory": str(package / "source"),
+                    "output_directory": str(package / "output"),
+                    "input_manifest_id": "sha256:" + "1" * 64,
+                },
+            }
+
+        def release_build_root(self, rid):
+            self.calls.append(("release-root", {"resource_id": rid}))
+            return {
+                "schema": 1, "execution_contract": INHERITED_EXECUTION_CONTRACT,
+                "resource_id": rid, "state": "released",
+            }
+
+    class RecordedPipeline(PipelineMixin):
+        def __init__(self, state, adapter):
+            self.state = state
+            self.runner = SimpleNamespace(execute=adapter)
+
+        def locked(self):
+            return nullcontext()
+
+        def _policy(self):
+            return {"source_test_only": True}
+
+    state = tmp_path / "original-project-state"
+    package = state / "image-build" / "attempts" / "attempt-one" / "pkg"
+    control = Controller(tmp_path)
+    adapter = _adapter(control)
+    with pytest.raises(RuntimeOperationError, match="pre-job registration failed"):
+        adapter.execute_for_attempt(_request(package), package / "compile.controller.json")
+    assert not list(package.glob("*.controller.json"))
+    assert [name for name, _ in control.calls] == ["register"]
+
+    pipeline = RecordedPipeline(state, adapter)
+    pipeline_id = "d" * 32
+    pipeline_path = state / "image-build/pipelines" / pipeline_id / "pipeline.json"
+    write_json(pipeline_path, {
+        "schema": 1, "pipeline_id": pipeline_id, "status": "pending",
+        "policy": pipeline._policy(), "attempts": {"image": "attempt-one"},
+    })
+    original = (package / "controller-resources.json").read_bytes()
+    if initial_status == "importing":
+        from zog.image_build.box_control_adapter import BuildRegistrationPending
+        with pytest.raises(BuildRegistrationPending):
+            pipeline.release_pipeline(pipeline_id)
+        assert not (package / "controller-released.json").exists()
+        assert json.loads(pipeline_path.read_text())["status"] == "pending"
+        assert not any(name == "release-root" for name, _ in control.calls)
+        control.state = "absent"  # new authoritative observation, no file edit
+    result = pipeline.release_pipeline(pipeline_id)
+    assert result["status"] == "released"
+    assert (package / "controller-released.json").is_file()
+    assert (package / "retained-output.json").is_file()
+    assert (state / "image-build/attempts/attempt-one/status.json").is_file()
+    assert (package / "controller-resources.json").read_bytes() == original
+    assert not any(name in ("issue", "inspect", "submit") for name, _ in control.calls)
+    assert len([name for name, _ in control.calls if name == "release-root"]) == 1
+    assert pipeline.release_pipeline(pipeline_id)["status"] == "released"
+    assert len([name for name, _ in control.calls if name == "release-root"]) == 1
