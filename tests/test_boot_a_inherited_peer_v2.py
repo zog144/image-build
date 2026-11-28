@@ -371,3 +371,93 @@ def test_corrected_root_daemon_accepts_exact_box_registration_envelope(
                        "build_contract": BUILD_RPC_CONTRACT,
                        **args, "unexpected": True}, peer=peer)
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("inspection", [
+    "absent", "ready", "importing", "unavailable", "forged-absent",
+])
+def test_failed_registration_before_first_job_cancels_only_with_controller_proof(
+    tmp_path, inspection,
+):
+    """Fonts #63: no manual removal of an orphan pre-job registration.
+
+    The original registration is durable; no request ID or controller job has
+    ever been allocated. Only an authentic terminal/absent registration status
+    permits controller-mediated release. Unknown/unsafe inspection must HOLD.
+    This is synthetic controller source acceptance, not native root-control
+    proof or permission to replay the old Fonts request.
+    """
+    from zog.box_control.errors import RuntimeOperationError
+
+    class PreJobRegistrationFailure(RecordingController):
+        def __init__(self, project):
+            super().__init__(project)
+            self.local_record = None
+
+        def register_build_root(self, **arguments):
+            self.calls.append(("register", arguments))
+            self.local_record = dict(arguments)  # controller retained before RPC
+            raise RuntimeOperationError(
+                "registration failed before issuing a build request")
+
+        def inspect_build_root(self, resource_id):
+            self.calls.append(("inspect-registration", {"resource_id": resource_id}))
+            if inspection == "unavailable":
+                raise RuntimeOperationError("original registration status unavailable")
+            if inspection == "forged-absent":
+                return {"resource_id": resource_id, "state": "absent",
+                        "unverified": True}
+            if inspection == "absent":
+                return {"resource_id": resource_id, "state": "absent"}
+            return {
+                "schema": 2, "resource_id": resource_id, "state": inspection,
+                "intent": {k: v for k, v in self.local_record.items()
+                           if k != "resource_id"},
+                "execution_identity": {"uid": 2001, "gid": 2001},
+            }
+
+        def release_build_root(self, resource_id):
+            self.calls.append(("release-registration", {"resource_id": resource_id}))
+            assert self.local_record["resource_id"] == resource_id
+            self.local_record = None  # only the controller performs cleanup
+            return {"schema": 1, "execution_contract": INHERITED_EXECUTION_CONTRACT,
+                    "resource_id": resource_id, "state": "released"}
+
+    control = PreJobRegistrationFailure(tmp_path)
+    package = tmp_path / "pre-job-failure"
+    request = _request(package)
+    adapter = _adapter(control)
+    with pytest.raises(RuntimeOperationError, match="before issuing a build request"):
+        adapter.execute_for_attempt(request, package / "compile.controller.json")
+
+    resource_path = package / "controller-resources.json"
+    old_resource = resource_path.read_bytes()
+    resource = json.loads(old_resource)
+    assert resource["schema"] == 2
+    assert not list(package.glob("*.controller.json"))
+    assert [label for label, _ in control.calls] == ["register"]
+    assert control.local_record is not None
+
+    if inspection in ("absent", "ready"):
+        adapter.release_resources(package)
+        assert json.loads((package / "controller-released.json").read_text()) == {
+            "resource_id": resource["resource_id"],
+            "execution_contract": INHERITED_EXECUTION_CONTRACT,
+        }
+        assert control.local_record is None
+        assert resource_path.read_bytes() == old_resource  # retained evidence
+        assert not list(package.glob("*.controller.json"))
+        assert [label for label, _ in control.calls] == [
+            "register", "inspect-registration", "release-registration",
+        ]
+        adapter.release_resources(package)  # idempotent, no second release
+        assert len(control.calls) == 3
+    else:
+        with pytest.raises((ImageBuildError, RuntimeOperationError)):
+            adapter.release_resources(package)
+        assert not (package / "controller-released.json").exists()
+        assert control.local_record is not None
+        assert resource_path.read_bytes() == old_resource
+        assert [label for label, _ in control.calls] == [
+            "register", "inspect-registration",
+        ]

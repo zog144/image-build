@@ -104,7 +104,31 @@ class BoxControlExecutionAdapter:
             {'resource_id', 'registration'}, 'build resource')
         released = directory / 'controller-released.json'
         if released.exists(): return
-        for checkpoint in sorted(directory.glob('*.controller.json')):
+        checkpoints = sorted(directory.glob('*.controller.json'))
+        if not checkpoints:
+            # The producer persists controller-resources.json before register,
+            # but writes its first *.controller.json only after registration
+            # succeeds. A failed registration therefore has no issued job ID.
+            # Do not infer absence from local files alone: inspect the original
+            # resource through box-control's read-only root-control status RPC.
+            pending_path = directory / 'registration-pending.json'
+            if pending_path.exists():
+                pending = _require_inherited_record(
+                    json.loads(pending_path.read_text()),
+                    {'resource_id', 'registration'}, 'pending registration')
+                if pending != resource:
+                    raise ImageBuildError(
+                        'pending registration and build resource identities differ')
+            observed = self.control.inspect_build_root(resource['resource_id'])
+            self._assert_registration_status(
+                observed, resource['resource_id'], resource['registration'])
+            if observed['state'] not in {'absent', 'ready', 'released'}:
+                raise BuildRegistrationPending(resource['resource_id'], observed)
+            # Even on an authoritative 'absent' status, release_build_root
+            # must reconcile the controller's durable local registration
+            # record and its privileged backend. Never unlink local or
+            # controller records as a substitute for that release.
+        for checkpoint in checkpoints:
             saved = _require_inherited_record(json.loads(checkpoint.read_text()),
                 {'binding', 'resource_id', 'request_id', 'job_id'}, 'build checkpoint')
             if saved['resource_id'] != resource['resource_id']:
