@@ -1,0 +1,34 @@
+{
+  "schema": "zog-resident-b-compiler-provenance-successor-v1",
+  "status": "HISTORICAL_OPERATION_UNRESOLVED_NATIVE_HOLD",
+  "original": {
+    "generation": "3805294fc8ccd9589aa75d3a6c5cb9367b7baf84b6ce131a84adafed7d34f9dc",
+    "receipt_sha256": "sha256:a205c07bde4e6cf61e48061affd9a0b40c3a101e18dff67a9871995a3a2afafc",
+    "reviewed_reader_revision": "1616f192ef9d8964a8f37f32a86c69c0242a213c",
+    "reviewed_reader_git_blob": "3eb562bbf2460fb95af0780a079cb2b058650f80",
+    "signed_receipt_reopened_by_this_source": false,
+    "authenticated_project_id": null,
+    "authenticated_operation_id": null,
+    "authoritative_pipeline_id": null
+  },
+  "evidence_boundary": {
+    "signature_and_payload_historical_work_report": "native Work reported verified; not re-signed or re-issued here",
+    "build_record_assembly_attempt_is_not_operation": true,
+    "source_state_cannot_create_provenance_authority": true,
+    "required_native_matches": [
+      "installed reviewed reader+dependencies and protected issuer policy",
+      "receipt/manifest/inventory/Build Record and all original installed compiler role hashes",
+      "unique original pipeline owner and durable remote request, binding and terminal result",
+      "original Host/installation/STATE/Project from signed receipt and Project provenance"
+    ],
+    "successor_if_unavailable": "publish a distinct authorized provenance-bound compiler generation/operation; retain original signed receipt and historical records unchanged"
+  },
+  "activation": {
+    "pin_to_existing_compiler_selection": false,
+    "native_build_permitted": false,
+    "output_generation_accepted": false,
+    "native_package_decisions_permitted": false,
+    "original_operation_replay_permitted": false,
+    "original_records_mutable": false
+  }
+}
