@@ -70,6 +70,8 @@ def bounded_json(path):
     try:
         return json.loads(raw, object_pairs_hook=_pairs,
                           parse_constant=lambda _: deny("nonfinite retained evidence"))
+    except ProvenanceHold:
+        raise  # preserve the specific duplicate-field refusal
     except (ValueError, UnicodeDecodeError) as exc:
         raise ProvenanceHold("Resident B original compiler provenance HOLD: invalid retained JSON") from exc
 
@@ -230,6 +232,11 @@ def native_trace(*, project, state, authority, controller):
     state = Path(state).resolve(strict=True)
     if not project.is_dir() or not state.is_dir():
         deny("original Project or STATE directory missing")
+    selected_controller = bounded_json(controller)
+    controller_project = selected_controller.get("project_root")
+    if (type(controller_project) is not str
+            or Path(controller_project).resolve(strict=True) != project):
+        deny("controller-selected Project differs from native Project argument")
     selection = read_selection(state / "image-build/generations" / GENERATION)
     config = selection.manifest.get("inputs", {}).get("provenance")
     if type(config) is not dict:

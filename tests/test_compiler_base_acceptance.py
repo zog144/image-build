@@ -243,8 +243,11 @@ def test_native_probe_requires_box_control_before_attempt_write(tmp_path):
           SimpleNamespace(root=tmp_path,generation="a"*64),tmp_path/"attempt")
     assert not (tmp_path/"attempt").exists()
 
-def test_actual_engine_image_requires_acceptance_and_propagates_binding(monkeypatch,tmp_path):
-    # Exercise the real _ensure path without issuing a real compiler command.
+def test_current_engine_rejects_unaccepted_original_image_before_build(monkeypatch,tmp_path):
+    # Reader source is unchanged from PR20. This source candidate's CURRENT
+    # engine requires a promoted stage-two toolchain for ordinary builds.
+    # The protected reader is used by the separate Resident B native auditor,
+    # not by overriding _ensure with an old PR20-only compiler_base argument.
     b=ImageBuild.__new__(ImageBuild)
     b.state=tmp_path
     b.package_dir=tmp_path/"packages"
@@ -258,36 +261,9 @@ def test_actual_engine_image_requires_acceptance_and_propagates_binding(monkeypa
         manifest={"kind":"image","inputs":{"architecture":platform.machine()}})
     base.root.mkdir(parents=True)
     monkeypatch.setattr(engine_module,"read_selection",lambda _:base)
-    with pytest.raises(ImageBuildError,match="requires independently accepted"):
+    with pytest.raises(ImageBuildError,match="ordinary builds require a promoted second-stage toolchain"):
         b._ensure(["fixture-final"],toolchain=base)
-    from zog.image_build import compiler_base_acceptance as acceptance
-    bound={"schema":ca.BINDING,"generation_id":base.generation,
-           "generation_kind":"image","status":
-           "independent-compiler-capability-observed-not-job-authorization"}
-    calls=[]
-    monkeypatch.setattr(acceptance,"resolve",
-                        lambda _builder,_selection,_id:copy.deepcopy(bound))
-    monkeypatch.setattr(engine_module,"load_packages",lambda _:{"fixture-final":SimpleNamespace(fingerprint="fixture",build_dependencies=(),runtime_dependencies=(),test_dependencies=())})
-    monkeypatch.setattr(engine_module,"order",lambda *a,**k:["fixture-final"])
-    attempt=tmp_path/"attempt"
-    attempt.mkdir()
-    b._candidate=lambda _:attempt
-    def build(*args,**kwargs):
-        calls.append(kwargs["compiler_base"])
-        return {}
-    b._build_set=build
-    b._compose=lambda *a,**k:{}
-    output=SimpleNamespace(generation="b"*64)
-    def publish(root,inputs,kind,details):
-        calls.append(inputs["compiler_base"])
-        assert inputs["toolchain"]==base.generation
-        assert kind=="image"
-        return output
-    b._publish=publish
-    b._activate=lambda *a:None
-    assert b._ensure(["fixture-final"],toolchain=base,
-                      compiler_base="sha256:"+"1"*64).generation==output.generation
-    assert calls==[bound,bound]
+    assert not (tmp_path/"image-build/attempts").exists()
 
 def test_native_probe_does_not_expose_direct_ssm_or_host_execute():
     source=(Path(__file__).resolve().parents[1]/
