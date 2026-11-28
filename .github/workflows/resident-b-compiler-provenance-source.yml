@@ -1,0 +1,38 @@
+name: Resident B original compiler provenance reader and operation trace (source-only)
+on:
+  push:
+    branches: [regular/resident-b-compiler-provenance-20261128]
+  pull_request:
+    branches: [regular/resident-b-consolidated-cp312-controllers-20261115]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-reader-and-origin-trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install test-only crypto and pytest
+        run: python -m pip install pytest cryptography
+      - name: Check exact original PR20 reader modules and unresolved successor
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m pytest -q -rs \
+            tests/test_resident_b_compiler_provenance.py \
+            tests/test_compiler_base_acceptance.py \
+            tests/test_compiler_base_isolation.py
+      - name: Source-only and no operation replay
+        if: always()
+        run: |
+          echo "Source tests are disposable; no original operation inferred, accepted generation written, protected policy installed, SSM request submitted, native package classified or Boot A generation published." >> "$GITHUB_STEP_SUMMARY"
