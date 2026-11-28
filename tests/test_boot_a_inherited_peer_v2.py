@@ -375,6 +375,7 @@ def test_corrected_root_daemon_accepts_exact_box_registration_envelope(
 
 @pytest.mark.parametrize("inspection", [
     "absent", "ready", "importing", "unavailable", "forged-absent",
+    "incomplete-release", "wrong-release-resource",
 ])
 def test_failed_registration_before_first_job_cancels_only_with_controller_proof(
     tmp_path, inspection,
@@ -407,7 +408,7 @@ def test_failed_registration_before_first_job_cancels_only_with_controller_proof
             if inspection == "forged-absent":
                 return {"resource_id": resource_id, "state": "absent",
                         "unverified": True}
-            if inspection == "absent":
+            if inspection in ("absent", "incomplete-release", "wrong-release-resource"):
                 return {"resource_id": resource_id, "state": "absent"}
             return {
                 "schema": 2, "resource_id": resource_id, "state": inspection,
@@ -419,6 +420,12 @@ def test_failed_registration_before_first_job_cancels_only_with_controller_proof
         def release_build_root(self, resource_id):
             self.calls.append(("release-registration", {"resource_id": resource_id}))
             assert self.local_record["resource_id"] == resource_id
+            if inspection == "incomplete-release":
+                return {"schema": 1, "execution_contract": INHERITED_EXECUTION_CONTRACT,
+                        "resource_id": resource_id, "state": "releasing"}
+            if inspection == "wrong-release-resource":
+                return {"schema": 1, "execution_contract": INHERITED_EXECUTION_CONTRACT,
+                        "resource_id": "f" * 32, "state": "released"}
             self.local_record = None  # only the controller performs cleanup
             return {"schema": 1, "execution_contract": INHERITED_EXECUTION_CONTRACT,
                     "resource_id": resource_id, "state": "released"}
@@ -458,6 +465,7 @@ def test_failed_registration_before_first_job_cancels_only_with_controller_proof
         assert not (package / "controller-released.json").exists()
         assert control.local_record is not None
         assert resource_path.read_bytes() == old_resource
-        assert [label for label, _ in control.calls] == [
-            "register", "inspect-registration",
-        ]
+        expected = ["register", "inspect-registration"]
+        if inspection in ("incomplete-release", "wrong-release-resource"):
+            expected.append("release-registration")
+        assert [label for label, _ in control.calls] == expected

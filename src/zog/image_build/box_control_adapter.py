@@ -145,6 +145,10 @@ class BoxControlExecutionAdapter:
                 capture_observation(checkpoint, released_record)
         released_root = self.control.release_build_root(resource['resource_id'])
         self._assert_controller_record(released_root, 'released build resource')
+        if (released_root.get('resource_id') != resource['resource_id']
+                or released_root.get('state') != 'released'):
+            raise ImageBuildError(
+                'build resource release identity or terminal state is unproven')
         replace_json(released, {'resource_id': resource['resource_id'],
                                 'execution_contract': INHERITED_EXECUTION_CONTRACT})
 
