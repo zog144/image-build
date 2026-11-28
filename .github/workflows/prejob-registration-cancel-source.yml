@@ -42,4 +42,5 @@ jobs:
           python -m pytest -q -rs tests/test_boot_a_inherited_peer_v2.py
       - name: No native execution or historical replay
         if: always()
-        run: echo "Disposable source fixtures only. No Fonts #63 replay, no SSM/Host action, no manual deletion of controller state, no native child acceptance." >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo 'Disposable source fixtures only. No Fonts request 63 replay, no SSM or Host action, no manual deletion of controller state, no native child acceptance.' >> "$GITHUB_STEP_SUMMARY"
